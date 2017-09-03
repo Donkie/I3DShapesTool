@@ -42,8 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="I3DDecryptor.cs" />
+    <Compile Include="I3DDecryptorStream.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StreamExt.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
