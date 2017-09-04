@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace I3DShapesTool
 {
@@ -58,7 +59,9 @@ namespace I3DShapesTool
                         string folder = Path.Combine(@"C:\Users\Daniel\Desktop\", fileName);
                         Directory.CreateDirectory(folder);
 
-                        File.WriteAllBytes(Path.Combine(folder, shape.Name + ".obj"), data);
+                        string filename = shape.Name + ".obj";
+
+                        File.WriteAllBytes(Path.Combine(folder, CleanFileName(filename)), data);
 
                         Console.WriteLine();
                     }
@@ -66,6 +69,16 @@ namespace I3DShapesTool
             }
 
             Console.Read();
+        }
+
+        /// <summary>
+        /// https://stackoverflow.com/a/7393722/2911165
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        private static string CleanFileName(string fileName)
+        {
+            return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
     }
 }
