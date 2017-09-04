@@ -59,7 +59,7 @@ namespace I3DShapesTool
                         string folder = Path.Combine(@"C:\Users\Daniel\Desktop\", fileName);
                         Directory.CreateDirectory(folder);
 
-                        string filename = shape.Name + ".obj";
+                        string filename = shape.Name + ".bin";
 
                         File.WriteAllBytes(Path.Combine(folder, CleanFileName(filename)), data);
 
