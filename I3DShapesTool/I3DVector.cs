@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace I3DShapesTool
+﻿namespace I3DShapesTool
 {
     class I3DVector
     {
-        private float _x;
-        private float _y;
-        private float _z;
+        public float X { get; }
+        public float Y { get; }
+        public float Z { get; }
+
+        public I3DVector(BigEndianBinaryReader br)
+        {
+            X = br.ReadSingle();
+            Y = br.ReadSingle();
+            Z = br.ReadSingle();
+        }
     }
 }

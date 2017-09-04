@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace I3DShapesTool
 {
@@ -13,10 +10,12 @@ namespace I3DShapesTool
         {
 
             string path = args.Length > 0 ? args[0] : @"D:\SteamLibrary\steamapps\common\Farming Simulator 2013\data\vehicles\balers\kroneBigPack1290.i3d.shapes";
+            List<I3DShape> shapes = new List<I3DShape>();
 
             using (FileStream fs = File.OpenRead(path))
             {
-                Console.WriteLine("Loading file: " + Path.GetFileName(fs.Name));
+                string fileName = Path.GetFileName(fs.Name) ?? "N/A";
+                Console.WriteLine("Loading file: " + fileName);
 
                 byte seed = (byte)fs.ReadInt16L();
                 Console.WriteLine("File Seed: " + seed);
@@ -43,7 +42,24 @@ namespace I3DShapesTool
                         int size = dfs.ReadInt32L();
                         Console.WriteLine("Size: " + size);
                         byte[] data = dfs.ReadBytes(size);
-                        File.WriteAllBytes(@"C:\Users\Daniel\Desktop\data\" + i, data);
+
+                        I3DShape shape;
+
+                        using (MemoryStream ms = new MemoryStream(data))
+                        {
+                            using (BigEndianBinaryReader br = new BigEndianBinaryReader(ms))
+                            {
+                                shape = new I3DShape(br);
+                            }
+                        }
+
+                        shapes.Add(shape);
+
+                        string folder = Path.Combine(@"C:\Users\Daniel\Desktop\", fileName);
+                        Directory.CreateDirectory(folder);
+
+                        File.WriteAllBytes(Path.Combine(folder, shape.Name + ".obj"), data);
+
                         Console.WriteLine();
                     }
                 }

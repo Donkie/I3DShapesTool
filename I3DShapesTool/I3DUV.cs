@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace I3DShapesTool
+﻿namespace I3DShapesTool
 {
     class I3DUV
     {
-        private float _u;
-        private float _v;
+        public float U { get; }
+        public float V { get; }
+
+        public I3DUV(BigEndianBinaryReader br)
+        {
+            U = br.ReadSingle();
+            V = br.ReadSingle();
+        }
     }
 }

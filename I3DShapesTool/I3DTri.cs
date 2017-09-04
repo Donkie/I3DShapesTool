@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace I3DShapesTool
+﻿namespace I3DShapesTool
 {
     class I3DTri
     {
-        private ushort _p1idx;
-        private ushort _p2idx;
-        private ushort _p3idx;
+        public ushort P1Idx { get; }
+        public ushort P2Idx { get; }
+        public ushort P3Idx { get; }
+
+        public I3DTri(BigEndianBinaryReader br)
+        {
+            P1Idx = br.ReadUInt16();
+            P2Idx = br.ReadUInt16();
+            P3Idx = br.ReadUInt16();
+        }
     }
 }

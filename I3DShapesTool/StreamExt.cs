@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace I3DShapesTool
 {
@@ -39,6 +41,27 @@ namespace I3DShapesTool
                     offset += read;
                 } while (offset < numBytes);
             }
+        }
+
+        public static void Align(this Stream s, byte wordSize)
+        {
+            int bytesToRead = (int)(wordSize - s.Position % wordSize);
+            s.ReadBytes(bytesToRead);
+        }
+
+        public static string ReadNullTerminatedString(this Stream stream)
+        {
+            List<byte> bytes = new List<byte>();
+            byte b;
+            do
+            {
+                b = (byte) stream.ReadByte();
+                bytes.Add(b);
+            } while (b != 0x0);
+
+            bytes.RemoveAt(bytes.Count - 1);
+
+            return Encoding.ASCII.GetString(bytes.ToArray());
         }
 
         public static byte ReadInt8(this Stream s)
