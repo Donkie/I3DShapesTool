@@ -1,4 +1,7 @@
-﻿namespace I3DShapesTool
+﻿using System;
+using Assimp;
+
+namespace I3DShapesTool
 {
     class I3DShape
     {
@@ -73,6 +76,8 @@
                 Triangles[i] = new I3DTri(br);
             }
 
+            br.BaseStream.Align(4);
+
             Positions = new I3DVector[Vertices];
             for (int i = 0; i < Vertices; i++)
             {
@@ -90,6 +95,50 @@
             {
                 UVs[i] = new I3DUV(br);
             }
+        }
+
+        public Scene ToAssimp()
+        {
+            Scene scene = new Scene();
+
+            Mesh mesh = new Mesh(Name + "_mesh", PrimitiveType.Triangle);
+
+            foreach (I3DTri triangle in Triangles)
+            {
+                mesh.Faces.Add(new Face(new int[]{triangle.P1Idx, triangle.P2Idx, triangle.P3Idx}));
+            }
+
+            foreach (I3DVector i3DVector in Positions)
+            {
+                mesh.Vertices.Add(new Vector3D(i3DVector.X, i3DVector.Y, i3DVector.Z));
+            }
+
+            foreach (I3DVector i3DVector in Normals)
+            {
+                Vector3D normal = new Vector3D(i3DVector.X, i3DVector.Y, i3DVector.Z);
+                normal.Normalize();
+                mesh.Normals.Add(normal);
+            }
+
+            foreach (I3DUV i3Duv in UVs)
+            {
+                mesh.TextureCoordinateChannels[0].Add(new Vector3D(i3Duv.U, i3Duv.V, 0));
+            }
+
+            mesh.MaterialIndex = 0;
+
+            scene.Meshes.Add(mesh);
+
+            Material mat = new Material();
+            mat.Name = Name + "_mat";
+
+            scene.Materials.Add(mat);
+
+            Node n = new Node(Name + "_node");
+            scene.RootNode = n;
+            n.MeshIndices.Add(0);
+
+            return scene;
         }
     }
 }

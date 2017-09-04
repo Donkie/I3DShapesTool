@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Assimp;
+using Assimp.Unmanaged;
 
 namespace I3DShapesTool
 {
@@ -10,7 +12,7 @@ namespace I3DShapesTool
         private static void Main(string[] args)
         {
 
-            string path = args.Length > 0 ? args[0] : @"D:\SteamLibrary\steamapps\common\Farming Simulator 2013\data\vehicles\balers\kroneBigPack1290.i3d.shapes";
+            string path = args.Length > 0 ? args[0] : @"D:\SteamLibrary\steamapps\common\Farming Simulator 2013\data\vehicles\steerable\deutz\deutzTTV6190.i3d.shapes";
             List<I3DShape> shapes = new List<I3DShape>();
 
             using (FileStream fs = File.OpenRead(path))
@@ -29,6 +31,11 @@ namespace I3DShapesTool
 
                 Console.WriteLine();
                 
+                LogStream logstream = new LogStream(delegate (string msg, string userData) {
+                    Console.WriteLine(msg);
+                });
+                logstream.Attach();
+
                 using (I3DDecryptorStream dfs = new I3DDecryptorStream(fs, seed))
                 {
                     int itemCount = dfs.ReadInt32L();
@@ -63,6 +70,29 @@ namespace I3DShapesTool
 
                         File.WriteAllBytes(Path.Combine(folder, CleanFileName(filename)), data);
 
+                        Scene scene = shape.ToAssimp();
+                        AssimpContext exporter = new AssimpContext();
+
+                        string outpath = Path.Combine(folder, CleanFileName(shape.Name + ".stl"));
+                        
+                        
+                        
+                        ExportDataBlob dataBlob = exporter.ExportToBlob(scene, "stl", PostProcessSteps.ValidateDataStructure);
+
+
+                        using (FileIOSystem ioSystem = new FileIOSystem())
+                        {
+                            using (IOStream iostream = ioSystem.OpenFile(outpath, FileIOMode.WriteBinary))
+                            {
+                                iostream.Write(dataBlob.Data, dataBlob.Data.LongLength);
+                            }
+                        }                        
+                        
+                       // using (FileStream fsOut = File.Create(path: outpath)) {
+                       //     dataBlob.ToStream(fsOut);
+                        //}
+
+                        Console.WriteLine("Finished with " + shape.Name);
                         Console.WriteLine();
                     }
                 }
