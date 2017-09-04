@@ -45,7 +45,7 @@ namespace I3DShapesTool
 
         public static void Align(this Stream s, byte wordSize)
         {
-            int bytesToRead = (int)(wordSize - s.Position % wordSize);
+            int bytesToRead = (int)(s.Position % wordSize);
             s.ReadBytes(bytesToRead);
         }
 
