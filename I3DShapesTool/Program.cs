@@ -5,6 +5,7 @@ using System.Linq;
 using Assimp;
 using Assimp.Unmanaged;
 using NDesk.Options;
+using ByteSizeLib;
 
 namespace I3DShapesTool
 {
@@ -16,6 +17,8 @@ namespace I3DShapesTool
             {
                 string fileName = Path.GetFileName(fs.Name) ?? "N/A";
                 Console.WriteLine("Loading file: " + fileName);
+
+                Console.WriteLine("File Size: " + ByteSize.FromBytes(new FileInfo(fs.Name).Length));
 
                 byte seed = (byte)fs.ReadInt16L();
                 Console.WriteLine("File Seed: " + seed);
@@ -44,12 +47,12 @@ namespace I3DShapesTool
                     Console.WriteLine();
                     for (int i = 0; i < itemCount; i++)
                     {
-                        Console.WriteLine("Loading item " + (i + 1));
+                        Console.Write("{0}: ", i + 1);
 
                         int type = dfs.ReadInt32L();
-                        Console.WriteLine("Type: " + type);
                         int size = dfs.ReadInt32L();
-                        Console.WriteLine("Size: " + size);
+                        Console.Write("(Type {0}) ", type);
+                        Console.Write(ByteSize.FromBytes(size));
                         byte[] data = dfs.ReadBytes(size);
 
                         I3DShape shape;
@@ -92,8 +95,7 @@ namespace I3DShapesTool
                             }
                         }
                         
-                        Console.WriteLine("Finished with " + shape.Name);
-                        Console.WriteLine();
+                        Console.WriteLine(" - {0}", shape.Name);
                     }
                 }
             }
