@@ -76,25 +76,30 @@ namespace I3DShapesTool
                             folder = OutPath;
                         }
 
-                        string binFileName = shape.Name + ".bin";
-
-                        File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), data);
-
-                        Scene scene = shape.ToAssimp();
-                        AssimpContext exporter = new AssimpContext();
-
-                        string mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".stl"));
-                        
-                        ExportDataBlob dataBlob = exporter.ExportToBlob(scene, "stl", PostProcessSteps.ValidateDataStructure);
-                        
-                        using (FileIOSystem ioSystem = new FileIOSystem())
+                        if (DumpBinary)
                         {
-                            using (IOStream iostream = ioSystem.OpenFile(mdlFileName, FileIOMode.WriteBinary))
+                            string binFileName = shape.Name + ".bin";
+                            File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), data);
+                        }
+
+                        if (ExportFormat != null)
+                        {
+                            Scene scene = shape.ToAssimp();
+                            AssimpContext exporter = new AssimpContext();
+
+                            string mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + "." + ExportFormat.FileExtension));
+
+                            ExportDataBlob dataBlob = exporter.ExportToBlob(scene, ExportFormat.FormatId, PostProcessSteps.ValidateDataStructure);
+
+                            using (FileIOSystem ioSystem = new FileIOSystem())
                             {
-                                iostream.Write(dataBlob.Data, dataBlob.Data.LongLength);
+                                using (IOStream iostream = ioSystem.OpenFile(mdlFileName, FileIOMode.WriteBinary))
+                                {
+                                    iostream.Write(dataBlob.Data, dataBlob.Data.LongLength);
+                                }
                             }
                         }
-                        
+
                         Console.WriteLine(" - {0}", shape.Name);
                     }
                 }
@@ -103,20 +108,27 @@ namespace I3DShapesTool
 
         private static void ShowHelp(OptionSet p)
         {
-            Console.WriteLine("Usage: I3DShapesTool");
+            Console.WriteLine("Usage: I3DShapesTool [-dhv --supportedformats --out=outPath] [-f=format | -b] inFile");
             Console.WriteLine("Extract model data from GIANTS engine's .i3d.shapes files.");
             Console.WriteLine();
             p.WriteOptionDescriptions(Console.Out);
         }
 
-        public static int Verbosity = 0;
+        public static int Verbosity;
         public static string InPath;
         public static string OutPath;
-        public static bool CreateDir = false;
+        public static bool CreateDir;
+        public static bool DumpBinary;
+        public static ExportFormatDescription ExportFormat;
 
         private static void Main(string[] args)
         {
             bool showHelp = false;
+            bool showSupportedFormats = false;
+            string chosenFormat = null;
+
+            AssimpContext exporter = new AssimpContext();
+            ExportFormatDescription[] formats = exporter.GetSupportedExportFormats();
 
             OptionSet p = new OptionSet
             {
@@ -130,33 +142,33 @@ namespace I3DShapesTool
                     }
                 },
                 {
-                    "file=", "the .i3d.shapes {FILE} to be extracted", v =>
-                    {
-                        InPath = v;
-                    }
-                },
-                {
                     "d|createdir", "extract the files to a folder in the output directory instead of directly to the output directory", v => CreateDir = v != null
                 },
                 {
-                    "out:", "the {DIRECTORY} files should be extracted to\ndefaults to the directory of the input file", v =>
-                    {
-                        OutPath = v;
-                    }
+                    "out:", "the {DIRECTORY} files should be extracted to\ndefaults to the directory of the input file", v => OutPath = v
+                },
+                {
+                    "b|bin", "dump the raw decrypted binary file",  v => DumpBinary = v != null
+                },
+                {
+                    "f|format=", "the output {FORMAT}, check --supportedformats",  v => chosenFormat = v
+                },
+                {
+                    "supportedformats", "prints out the supported extraction formats", v => showSupportedFormats = v != null
                 },
             };
 
-            List<string> extra;
             try
             {
-                extra = p.Parse(args);
+                List<string> extra = p.Parse(args);
 
-                if (InPath == null)
+                if (extra[0] == null)
                 {
                     showHelp = true;
                 }
                 else
                 {
+                    InPath = extra[0];
                     if (!File.Exists(InPath))
                         throw new OptionException("File doesn't exist.", "--file");
                 }
@@ -170,6 +182,23 @@ namespace I3DShapesTool
                     if (!Directory.Exists(OutPath))
                         throw new OptionException("Directory doesn't exist.", "--out");
                 }
+
+                if (chosenFormat == null && !DumpBinary)
+                {
+                    showHelp = true;
+                }
+                else
+                {
+                    foreach (ExportFormatDescription exportFormatDescription in formats)
+                    {
+                        if (!string.Equals(exportFormatDescription.FormatId, chosenFormat, StringComparison.CurrentCultureIgnoreCase)) continue;
+                        ExportFormat = exportFormatDescription;
+                        break;
+                    }
+
+                    if(ExportFormat == null && !DumpBinary)
+                        throw new OptionException("Invalid output format. Check --supportedformats", "--f");
+                }
             }
             catch (OptionException e)
             {
@@ -177,6 +206,15 @@ namespace I3DShapesTool
                 Console.WriteLine("Try 'I3DShapesTool --help' for more information.");
                 Console.Read();
                 return;
+            }
+            
+            if (showSupportedFormats)
+            {
+                Console.WriteLine("Supported Extraction Formats:");
+                foreach (ExportFormatDescription exportFormatDescription in formats)
+                {
+                    Console.WriteLine("\t-f={0} - {1} (.{2})", exportFormatDescription.FormatId, exportFormatDescription.Description, exportFormatDescription.FileExtension);
+                }
             }
 
             if (showHelp)
