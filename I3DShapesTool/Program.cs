@@ -11,6 +11,39 @@ namespace I3DShapesTool
 {
     class Program
     {
+        private static I3DShapesHeader ParseFileHeader(Stream fs)
+        {
+            byte b1 = fs.ReadInt8();
+            byte b2 = fs.ReadInt8();
+            byte b3 = fs.ReadInt8();
+            byte b4 = fs.ReadInt8();
+
+            byte seed;
+            short version;
+
+            if (b1 == 5)
+            {
+                //Some testing
+                version = b1;
+                seed = b3;
+            }
+            else if (b4 == 2 || b4 == 3)
+            {
+                version = b4;
+                seed = b2;
+            }
+            else
+            {
+                throw new NotSupportedException("Unknown version");
+            }
+
+            return new I3DShapesHeader
+            {
+                Seed = seed,
+                Version = version
+            };
+        }
+
         private static void ParseFile()
         {
             using (FileStream fs = File.OpenRead(InPath))
@@ -20,13 +53,12 @@ namespace I3DShapesTool
 
                 Console.WriteLine("File Size: " + ByteSize.FromBytes(new FileInfo(fs.Name).Length));
 
-                byte seed = (byte)fs.ReadInt16L();
-                Console.WriteLine("File Seed: " + seed);
+                I3DShapesHeader header = ParseFileHeader(fs);
+                
+                Console.WriteLine("File Seed: " + header.Seed);
+                Console.WriteLine("File Version: " + header.Version);
 
-                short version = fs.ReadInt16L();
-                Console.WriteLine("File Version: " + version);
-
-                if (version != 2 && version != 3)
+                if (header.Version != 2 && header.Version != 3)
                     throw new NotSupportedException("Unsupported version");
 
                 Console.WriteLine();
@@ -39,8 +71,8 @@ namespace I3DShapesTool
                     });
                     logstream.Attach();
                 }
-
-                using (I3DDecryptorStream dfs = new I3DDecryptorStream(fs, seed))
+                
+                using (I3DDecryptorStream dfs = new I3DDecryptorStream(fs, header.Seed))
                 {
                     int itemCount = dfs.ReadInt32L();
                     Console.WriteLine("Found " + itemCount + " items");

@@ -57,6 +57,7 @@
     <Compile Include="I3DDecryptor.cs" />
     <Compile Include="I3DDecryptorStream.cs" />
     <Compile Include="I3DShape.cs" />
+    <Compile Include="I3DShapesHeader.cs" />
     <Compile Include="I3DTri.cs" />
     <Compile Include="I3DUV.cs" />
     <Compile Include="I3DVector.cs" />
