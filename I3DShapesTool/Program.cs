@@ -26,7 +26,7 @@ namespace I3DShapesTool
                 short version = fs.ReadInt16L();
                 Console.WriteLine("File Version: " + version);
 
-                if (version != 2)
+                if (version != 2 && version != 3)
                     throw new NotSupportedException("Unsupported version");
 
                 Console.WriteLine();
