@@ -4,18 +4,15 @@ using System.IO;
 using System.Linq;
 using Assimp;
 using Assimp.Unmanaged;
+using NDesk.Options;
 
 namespace I3DShapesTool
 {
     class Program
     {
-        private static void Main(string[] args)
+        private static void ParseFile()
         {
-
-            string path = args.Length > 0 ? args[0] : @"D:\SteamLibrary\steamapps\common\Farming Simulator 2013\data\vehicles\steerable\deutz\deutzTTV6190.i3d.shapes";
-            List<I3DShape> shapes = new List<I3DShape>();
-
-            using (FileStream fs = File.OpenRead(path))
+            using (FileStream fs = File.OpenRead(InPath))
             {
                 string fileName = Path.GetFileName(fs.Name) ?? "N/A";
                 Console.WriteLine("Loading file: " + fileName);
@@ -30,11 +27,15 @@ namespace I3DShapesTool
                     throw new NotSupportedException("Unsupported version");
 
                 Console.WriteLine();
-                
-                LogStream logstream = new LogStream(delegate (string msg, string userData) {
-                    Console.WriteLine(msg);
-                });
-                logstream.Attach();
+
+                if (Verbosity > 0)
+                {
+                    LogStream logstream = new LogStream(delegate(string msg, string userData)
+                    {
+                        Console.WriteLine(msg);
+                    });
+                    logstream.Attach();
+                }
 
                 using (I3DDecryptorStream dfs = new I3DDecryptorStream(fs, seed))
                 {
@@ -52,7 +53,6 @@ namespace I3DShapesTool
                         byte[] data = dfs.ReadBytes(size);
 
                         I3DShape shape;
-
                         using (MemoryStream ms = new MemoryStream(data))
                         {
                             using (BigEndianBinaryReader br = new BigEndianBinaryReader(ms))
@@ -61,43 +61,132 @@ namespace I3DShapesTool
                             }
                         }
 
-                        shapes.Add(shape);
 
-                        string folder = Path.Combine(@"C:\Users\Daniel\Desktop\", fileName);
-                        Directory.CreateDirectory(folder);
+                        string folder;
+                        if (CreateDir)
+                        {
+                            folder = Path.Combine(OutPath, "extract_" + fileName);
+                            Directory.CreateDirectory(folder);
+                        }
+                        else
+                        {
+                            folder = OutPath;
+                        }
 
-                        string filename = shape.Name + ".bin";
+                        string binFileName = shape.Name + ".bin";
 
-                        File.WriteAllBytes(Path.Combine(folder, CleanFileName(filename)), data);
+                        File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), data);
 
                         Scene scene = shape.ToAssimp();
                         AssimpContext exporter = new AssimpContext();
 
-                        string outpath = Path.Combine(folder, CleanFileName(shape.Name + ".stl"));
-                        
-                        
+                        string mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".stl"));
                         
                         ExportDataBlob dataBlob = exporter.ExportToBlob(scene, "stl", PostProcessSteps.ValidateDataStructure);
-
-
+                        
                         using (FileIOSystem ioSystem = new FileIOSystem())
                         {
-                            using (IOStream iostream = ioSystem.OpenFile(outpath, FileIOMode.WriteBinary))
+                            using (IOStream iostream = ioSystem.OpenFile(mdlFileName, FileIOMode.WriteBinary))
                             {
                                 iostream.Write(dataBlob.Data, dataBlob.Data.LongLength);
                             }
-                        }                        
+                        }
                         
-                       // using (FileStream fsOut = File.Create(path: outpath)) {
-                       //     dataBlob.ToStream(fsOut);
-                        //}
-
                         Console.WriteLine("Finished with " + shape.Name);
                         Console.WriteLine();
                     }
                 }
             }
+        }
 
+        private static void ShowHelp(OptionSet p)
+        {
+            Console.WriteLine("Usage: I3DShapesTool");
+            Console.WriteLine("Extract model data from GIANTS engine's .i3d.shapes files.");
+            Console.WriteLine();
+            p.WriteOptionDescriptions(Console.Out);
+        }
+
+        public static int Verbosity = 0;
+        public static string InPath;
+        public static string OutPath;
+        public static bool CreateDir = false;
+
+        private static void Main(string[] args)
+        {
+            bool showHelp = false;
+
+            OptionSet p = new OptionSet
+            {
+                {
+                    "h|help", "show this message and exit", v => showHelp = v != null
+                },
+                {
+                    "v|verbose", "increase debug message verbosity", v =>
+                    {
+                        if (v != null) Verbosity++;
+                    }
+                },
+                {
+                    "file=", "the .i3d.shapes {FILE} to be extracted", v =>
+                    {
+                        InPath = v;
+                    }
+                },
+                {
+                    "d|createdir", "extract the files to a folder in the output directory instead of directly to the output directory", v => CreateDir = v != null
+                },
+                {
+                    "out:", "the {DIRECTORY} files should be extracted to\ndefaults to the directory of the input file", v =>
+                    {
+                        OutPath = v;
+                    }
+                },
+            };
+
+            List<string> extra;
+            try
+            {
+                extra = p.Parse(args);
+
+                if (InPath == null)
+                {
+                    showHelp = true;
+                }
+                else
+                {
+                    if (!File.Exists(InPath))
+                        throw new OptionException("File doesn't exist.", "--file");
+                }
+
+                if (OutPath == null)
+                {
+                    OutPath = Path.GetDirectoryName(InPath);
+                }
+                else
+                {
+                    if (!Directory.Exists(OutPath))
+                        throw new OptionException("Directory doesn't exist.", "--out");
+                }
+            }
+            catch (OptionException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Try 'I3DShapesTool --help' for more information.");
+                Console.Read();
+                return;
+            }
+
+            if (showHelp)
+            {
+                ShowHelp(p);
+                Console.Read();
+                return;
+            }
+
+            ParseFile();
+
+            Console.WriteLine("Done");
             Console.Read();
         }
 
