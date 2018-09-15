@@ -194,7 +194,7 @@ namespace I3DShapesTool
             {
                 List<string> extra = p.Parse(args);
 
-                if (extra[0] == null)
+                if (extra.Count == 0)
                 {
                     showHelp = true;
                 }
