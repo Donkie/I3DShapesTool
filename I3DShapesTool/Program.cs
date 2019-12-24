@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NDesk.Options;
 using ByteSizeLib;
 using NLog;
+using NLog.Layouts;
 
 namespace I3DShapesTool
 {
@@ -51,7 +53,21 @@ namespace I3DShapesTool
         {
             Logger.Info("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
             Logger.Info("Extract model data from GIANTS engine's .i3d.shapes files.");
-            p.WriteOptionDescriptions(Console.Out);
+
+            string optionDescriptions;
+            using (var ms = new MemoryStream())
+            {
+                using (var tw = new StreamWriter(ms, Encoding.ASCII))
+                {
+                    p.WriteOptionDescriptions(tw);
+                }
+                optionDescriptions = Encoding.ASCII.GetString(ms.ToArray());
+            }
+
+            foreach (var s in optionDescriptions.Split('\n'))
+            {
+                Logger.Info(s);
+            }
         }
 
         public static int Verbosity;
@@ -66,6 +82,7 @@ namespace I3DShapesTool
             var config = new NLog.Config.LoggingConfiguration();
 
             var logconsole = new NLog.Targets.ConsoleTarget("logConsole");
+            logconsole.Layout = new SimpleLayout("[${level:uppercase=true}] ${message}");
 
             LogLevel minLevel;
             if (Verbosity >= 2)
@@ -82,6 +99,8 @@ namespace I3DShapesTool
 
         private static void Main(string[] args)
         {
+            SetupLogging();
+
             bool showHelp = false;
 
             OptionSet p = new OptionSet
@@ -140,16 +159,17 @@ namespace I3DShapesTool
             
             if (showHelp)
             {
+                Logger.Info("This program needs to be run from a batch file or Windows command line.");
                 ShowHelp(p);
+                Logger.Info("Press enter to exit...");
                 Console.Read();
                 return;
             }
 
-            SetupLogging();
-
             ExtractFile();
 
             Logger.Info("Done");
+            Logger.Info("Press enter to exit...");
             Console.Read();
 
             LogManager.Shutdown();
