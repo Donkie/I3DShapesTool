@@ -3,7 +3,7 @@ using NLog;
 
 namespace I3DShapesTool
 {
-    class I3DShape
+    public class I3DShape
     {
         public int Type { get; }
 

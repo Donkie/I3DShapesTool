@@ -2,7 +2,7 @@
 
 namespace I3DShapesTool
 {
-    class I3DTri
+    public class I3DTri
     {
         public ushort P1Idx { get; set; }
         public ushort P2Idx { get; set; }

@@ -2,7 +2,7 @@
 
 namespace I3DShapesTool
 {
-    class I3DVector
+    public class I3DVector
     {
         public float X { get; set; }
         public float Y { get; set; }

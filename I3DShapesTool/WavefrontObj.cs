@@ -3,7 +3,7 @@ using System.Text;
 
 namespace I3DShapesTool
 {
-    class WavefrontObj
+    public class WavefrontObj
     {
         public string Name { get; set; }
 

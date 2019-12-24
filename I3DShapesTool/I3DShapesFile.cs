@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace I3DShapesTool
 {
-    class I3DShapesFile
+    public class I3DShapesFile
     {
         public string FilePath { get; private set; }
         public string FileName => Path.GetFileName(FilePath);

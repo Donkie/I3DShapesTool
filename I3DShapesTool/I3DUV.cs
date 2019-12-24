@@ -2,7 +2,7 @@
 
 namespace I3DShapesTool
 {
-    class I3DUV
+    public class I3DUV
     {
         public float U { get; }
         public float V { get; }
