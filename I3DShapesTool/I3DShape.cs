@@ -1,5 +1,4 @@
-﻿using System;
-using Assimp;
+﻿using System.IO;
 
 namespace I3DShapesTool
 {
@@ -9,7 +8,7 @@ namespace I3DShapesTool
 
         public string Name { get; }
 
-        public ushort ShapeId { get; }
+        public uint ShapeId { get; }
 
         public float Unknown2 { get; }
 
@@ -43,19 +42,21 @@ namespace I3DShapesTool
 
         public I3DUV[] UVs { get; }
 
-        public I3DShape(BigEndianBinaryReader br)
+        public I3DShape(BinaryReader br, int fileVersion)
         {
-            Unknown1 = br.ReadUInt32();
-            Name = br.BaseStream.ReadNullTerminatedString();
+            int nameLength = (int) br.ReadUInt32();
+            Name = System.Text.Encoding.ASCII.GetString(br.ReadBytes(nameLength));
+            //Name = br.ReadString();
+            //Name = br.BaseStream.ReadNullTerminatedString();
 
-            br.BaseStream.Align(2); // Align the stream to short
+            br.BaseStream.Align(4); // Align the stream to short
 
             //This is pretty ugly, but they pretty much zero-pad after the alignment
             //So we read the padding until we found the shapeid
-            do
-            {
-                ShapeId = br.ReadUInt16();
-            } while (ShapeId == 0);
+            //do
+            //{
+            //} while (ShapeId == 0);
+            ShapeId = br.ReadUInt32();
 
             Unknown2 = br.ReadSingle();
             Unknown3 = br.ReadSingle();
@@ -70,13 +71,29 @@ namespace I3DShapesTool
             Unknown9 = br.ReadUInt32();
             VertexCount2 = br.ReadUInt32();
 
+            var isZeroBased = false;
             Triangles = new I3DTri[VertexCount / 3];
             for (int i = 0; i < VertexCount / 3; i++)
             {
                 Triangles[i] = new I3DTri(br);
+
+                if (Triangles[i].P1Idx == 0 || Triangles[i].P2Idx == 0 || Triangles[i].P3Idx == 0)
+                    isZeroBased = true;
+            }
+            
+            // Convert to 1-based indices if it's detected that it is a zero-based index
+            if (isZeroBased)
+            {
+                foreach (var t in Triangles)
+                {
+                    t.P1Idx += 1;
+                    t.P2Idx += 1;
+                    t.P3Idx += 1;
+                }
             }
 
-            br.BaseStream.Align(4);
+            if(fileVersion < 4) // Could be 5 as well
+                br.BaseStream.Align(4);
 
             Positions = new I3DVector[Vertices];
             for (int i = 0; i < Vertices; i++)
@@ -90,55 +107,37 @@ namespace I3DShapesTool
                 Normals[i] = new I3DVector(br);
             }
 
+            if (fileVersion >= 4) // Could be 5 as well
+            {
+                long bytesLeft = br.BaseStream.Length - br.BaseStream.Position;
+                long unknownBytes = bytesLeft - UvCount * 2 * 4;
+                if (unknownBytes > 4)
+                {
+                    br.BaseStream.Seek(unknownBytes, SeekOrigin.Current);
+                }
+            }
+
             UVs = new I3DUV[UvCount];
             for (int i = 0; i < UvCount; i++)
             {
-                UVs[i] = new I3DUV(br);
+                UVs[i] = new I3DUV(br, fileVersion);
             }
         }
 
-        public Scene ToAssimp()
+        public WavefrontObj ToObj()
         {
-            Scene scene = new Scene();
+            var geomname = Name;
+            if (geomname.EndsWith("Shape"))
+                geomname = geomname.Substring(0, geomname.Length - 5);
 
-            Mesh mesh = new Mesh(Name + "_mesh", PrimitiveType.Triangle);
-
-            foreach (I3DTri triangle in Triangles)
+            return new WavefrontObj
             {
-                mesh.Faces.Add(new Face(new int[]{triangle.P1Idx, triangle.P2Idx, triangle.P3Idx}));
-            }
-
-            foreach (I3DVector i3DVector in Positions)
-            {
-                mesh.Vertices.Add(new Vector3D(i3DVector.X, i3DVector.Y, i3DVector.Z));
-            }
-
-            foreach (I3DVector i3DVector in Normals)
-            {
-                Vector3D normal = new Vector3D(i3DVector.X, i3DVector.Y, i3DVector.Z);
-                normal.Normalize();
-                mesh.Normals.Add(normal);
-            }
-
-            foreach (I3DUV i3Duv in UVs)
-            {
-                mesh.TextureCoordinateChannels[0].Add(new Vector3D(i3Duv.U, i3Duv.V, 0));
-            }
-
-            mesh.MaterialIndex = 0;
-
-            scene.Meshes.Add(mesh);
-
-            Material mat = new Material();
-            mat.Name = Name + "_mat";
-
-            scene.Materials.Add(mat);
-
-            Node n = new Node(Name + "_node");
-            scene.RootNode = n;
-            n.MeshIndices.Add(0);
-
-            return scene;
+                GeometryName = geomname,
+                Positions = Positions,
+                Normals = Normals,
+                UVs = UVs,
+                Triangles = Triangles
+            };
         }
     }
 }

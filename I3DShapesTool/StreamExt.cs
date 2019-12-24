@@ -45,7 +45,7 @@ namespace I3DShapesTool
 
         public static void Align(this Stream s, byte wordSize)
         {
-            int bytesToRead = (int)(s.Position % wordSize);
+            int bytesToRead = (int)(4 - s.Position % wordSize);
             s.ReadBytes(bytesToRead);
         }
 
@@ -77,39 +77,48 @@ namespace I3DShapesTool
             return s.ReadInt8() != 0;
         }
 
-        public static short ReadInt16(this Stream s)
+        public static short ReadInt16(this Stream s, Endian endian)
         {
+            if (endian == Endian.Big)
+                return ReadInt16Big(s);
+
             s.FillBuffer(0x2);
             return (short) (Buffer[0x0] | (Buffer[0x1] << 0x8));
         }
 
-        public static short ReadInt16L(this Stream s)
+        private static short ReadInt16Big(this Stream s)
         {
             s.FillBuffer(0x2);
             return (short) (Buffer[0x1] | (Buffer[0x0] << 0x8));
         }
 
-        public static int ReadInt32(this Stream s)
+        public static int ReadInt32(this Stream s, Endian endian)
         {
+            if (endian == Endian.Big)
+                return ReadInt32Big(s);
+
             s.FillBuffer(0x4);
             return Buffer[0x0] | (Buffer[0x1] << 0x8) | (Buffer[0x2] << 0x10) | (Buffer[0x3] << 0x18);
         }
 
-        public static int ReadInt32L(this Stream s)
+        public static int ReadInt32Big(this Stream s)
         {
             s.FillBuffer(0x4);
             return Buffer[0x3] | (Buffer[0x2] << 0x8) | (Buffer[0x1] << 0x10) | (Buffer[0x0] << 0x18);
         }
 
-        public static long ReadInt64(this Stream s)
+        public static long ReadInt64(this Stream s, Endian endian)
         {
+            if (endian == Endian.Big)
+                return ReadInt64Big(s);
+
             s.FillBuffer(0x8);
             ulong num = (uint) (Buffer[0x0] | (Buffer[0x1] << 0x8) | (Buffer[0x2] << 0x10) | (Buffer[0x3] << 0x18));
             ulong num2 = (uint) (Buffer[0x4] | (Buffer[0x5] << 0x8) | (Buffer[0x6] << 0x10) | (Buffer[0x7] << 0x18));
             return (long) ((num2 << 0x20) | num);
         }
 
-        public static long ReadInt64L(this Stream s)
+        public static long ReadInt64Big(this Stream s)
         {
             s.FillBuffer(0x8);
             ulong num = (uint) (Buffer[0x3] | (Buffer[0x2] << 0x8) | (Buffer[0x1] << 0x10) | (Buffer[0x0] << 0x18));
@@ -133,6 +142,8 @@ namespace I3DShapesTool
         {
             if (count < 0x0)
                 throw new ArgumentOutOfRangeException(nameof(count));
+
+            //count = I3DDecryptor.RoundUpTo(count, 4);
 
             byte[] buffer = new byte[count];
             int offset = 0x0;

@@ -615,7 +615,7 @@ namespace I3DShapesTool
             }
         }
 
-        private static int RoundUpTo(int val, int toNearest)
+        public static int RoundUpTo(int val, int toNearest)
         {
             return val % toNearest != 0 ? val + (toNearest - val % toNearest) : val;
         }
@@ -626,7 +626,7 @@ namespace I3DShapesTool
             buf.CopyTo(copy, idx);
 
             uint[] blocks = new uint[copy.Length / 4];
-            CopyTo(buf, 0, blocks);
+            CopyTo(copy, 0, blocks);
 
             DecryptBlocks(blocks);
 

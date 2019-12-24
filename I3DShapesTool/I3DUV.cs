@@ -1,14 +1,24 @@
-﻿namespace I3DShapesTool
+﻿using System.IO;
+
+namespace I3DShapesTool
 {
     class I3DUV
     {
         public float U { get; }
         public float V { get; }
 
-        public I3DUV(BigEndianBinaryReader br)
+        public I3DUV(BinaryReader br, int fileVersion)
         {
-            U = br.ReadSingle();
-            V = br.ReadSingle();
+            if (fileVersion >= 4) // Can be 5 as well
+            {
+                V = br.ReadSingle();
+                U = br.ReadSingle();
+            }
+            else
+            {
+                U = br.ReadSingle();
+                V = br.ReadSingle();
+            }
         }
     }
 }

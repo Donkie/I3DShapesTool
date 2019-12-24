@@ -1,12 +1,14 @@
-﻿namespace I3DShapesTool
+﻿using System.IO;
+
+namespace I3DShapesTool
 {
     class I3DVector
     {
-        public float X { get; }
-        public float Y { get; }
-        public float Z { get; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
 
-        public I3DVector(BigEndianBinaryReader br)
+        public I3DVector(BinaryReader br)
         {
             X = br.ReadSingle();
             Y = br.ReadSingle();

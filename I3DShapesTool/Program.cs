@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Assimp;
-using Assimp.Unmanaged;
 using NDesk.Options;
 using ByteSizeLib;
 
@@ -13,15 +11,15 @@ namespace I3DShapesTool
     {
         private static I3DShapesHeader ParseFileHeader(Stream fs)
         {
-            byte b1 = fs.ReadInt8();
-            byte b2 = fs.ReadInt8();
-            byte b3 = fs.ReadInt8();
-            byte b4 = fs.ReadInt8();
+            byte b1 = (byte)fs.ReadByte();
+            byte b2 = (byte)fs.ReadByte();
+            byte b3 = (byte)fs.ReadByte();
+            byte b4 = (byte)fs.ReadByte();
 
             byte seed;
             short version;
 
-            if (b1 == 5)
+            if (b1 >= 4) // Might be 5 as well
             {
                 //Some testing
                 version = b1;
@@ -58,80 +56,92 @@ namespace I3DShapesTool
                 Console.WriteLine("File Seed: " + header.Seed);
                 Console.WriteLine("File Version: " + header.Version);
 
-                if (header.Version != 2 && header.Version != 3)
+                if (header.Version < 2 || header.Version > 5)
                     throw new NotSupportedException("Unsupported version");
 
-                Console.WriteLine();
+                Endian fileEndian = header.Version >= 4 ? Endian.Little : Endian.Big; // Might be version 5
 
-                if (Verbosity > 0)
-                {
-                    LogStream logstream = new LogStream(delegate(string msg, string userData)
-                    {
-                        Console.WriteLine(msg);
-                    });
-                    logstream.Attach();
-                }
+                Console.WriteLine();
                 
                 using (I3DDecryptorStream dfs = new I3DDecryptorStream(fs, header.Seed))
                 {
-                    int itemCount = dfs.ReadInt32L();
+                    string folder;
+                    if (CreateDir)
+                    {
+                        folder = Path.Combine(OutPath, "extract_" + fileName);
+                        Directory.CreateDirectory(folder);
+                    }
+                    else
+                    {
+                        folder = OutPath;
+                    }
+
+
+                    //using (MemoryStream ms = new MemoryStream())
+                    //{
+                    //    var off = 0;
+                    //    while (true)
+                    //    {
+                    //        var buf = dfs.ReadBytes(16);
+                    //        if (buf.Length != 4)
+                    //            break;
+                    //        ms.Write(buf, 0, 16);
+                    //        off += 4;
+                    //    }
+                    //    File.WriteAllBytes(Path.Combine(folder, "allShapes.bin"), ms.GetBuffer());
+                    //}
+
+
+
+                    int itemCount = dfs.ReadInt32(fileEndian);
                     Console.WriteLine("Found " + itemCount + " items");
                     Console.WriteLine();
                     for (int i = 0; i < itemCount; i++)
                     {
                         Console.Write("{0}: ", i + 1);
 
-                        int type = dfs.ReadInt32L();
-                        int size = dfs.ReadInt32L();
+                        int type = dfs.ReadInt32(fileEndian);
+                        int size = dfs.ReadInt32(fileEndian);
                         Console.Write("(Type {0}) ", type);
                         Console.Write(ByteSize.FromBytes(size));
                         byte[] data = dfs.ReadBytes(size);
-
+                        
+                        if (DumpBinary)
+                        {
+                            string binFileName = $"shape_{i}.bin";
+                            File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), data);
+                        }
+                        
                         I3DShape shape;
                         using (MemoryStream ms = new MemoryStream(data))
                         {
-                            using (BigEndianBinaryReader br = new BigEndianBinaryReader(ms))
+                            if(fileEndian == Endian.Big)
                             {
-                                shape = new I3DShape(br);
-                            }
-                        }
-
-
-                        string folder;
-                        if (CreateDir)
-                        {
-                            folder = Path.Combine(OutPath, "extract_" + fileName);
-                            Directory.CreateDirectory(folder);
-                        }
-                        else
-                        {
-                            folder = OutPath;
-                        }
-
-                        if (DumpBinary)
-                        {
-                            string binFileName = shape.Name + ".bin";
-                            File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), data);
-                        }
-
-                        if (ExportFormat != null)
-                        {
-                            Scene scene = shape.ToAssimp();
-                            AssimpContext exporter = new AssimpContext();
-
-                            string mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + "." + ExportFormat.FileExtension));
-
-                            ExportDataBlob dataBlob = exporter.ExportToBlob(scene, ExportFormat.FormatId, PostProcessSteps.ValidateDataStructure);
-
-                            using (FileIOSystem ioSystem = new FileIOSystem())
-                            {
-                                using (IOStream iostream = ioSystem.OpenFile(mdlFileName, FileIOMode.WriteBinary))
+                                using (BigEndianBinaryReader br = new BigEndianBinaryReader(ms))
                                 {
-                                    iostream.Write(dataBlob.Data, dataBlob.Data.LongLength);
+                                    shape = new I3DShape(br, header.Version);
+                                }
+                            }
+                            else
+                            {
+                                using (BinaryReader br = new BinaryReader(ms))
+                                {
+                                    shape = new I3DShape(br, header.Version);
                                 }
                             }
                         }
 
+                        string mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
+
+                        var objfile = shape.ToObj();
+                        objfile.Name = fileName.Replace(".i3d.shapes", "");
+                        var dataBlob = objfile.ExportToBlob();
+                        
+                        if(File.Exists(mdlFileName))
+                            File.Delete(mdlFileName);
+
+                        File.WriteAllBytes(mdlFileName, dataBlob);
+                        
                         Console.WriteLine(" - {0}", shape.Name);
                     }
                 }
@@ -140,7 +150,7 @@ namespace I3DShapesTool
 
         private static void ShowHelp(OptionSet p)
         {
-            Console.WriteLine("Usage: I3DShapesTool [-dhv --supportedformats --out=outPath] [-f=format | -b] inFile");
+            Console.WriteLine("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
             Console.WriteLine("Extract model data from GIANTS engine's .i3d.shapes files.");
             Console.WriteLine();
             p.WriteOptionDescriptions(Console.Out);
@@ -151,16 +161,10 @@ namespace I3DShapesTool
         public static string OutPath;
         public static bool CreateDir;
         public static bool DumpBinary;
-        public static ExportFormatDescription ExportFormat;
 
         private static void Main(string[] args)
         {
             bool showHelp = false;
-            bool showSupportedFormats = false;
-            string chosenFormat = null;
-
-            AssimpContext exporter = new AssimpContext();
-            ExportFormatDescription[] formats = exporter.GetSupportedExportFormats();
 
             OptionSet p = new OptionSet
             {
@@ -181,12 +185,6 @@ namespace I3DShapesTool
                 },
                 {
                     "b|bin", "dump the raw decrypted binary file",  v => DumpBinary = v != null
-                },
-                {
-                    "f|format=", "the output {FORMAT}, check --supportedformats",  v => chosenFormat = v
-                },
-                {
-                    "supportedformats", "prints out the supported extraction formats", v => showSupportedFormats = v != null
                 },
             };
 
@@ -214,23 +212,6 @@ namespace I3DShapesTool
                     if (!Directory.Exists(OutPath))
                         throw new OptionException("Directory doesn't exist.", "--out");
                 }
-
-                if (chosenFormat == null && !DumpBinary)
-                {
-                    showHelp = true;
-                }
-                else
-                {
-                    foreach (ExportFormatDescription exportFormatDescription in formats)
-                    {
-                        if (!string.Equals(exportFormatDescription.FormatId, chosenFormat, StringComparison.CurrentCultureIgnoreCase)) continue;
-                        ExportFormat = exportFormatDescription;
-                        break;
-                    }
-
-                    if(ExportFormat == null && !DumpBinary)
-                        throw new OptionException("Invalid output format. Check --supportedformats", "--f");
-                }
             }
             catch (OptionException e)
             {
@@ -240,15 +221,6 @@ namespace I3DShapesTool
                 return;
             }
             
-            if (showSupportedFormats)
-            {
-                Console.WriteLine("Supported Extraction Formats:");
-                foreach (ExportFormatDescription exportFormatDescription in formats)
-                {
-                    Console.WriteLine("\t-f={0} - {1} (.{2})", exportFormatDescription.FormatId, exportFormatDescription.Description, exportFormatDescription.FileExtension);
-                }
-            }
-
             if (showHelp)
             {
                 ShowHelp(p);
