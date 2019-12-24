@@ -1,61 +1,66 @@
 ﻿using System.IO;
+using NLog;
 
 namespace I3DShapesTool
 {
     class I3DShape
     {
-        public uint Unknown1 { get; }
+        public int Type { get; }
 
-        public string Name { get; }
+        public int Size { get; }
 
-        public uint ShapeId { get; }
+        public byte[] RawBytes { get; }
 
-        public float Unknown2 { get; }
+        public string Name { get; private set; }
 
-        public float Unknown3 { get; }
+        public uint ShapeId { get; private set; }
 
-        public float Unknown4 { get; }
+        public float Unknown2 { get; private set; }
 
-        public float Unknown5 { get; }
+        public float Unknown3 { get; private set; }
 
-        public uint VertexCount { get; }
+        public float Unknown4 { get; private set; }
 
-        public uint Unknown6 { get; }
+        public float Unknown5 { get; private set; }
 
-        public uint Vertices { get; }
+        public uint VertexCount { get; private set; }
 
-        public uint Unknown7 { get; }
+        public uint Unknown6 { get; private set; }
 
-        public uint Unknown8 { get; }
+        public uint Vertices { get; private set; }
 
-        public uint UvCount { get; }
+        public uint Unknown7 { get; private set; }
 
-        public uint Unknown9 { get; }
+        public uint Unknown8 { get; private set; }
 
-        public uint VertexCount2 { get; }
+        public uint UvCount { get; private set; }
 
-        public I3DTri[] Triangles { get; }
+        public uint Unknown9 { get; private set; }
 
-        public I3DVector[] Positions { get; }
+        public uint VertexCount2 { get; private set; }
 
-        public I3DVector[] Normals { get; }
+        public I3DTri[] Triangles { get; private set; }
 
-        public I3DUV[] UVs { get; }
+        public I3DVector[] Positions { get; private set; }
 
-        public I3DShape(BinaryReader br, int fileVersion)
+        public I3DVector[] Normals { get; private set; }
+
+        public I3DUV[] UVs { get; private set; }
+
+        public I3DShape(int type, int size, byte[] rawBytes)
         {
-            int nameLength = (int) br.ReadUInt32();
+            Type = type;
+            Size = size;
+            RawBytes = rawBytes;
+        }
+
+        public void Load(BinaryReader br, int fileVersion)
+        {
+            var nameLength = (int) br.ReadUInt32();
             Name = System.Text.Encoding.ASCII.GetString(br.ReadBytes(nameLength));
-            //Name = br.ReadString();
-            //Name = br.BaseStream.ReadNullTerminatedString();
-
+            
             br.BaseStream.Align(4); // Align the stream to short
-
-            //This is pretty ugly, but they pretty much zero-pad after the alignment
-            //So we read the padding until we found the shapeid
-            //do
-            //{
-            //} while (ShapeId == 0);
+            
             ShapeId = br.ReadUInt32();
 
             Unknown2 = br.ReadSingle();
@@ -84,6 +89,7 @@ namespace I3DShapesTool
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if (isZeroBased)
             {
+                Program.Logger.Debug("Shape has zero-based face indices");
                 foreach (var t in Triangles)
                 {
                     t.P1Idx += 1;

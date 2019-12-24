@@ -4,155 +4,53 @@ using System.IO;
 using System.Linq;
 using NDesk.Options;
 using ByteSizeLib;
+using NLog;
 
 namespace I3DShapesTool
 {
     class Program
     {
-        private static I3DShapesHeader ParseFileHeader(Stream fs)
+        private static void ExtractFile()
         {
-            byte b1 = (byte)fs.ReadByte();
-            byte b2 = (byte)fs.ReadByte();
-            byte b3 = (byte)fs.ReadByte();
-            byte b4 = (byte)fs.ReadByte();
+            var file = new I3DShapesFile();
+            file.Load(InPath);
 
-            byte seed;
-            short version;
-
-            if (b1 >= 4) // Might be 5 as well
+            string folder;
+            if (CreateDir)
             {
-                //Some testing
-                version = b1;
-                seed = b3;
-            }
-            else if (b4 == 2 || b4 == 3)
-            {
-                version = b4;
-                seed = b2;
+                folder = Path.Combine(OutPath, "extract_" + file.FileName);
+                Directory.CreateDirectory(folder);
             }
             else
             {
-                throw new NotSupportedException("Unknown version");
+                folder = OutPath;
             }
 
-            return new I3DShapesHeader
+            foreach (var shape in file.Shapes)
             {
-                Seed = seed,
-                Version = version
-            };
-        }
-
-        private static void ParseFile()
-        {
-            using (FileStream fs = File.OpenRead(InPath))
-            {
-                string fileName = Path.GetFileName(fs.Name) ?? "N/A";
-                Console.WriteLine("Loading file: " + fileName);
-
-                Console.WriteLine("File Size: " + ByteSize.FromBytes(new FileInfo(fs.Name).Length));
-
-                I3DShapesHeader header = ParseFileHeader(fs);
-                
-                Console.WriteLine("File Seed: " + header.Seed);
-                Console.WriteLine("File Version: " + header.Version);
-
-                if (header.Version < 2 || header.Version > 5)
-                    throw new NotSupportedException("Unsupported version");
-
-                Endian fileEndian = header.Version >= 4 ? Endian.Little : Endian.Big; // Might be version 5
-
-                Console.WriteLine();
-                
-                using (I3DDecryptorStream dfs = new I3DDecryptorStream(fs, header.Seed))
+                if (DumpBinary)
                 {
-                    string folder;
-                    if (CreateDir)
-                    {
-                        folder = Path.Combine(OutPath, "extract_" + fileName);
-                        Directory.CreateDirectory(folder);
-                    }
-                    else
-                    {
-                        folder = OutPath;
-                    }
-
-
-                    //using (MemoryStream ms = new MemoryStream())
-                    //{
-                    //    var off = 0;
-                    //    while (true)
-                    //    {
-                    //        var buf = dfs.ReadBytes(16);
-                    //        if (buf.Length != 4)
-                    //            break;
-                    //        ms.Write(buf, 0, 16);
-                    //        off += 4;
-                    //    }
-                    //    File.WriteAllBytes(Path.Combine(folder, "allShapes.bin"), ms.GetBuffer());
-                    //}
-
-
-
-                    int itemCount = dfs.ReadInt32(fileEndian);
-                    Console.WriteLine("Found " + itemCount + " items");
-                    Console.WriteLine();
-                    for (int i = 0; i < itemCount; i++)
-                    {
-                        Console.Write("{0}: ", i + 1);
-
-                        int type = dfs.ReadInt32(fileEndian);
-                        int size = dfs.ReadInt32(fileEndian);
-                        Console.Write("(Type {0}) ", type);
-                        Console.Write(ByteSize.FromBytes(size));
-                        byte[] data = dfs.ReadBytes(size);
-                        
-                        if (DumpBinary)
-                        {
-                            string binFileName = $"shape_{i}.bin";
-                            File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), data);
-                        }
-                        
-                        I3DShape shape;
-                        using (MemoryStream ms = new MemoryStream(data))
-                        {
-                            if(fileEndian == Endian.Big)
-                            {
-                                using (BigEndianBinaryReader br = new BigEndianBinaryReader(ms))
-                                {
-                                    shape = new I3DShape(br, header.Version);
-                                }
-                            }
-                            else
-                            {
-                                using (BinaryReader br = new BinaryReader(ms))
-                                {
-                                    shape = new I3DShape(br, header.Version);
-                                }
-                            }
-                        }
-
-                        string mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
-
-                        var objfile = shape.ToObj();
-                        objfile.Name = fileName.Replace(".i3d.shapes", "");
-                        var dataBlob = objfile.ExportToBlob();
-                        
-                        if(File.Exists(mdlFileName))
-                            File.Delete(mdlFileName);
-
-                        File.WriteAllBytes(mdlFileName, dataBlob);
-                        
-                        Console.WriteLine(" - {0}", shape.Name);
-                    }
+                    var binFileName = $"shape_{shape.Name}.bin";
+                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawBytes);
                 }
+
+                var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
+
+                var objfile = shape.ToObj();
+                objfile.Name = file.FileName.Replace(".i3d.shapes", "");
+                var dataBlob = objfile.ExportToBlob();
+
+                if (File.Exists(mdlFileName))
+                    File.Delete(mdlFileName);
+
+                File.WriteAllBytes(mdlFileName, dataBlob);
             }
         }
 
         private static void ShowHelp(OptionSet p)
         {
-            Console.WriteLine("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
-            Console.WriteLine("Extract model data from GIANTS engine's .i3d.shapes files.");
-            Console.WriteLine();
+            Logger.Info("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
+            Logger.Info("Extract model data from GIANTS engine's .i3d.shapes files.");
             p.WriteOptionDescriptions(Console.Out);
         }
 
@@ -161,6 +59,26 @@ namespace I3DShapesTool
         public static string OutPath;
         public static bool CreateDir;
         public static bool DumpBinary;
+        public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        private static void SetupLogging()
+        {
+            var config = new NLog.Config.LoggingConfiguration();
+
+            var logconsole = new NLog.Targets.ConsoleTarget("logConsole");
+
+            LogLevel minLevel;
+            if (Verbosity >= 2)
+                minLevel = LogLevel.Trace;
+            else if (Verbosity == 1)
+                minLevel = LogLevel.Debug;
+            else
+                minLevel = LogLevel.Info;
+
+            config.AddRule(minLevel, LogLevel.Fatal, logconsole);
+
+            NLog.LogManager.Configuration = config;
+        }
 
         private static void Main(string[] args)
         {
@@ -215,9 +133,8 @@ namespace I3DShapesTool
             }
             catch (OptionException e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine("Try 'I3DShapesTool --help' for more information.");
-                Console.Read();
+                Logger.Info(e.Message);
+                Logger.Info("Try 'I3DShapesTool --help' for more information.");
                 return;
             }
             
@@ -228,10 +145,14 @@ namespace I3DShapesTool
                 return;
             }
 
-            ParseFile();
+            SetupLogging();
 
-            Console.WriteLine("Done");
+            ExtractFile();
+
+            Logger.Info("Done");
             Console.Read();
+
+            LogManager.Shutdown();
         }
 
         /// <summary>
