@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using I3DShapesTool;
 
@@ -18,7 +19,7 @@ namespace I3DShapesToolTest
         {
             Assert.AreEqual(seed, file.Seed, "Unexpected seed");
             Assert.AreEqual(version, file.Version, "Unexpected version");
-            Assert.AreEqual(shapeCount, file.ShapeCount, "Unexpected shape count");
+            Assert.AreEqual(shapeCount, file.PartsCount, "Unexpected shape count");
         }
 
         private static void AssertShape(I3DShape shape, string name, uint shapeId, int vertexCount, int faceCount)

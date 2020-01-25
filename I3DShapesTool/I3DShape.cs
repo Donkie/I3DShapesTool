@@ -3,20 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool
 {
-    public class I3DShape
+    public class I3DShape : I3DPart
     {
         private readonly ILogger _logger;
 
-        public int Type { get; }
-
-        public int Size { get; }
-
-        public byte[] RawBytes { get; }
-
-        public string Name { get; private set; }
-
-        public uint ShapeId { get; private set; }
-        
         public float BoundingVolumeX { get; private set; }
 
         public float BoundingVolumeY { get; private set; }
@@ -49,22 +39,23 @@ namespace I3DShapesTool
 
         public I3DUV[] UVs { get; private set; }
 
-        public I3DShape(int type, int size, byte[] rawBytes, ILogger logger = null)
+        public I3DShape(I3DPart part)
+            : base(part)
         {
-            Type = type;
-            Size = size;
-            RawBytes = rawBytes;
-
-            _logger = logger;
+            using (var stream = new MemoryStream(RawData))
+            using (var binaryReader = Endian == Endian.Big ? new BigEndianBinaryReader(stream) : new BinaryReader(stream))
+            {
+                Load(binaryReader);
+            }
         }
 
-        public void Load(BinaryReader br, int fileVersion)
+        public void Load(BinaryReader br)
         {
-            var nameLength = (int) br.ReadUInt32();
+            var nameLength = (int)br.ReadUInt32();
             Name = System.Text.Encoding.ASCII.GetString(br.ReadBytes(nameLength));
-            
+
             br.BaseStream.Align(4); // Align the stream to short
-            
+
             ShapeId = br.ReadUInt32();
 
             BoundingVolumeX = br.ReadSingle();
@@ -89,7 +80,7 @@ namespace I3DShapesTool
                 if (Triangles[i].P1Idx == 0 || Triangles[i].P2Idx == 0 || Triangles[i].P3Idx == 0)
                     isZeroBased = true;
             }
-            
+
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if (isZeroBased)
             {
@@ -102,7 +93,7 @@ namespace I3DShapesTool
                 }
             }
 
-            if(fileVersion < 4) // Could be 5 as well
+            if (Version < 4) // Could be 5 as well
                 br.BaseStream.Align(4);
 
             Positions = new I3DVector[Vertices];
@@ -117,7 +108,7 @@ namespace I3DShapesTool
                 Normals[i] = new I3DVector(br);
             }
 
-            if (fileVersion >= 4) // Could be 5 as well
+            if (Version >= 4) // Could be 5 as well
             {
                 var bytesLeft = br.BaseStream.Length - br.BaseStream.Position;
                 var unknownBytes = bytesLeft - UvCount * 2 * 4;
@@ -130,7 +121,7 @@ namespace I3DShapesTool
             UVs = new I3DUV[UvCount];
             for (var i = 0; i < UvCount; i++)
             {
-                UVs[i] = new I3DUV(br, fileVersion);
+                UVs[i] = new I3DUV(br, Version);
             }
         }
 

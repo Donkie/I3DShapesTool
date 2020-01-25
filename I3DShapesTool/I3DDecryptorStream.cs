@@ -6,7 +6,7 @@ namespace I3DShapesTool
     /// <summary>
     /// Created by "high" https://facepunch.com/member.php?u=60704
     /// </summary>
-    class I3DDecryptorStream : Stream
+    public class I3DDecryptorStream : Stream
     {
         private readonly I3DDecryptor _decryptor;
         private readonly Stream _input;

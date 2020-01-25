@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.ServiceModel.Channels;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool
@@ -14,33 +15,34 @@ namespace I3DShapesTool
         public int Seed { get; private set; }
         public int Version { get; private set; }
         public Endian FileEndian => Version >= 4 ? Endian.Little : Endian.Big;
-        public int ShapeCount { get; private set; }
+        public int PartsCount { get; private set; }
         public I3DShape[] Shapes { get; private set; }
+        public ICollection<I3DSpline> Splines { get; private set; }
 
         public I3DShapesFile(ILogger logger = null)
         {
             _logger = logger;
         }
 
-        private I3DShape LoadShape(I3DDecryptorStream dfs)
+        private IEnumerable<I3DPart> LoadParts(I3DDecryptorStream dfs, int count)
         {
-            var type = dfs.ReadInt32(FileEndian);
-            var size = dfs.ReadInt32(FileEndian);
+            return Enumerable.Range(0, count)
+                .Select(index => I3DPart.Read(dfs, FileEndian, Version));
+        }
 
-            var data = dfs.ReadBytes(size);
-
-            var shape = new I3DShape(type, size, data);
-
-            using (var ms = new MemoryStream(data))
+        private static I3DPart Convert(I3DPart part)
+        {
+            switch (part.Type)
             {
-                var br = FileEndian == Endian.Big ? new BigEndianBinaryReader(ms) : new BinaryReader(ms);
-                shape.Load(br, Version);
-                br.Dispose();
+                case I3DPartType.Unknown:
+                    return part;
+                case I3DPartType.Shape:
+                    return new I3DShape(part);
+                case I3DPartType.Spline:
+                    return new I3DSpline(part);
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-
-            _logger?.LogInformation($"Shape {shape.ShapeId} ({shape.Name}, Type {shape.Type})");
-
-            return shape;
         }
 
         public void Load(string path)
@@ -63,15 +65,37 @@ namespace I3DShapesTool
 
                 using (var dfs = new I3DDecryptorStream(fs, header.Seed))
                 {
-                    ShapeCount = dfs.ReadInt32(FileEndian);
-                    Shapes = new I3DShape[ShapeCount];
+                    PartsCount = dfs.ReadInt32(FileEndian);
 
-                    _logger?.LogInformation($"Found {ShapeCount} shapes");
+                    _logger?.LogInformation($"Found {PartsCount} parts");
 
-                    for (var i = 0; i < ShapeCount; i++)
-                    {
-                        Shapes[i] = LoadShape(dfs);
-                    }
+                    var loadParts = LoadParts(dfs, PartsCount)
+                        .ToArray();
+
+                    // Convert to typed parts
+                    loadParts = loadParts
+                        .Select((v, i) =>
+                        {
+                            try
+                            {
+                                return Convert(v);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex);
+                                _logger?.LogCritical("Cant load parts {index}", i);
+                            }
+
+                            return null;
+                        })
+                        .Where(v => v != null)
+                        .ToArray();
+                    Shapes = loadParts
+                        .OfType<I3DShape>()
+                        .ToArray();
+                    Splines = loadParts
+                        .OfType<I3DSpline>()
+                        .ToArray();
                 }
             }
         }

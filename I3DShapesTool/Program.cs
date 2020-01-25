@@ -57,7 +57,7 @@ namespace I3DShapesTool
 
         private static void ExtractFile(CommandLineOptions commandLineOptions)
         {
-            var file = new I3DShapesFile();
+            var file = new I3DShapesFile(Logger);
             file.Load(commandLineOptions.InputFile);
 
             string folder;
@@ -76,7 +76,7 @@ namespace I3DShapesTool
                 if (commandLineOptions.DumpBinary)
                 {
                     var binFileName = $"shape_{shape.Name}.bin";
-                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawBytes);
+                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawData);
                 }
 
                 var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
@@ -97,7 +97,7 @@ namespace I3DShapesTool
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        private static string CleanFileName(string fileName)
+        public static string CleanFileName(string fileName)
         {
             return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
