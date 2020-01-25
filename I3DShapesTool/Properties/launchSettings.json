@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "I3DShapesTool": {
+      "commandName": "Project",
+      "commandLineArgs": "\"D:\\SteamLibrary\\steamapps\\common\\Farming Simulator 19\\data\\maps\\mapUS.i3d.shapes\""
+    }
+  }
+}

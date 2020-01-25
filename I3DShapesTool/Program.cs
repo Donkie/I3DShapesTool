@@ -2,14 +2,19 @@
 using System.IO;
 using System.Linq;
 using I3DShapesTool.Configuration;
+using Microsoft.Extensions.Logging;
 using NLog;
+using NLog.Extensions.Logging;
 using NLog.Layouts;
+using LogLevel = NLog.LogLevel;
 
 namespace I3DShapesTool
 {
     class Program
     {
-        public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static NLogLoggerProvider LogProvider = new NLogLoggerProvider();
+
+        public static readonly Microsoft.Extensions.Logging.ILogger Logger = LogProvider.CreateLogger("all");
 
         private static void Main(string[] args)
         {
@@ -17,10 +22,14 @@ namespace I3DShapesTool
 
             var commandLineOptions = CommandLineOptions.Parse(args, Logger);
 
-            ExtractFile(commandLineOptions);
+            if (commandLineOptions == null)
+            {
+                return;
+            }
 
-            Logger.Info("Done");
-            Logger.Info("Press enter to exit...");
+            ExtractFile(commandLineOptions);
+            Logger.LogInformation("Done");
+            Logger.LogInformation("Press enter to exit...");
             Console.Read();
 
             LogManager.Shutdown();

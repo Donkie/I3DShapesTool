@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using NDesk.Options;
-using NLog;
 
 namespace I3DShapesTool.Configuration
 {
@@ -20,9 +20,9 @@ namespace I3DShapesTool.Configuration
         {
             var commandLineOptions = new CommandLineOptions();
 
-            bool showHelp = false;
+            var showHelp = false;
 
-            OptionSet p = new OptionSet
+            var p = new OptionSet
             {
                 {
                     "h|help",
@@ -57,7 +57,7 @@ namespace I3DShapesTool.Configuration
 
             try
             {
-                List<string> extra = p.Parse(args);
+                var extra = p.Parse(args);
 
                 if (extra.Count == 0)
                 {
@@ -86,16 +86,16 @@ namespace I3DShapesTool.Configuration
             }
             catch (OptionException e)
             {
-                logger.Info(e.Message);
-                logger.Info("Try 'I3DShapesTool --help' for more information.");
+                logger.LogInformation(e.Message);
+                logger.LogInformation("Try 'I3DShapesTool --help' for more information.");
                 return null;
             }
 
             if (showHelp)
             {
-                logger.Info("This program needs to be run from a batch file or Windows command line.");
+                logger.LogInformation("This program needs to be run from a batch file or Windows command line.");
                 ShowHelp(p, logger);
-                logger.Info("Press enter to exit...");
+                logger.LogInformation("Press enter to exit...");
                 Console.Read();
                 return null;
             }
@@ -107,8 +107,8 @@ namespace I3DShapesTool.Configuration
 
         private static void ShowHelp(OptionSet p, ILogger logger)
         {
-            logger.Info("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
-            logger.Info("Extract model data from GIANTS engine's .i3d.shapes files.");
+            logger.LogInformation("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
+            logger.LogInformation("Extract model data from GIANTS engine's .i3d.shapes files.");
 
             string optionDescriptions;
             using (var ms = new MemoryStream())
@@ -122,7 +122,7 @@ namespace I3DShapesTool.Configuration
 
             foreach (var s in optionDescriptions.Split('\n'))
             {
-                logger.Info(s);
+                logger.LogInformation(s);
             }
         }
     }

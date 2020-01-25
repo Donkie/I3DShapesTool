@@ -1,10 +1,12 @@
 ﻿using System.IO;
-using NLog;
+using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool
 {
     public class I3DShape
     {
+        private readonly ILogger _logger;
+
         public int Type { get; }
 
         public int Size { get; }
@@ -47,11 +49,13 @@ namespace I3DShapesTool
 
         public I3DUV[] UVs { get; private set; }
 
-        public I3DShape(int type, int size, byte[] rawBytes)
+        public I3DShape(int type, int size, byte[] rawBytes, ILogger logger = null)
         {
             Type = type;
             Size = size;
             RawBytes = rawBytes;
+
+            _logger = logger;
         }
 
         public void Load(BinaryReader br, int fileVersion)
@@ -78,7 +82,7 @@ namespace I3DShapesTool
 
             var isZeroBased = false;
             Triangles = new I3DTri[VertexCount / 3];
-            for (int i = 0; i < VertexCount / 3; i++)
+            for (var i = 0; i < VertexCount / 3; i++)
             {
                 Triangles[i] = new I3DTri(br);
 
@@ -89,7 +93,7 @@ namespace I3DShapesTool
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if (isZeroBased)
             {
-                Program.Logger.Debug("Shape has zero-based face indices");
+                _logger?.LogDebug("Shape has zero-based face indices");
                 foreach (var t in Triangles)
                 {
                     t.P1Idx += 1;
@@ -102,21 +106,21 @@ namespace I3DShapesTool
                 br.BaseStream.Align(4);
 
             Positions = new I3DVector[Vertices];
-            for (int i = 0; i < Vertices; i++)
+            for (var i = 0; i < Vertices; i++)
             {
                 Positions[i] = new I3DVector(br);
             }
 
             Normals = new I3DVector[Vertices];
-            for (int i = 0; i < Vertices; i++)
+            for (var i = 0; i < Vertices; i++)
             {
                 Normals[i] = new I3DVector(br);
             }
 
             if (fileVersion >= 4) // Could be 5 as well
             {
-                long bytesLeft = br.BaseStream.Length - br.BaseStream.Position;
-                long unknownBytes = bytesLeft - UvCount * 2 * 4;
+                var bytesLeft = br.BaseStream.Length - br.BaseStream.Position;
+                var unknownBytes = bytesLeft - UvCount * 2 * 4;
                 if (unknownBytes > 4)
                 {
                     br.BaseStream.Seek(unknownBytes, SeekOrigin.Current);
@@ -124,7 +128,7 @@ namespace I3DShapesTool
             }
 
             UVs = new I3DUV[UvCount];
-            for (int i = 0; i < UvCount; i++)
+            for (var i = 0; i < UvCount; i++)
             {
                 UVs[i] = new I3DUV(br, fileVersion);
             }

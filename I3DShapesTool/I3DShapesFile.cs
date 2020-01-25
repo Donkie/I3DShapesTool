@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool
 {
     public class I3DShapesFile
     {
+        private readonly ILogger _logger;
+
         public string FilePath { get; private set; }
         public string FileName => Path.GetFileName(FilePath);
         public int Seed { get; private set; }
@@ -16,7 +15,12 @@ namespace I3DShapesTool
         public Endian FileEndian => Version >= 4 ? Endian.Little : Endian.Big;
         public int ShapeCount { get; private set; }
         public I3DShape[] Shapes { get; private set; }
-        
+
+        public I3DShapesFile(ILogger logger = null)
+        {
+            _logger = logger;
+        }
+
         private I3DShape LoadShape(I3DDecryptorStream dfs)
         {
             var type = dfs.ReadInt32(FileEndian);
@@ -33,7 +37,7 @@ namespace I3DShapesTool
                 br.Dispose();
             }
 
-            Program.Logger.Info($"Shape {shape.ShapeId} ({shape.Name}, Type {shape.Type})");
+            _logger?.LogInformation($"Shape {shape.ShapeId} ({shape.Name}, Type {shape.Type})");
 
             return shape;
         }
@@ -42,7 +46,7 @@ namespace I3DShapesTool
         {
             FilePath = path;
 
-            Program.Logger.Info($"Loading file: {FileName}");
+            _logger?.LogInformation($"Loading file: {FileName}");
 
             using (var fs = File.OpenRead(path))
             {
@@ -50,8 +54,8 @@ namespace I3DShapesTool
                 Seed = header.Seed;
                 Version = header.Version;
 
-                Program.Logger.Debug($"File seed: {Seed}");
-                Program.Logger.Debug($"File version: {Version}");
+                _logger?.LogDebug($"File seed: {Seed}");
+                _logger?.LogDebug($"File version: {Version}");
 
                 if (header.Version < 2 || header.Version > 5)
                     throw new NotSupportedException("Unsupported version");
@@ -61,7 +65,7 @@ namespace I3DShapesTool
                     ShapeCount = dfs.ReadInt32(FileEndian);
                     Shapes = new I3DShape[ShapeCount];
 
-                    Program.Logger.Info($"Found {ShapeCount} shapes");
+                    _logger?.LogInformation($"Found {ShapeCount} shapes");
 
                     for (var i = 0; i < ShapeCount; i++)
                     {
