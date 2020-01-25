@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.ServiceModel.Channels;
 using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool
@@ -29,7 +30,7 @@ namespace I3DShapesTool
             var data = dfs.ReadBytes(size);
 
             var shape = new I3DShape(type, size, data);
-            
+
             using (var ms = new MemoryStream(data))
             {
                 var br = FileEndian == Endian.Big ? new BigEndianBinaryReader(ms) : new BinaryReader(ms);
@@ -50,7 +51,7 @@ namespace I3DShapesTool
 
             using (var fs = File.OpenRead(path))
             {
-                var header = ParseFileHeader(fs);
+                var header = new I3DShapesHeader(fs);
                 Seed = header.Seed;
                 Version = header.Version;
 
@@ -73,38 +74,6 @@ namespace I3DShapesTool
                     }
                 }
             }
-        }
-
-        private static I3DShapesHeader ParseFileHeader(Stream fs)
-        {
-            var b1 = (byte)fs.ReadByte();
-            var b2 = (byte)fs.ReadByte();
-            var b3 = (byte)fs.ReadByte();
-            var b4 = (byte)fs.ReadByte();
-
-            byte seed;
-            short version;
-
-            if (b1 >= 4) // Might be 5 as well
-            {
-                version = b1;
-                seed = b3;
-            }
-            else if (b4 == 2 || b4 == 3)
-            {
-                version = b4;
-                seed = b2;
-            }
-            else
-            {
-                throw new NotSupportedException("Unknown version");
-            }
-
-            return new I3DShapesHeader
-            {
-                Seed = seed,
-                Version = version
-            };
         }
     }
 }

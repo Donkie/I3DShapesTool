@@ -21,8 +21,4 @@
     <PackageReference Include="NDesk.Options" Version="0.2.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tools\" />
-  </ItemGroup>
-
 </Project>
