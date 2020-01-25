@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using NDesk.Options;
-using ByteSizeLib;
+using I3DShapesTool.Configuration;
 using NLog;
 using NLog.Layouts;
 
@@ -12,25 +9,62 @@ namespace I3DShapesTool
 {
     class Program
     {
-        private static void ExtractFile()
+        public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        private static void Main(string[] args)
+        {
+            SetupLogging();
+
+            var commandLineOptions = CommandLineOptions.Parse(args, Logger);
+
+            ExtractFile(commandLineOptions);
+
+            Logger.Info("Done");
+            Logger.Info("Press enter to exit...");
+            Console.Read();
+
+            LogManager.Shutdown();
+        }
+
+        private static void SetupLogging(int verbosity = 0)
+        {
+            var config = new NLog.Config.LoggingConfiguration();
+
+            var logconsole = new NLog.Targets.ConsoleTarget("logConsole");
+            logconsole.Layout = new SimpleLayout("[${level:uppercase=true}] ${message}");
+
+            LogLevel minLevel;
+            if (verbosity >= 2)
+                minLevel = LogLevel.Trace;
+            else if (verbosity == 1)
+                minLevel = LogLevel.Debug;
+            else
+                minLevel = LogLevel.Info;
+
+            config.AddRule(minLevel, LogLevel.Fatal, logconsole);
+
+            LogManager.Configuration = config;
+        }
+
+        private static void ExtractFile(CommandLineOptions commandLineOptions)
         {
             var file = new I3DShapesFile();
-            file.Load(InPath);
+            file.Load(commandLineOptions.InputFile);
 
             string folder;
-            if (CreateDir)
+            if (commandLineOptions.CreateDir)
             {
-                folder = Path.Combine(OutPath, "extract_" + file.FileName);
+                folder = Path.Combine(commandLineOptions.OutPath, "extract_" + file.FileName);
                 Directory.CreateDirectory(folder);
             }
             else
             {
-                folder = OutPath;
+                folder = commandLineOptions.OutPath;
             }
 
             foreach (var shape in file.Shapes)
             {
-                if (DumpBinary)
+                if (commandLineOptions.DumpBinary)
                 {
                     var binFileName = $"shape_{shape.Name}.bin";
                     File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawBytes);
@@ -47,132 +81,6 @@ namespace I3DShapesTool
 
                 File.WriteAllBytes(mdlFileName, dataBlob);
             }
-        }
-
-        private static void ShowHelp(OptionSet p)
-        {
-            Logger.Info("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
-            Logger.Info("Extract model data from GIANTS engine's .i3d.shapes files.");
-
-            string optionDescriptions;
-            using (var ms = new MemoryStream())
-            {
-                using (var tw = new StreamWriter(ms, Encoding.ASCII))
-                {
-                    p.WriteOptionDescriptions(tw);
-                }
-                optionDescriptions = Encoding.ASCII.GetString(ms.ToArray());
-            }
-
-            foreach (var s in optionDescriptions.Split('\n'))
-            {
-                Logger.Info(s);
-            }
-        }
-
-        public static int Verbosity;
-        public static string InPath;
-        public static string OutPath;
-        public static bool CreateDir;
-        public static bool DumpBinary;
-        public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        private static void SetupLogging()
-        {
-            var config = new NLog.Config.LoggingConfiguration();
-
-            var logconsole = new NLog.Targets.ConsoleTarget("logConsole");
-            logconsole.Layout = new SimpleLayout("[${level:uppercase=true}] ${message}");
-
-            LogLevel minLevel;
-            if (Verbosity >= 2)
-                minLevel = LogLevel.Trace;
-            else if (Verbosity == 1)
-                minLevel = LogLevel.Debug;
-            else
-                minLevel = LogLevel.Info;
-
-            config.AddRule(minLevel, LogLevel.Fatal, logconsole);
-
-            NLog.LogManager.Configuration = config;
-        }
-
-        private static void Main(string[] args)
-        {
-            SetupLogging();
-
-            bool showHelp = false;
-
-            OptionSet p = new OptionSet
-            {
-                {
-                    "h|help", "show this message and exit", v => showHelp = v != null
-                },
-                {
-                    "v|verbose", "increase debug message verbosity", v =>
-                    {
-                        if (v != null) Verbosity++;
-                    }
-                },
-                {
-                    "d|createdir", "extract the files to a folder in the output directory instead of directly to the output directory", v => CreateDir = v != null
-                },
-                {
-                    "out:", "the {DIRECTORY} files should be extracted to\ndefaults to the directory of the input file", v => OutPath = v
-                },
-                {
-                    "b|bin", "dump the raw decrypted binary file",  v => DumpBinary = v != null
-                },
-            };
-
-            try
-            {
-                List<string> extra = p.Parse(args);
-
-                if (extra.Count == 0)
-                {
-                    showHelp = true;
-                }
-                else
-                {
-                    InPath = extra[0];
-                    if (!File.Exists(InPath))
-                        throw new OptionException("File doesn't exist.", "--file");
-                }
-
-                if (OutPath == null)
-                {
-                    OutPath = Path.GetDirectoryName(InPath);
-                }
-                else
-                {
-                    if (!Directory.Exists(OutPath))
-                        throw new OptionException("Directory doesn't exist.", "--out");
-                }
-            }
-            catch (OptionException e)
-            {
-                Logger.Info(e.Message);
-                Logger.Info("Try 'I3DShapesTool --help' for more information.");
-                return;
-            }
-            
-            if (showHelp)
-            {
-                Logger.Info("This program needs to be run from a batch file or Windows command line.");
-                ShowHelp(p);
-                Logger.Info("Press enter to exit...");
-                Console.Read();
-                return;
-            }
-
-            ExtractFile();
-
-            Logger.Info("Done");
-            Logger.Info("Press enter to exit...");
-            Console.Read();
-
-            LogManager.Shutdown();
         }
 
         /// <summary>
