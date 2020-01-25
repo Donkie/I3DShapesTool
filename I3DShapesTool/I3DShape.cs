@@ -14,14 +14,14 @@ namespace I3DShapesTool
         public string Name { get; private set; }
 
         public uint ShapeId { get; private set; }
+        
+        public float BoundingVolumeX { get; private set; }
 
-        public float Unknown2 { get; private set; }
+        public float BoundingVolumeY { get; private set; }
 
-        public float Unknown3 { get; private set; }
+        public float BoundingVolumeZ { get; private set; }
 
-        public float Unknown4 { get; private set; }
-
-        public float Unknown5 { get; private set; }
+        public float BoundingVolumeR { get; private set; }
 
         public uint VertexCount { get; private set; }
 
@@ -63,10 +63,10 @@ namespace I3DShapesTool
             
             ShapeId = br.ReadUInt32();
 
-            Unknown2 = br.ReadSingle();
-            Unknown3 = br.ReadSingle();
-            Unknown4 = br.ReadSingle();
-            Unknown5 = br.ReadSingle();
+            BoundingVolumeX = br.ReadSingle();
+            BoundingVolumeY = br.ReadSingle();
+            BoundingVolumeZ = br.ReadSingle();
+            BoundingVolumeR = br.ReadSingle();
             VertexCount = br.ReadUInt32();
             Unknown6 = br.ReadUInt32();
             Vertices = br.ReadUInt32();
