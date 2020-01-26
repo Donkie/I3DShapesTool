@@ -119,7 +119,7 @@ namespace I3DShapesTool
             catch (ArgumentValidationException e)
             {
                 Logger.Error(e.Message);
-                throw;
+                Console.Read();
             }
             finally
             {
