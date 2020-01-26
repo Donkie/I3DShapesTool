@@ -143,8 +143,6 @@ namespace I3DShapesTool
             ExtractFile();
 
             Logger.Info("Done");
-            Logger.Info("Press enter to exit...");
-            Console.Read();
         }
 
         private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
