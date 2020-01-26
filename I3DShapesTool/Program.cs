@@ -156,6 +156,8 @@ namespace I3DShapesTool
             {
                 Logger.Info(s);
             }
+
+            Console.Read();
         }
 
         /// <summary>
