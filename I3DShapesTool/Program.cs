@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NDesk.Options;
-using ByteSizeLib;
 using NLog;
 using NLog.Layouts;
 

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 
 namespace I3DShapesToolTest
@@ -79,8 +75,6 @@ namespace I3DShapesToolTest
                 if (Directory.Exists(Path.Combine(steamGameDir, gameFolderName)))
                     return Path.Combine(steamGameDir, gameFolderName);
             }
-
-            Assert.Inconclusive($"{gameFolderName} not found installed.");
 
             return null;
         }
