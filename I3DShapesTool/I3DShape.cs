@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using NLog;
 
 namespace I3DShapesTool
 {

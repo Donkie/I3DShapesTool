@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using NDesk.Options;
+using CommandLine;
+using CommandLine.Text;
 using NLog;
 using NLog.Layouts;
 
@@ -11,25 +11,56 @@ namespace I3DShapesTool
 {
     class Program
     {
+        public class Options
+        {
+            [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
+            public bool Verbose { get; set; }
+
+            [Option('q', "quiet", Required = false, HelpText = "Suppress normal messages.")]
+            public bool Quiet { get; set; }
+
+            [Option('d', "createdir", Required = false, HelpText = "Extract the files to a folder in the output directory instead of directly to the output directory.")]
+            public bool CreateDir { get; set; }
+
+            [Option('b', "binary", Required = false, HelpText = "Dump the raw binary files as well as the model files.")]
+            public bool DumpBinary { get; set; }
+
+            [Option("out", Required = false, HelpText = "The directory files should be extracted to, defaults to the directory of the input file.")]
+            public string Out { get; set; }
+
+            [Value(0, MetaName = "input file", Required = true, HelpText = "The .i3d.shapes file to be processed")]
+            public string File { get; set; }
+
+            [Usage(ApplicationAlias = "I3DShapesTool")]
+            // ReSharper disable once UnusedMember.Global
+            public static IEnumerable<Example> Examples =>
+                new List<Example>
+                {
+                    new Example("Basic usage (drag-drop a .i3d.shapes onto this application)", new Options { File = "k105.i3d.shapes" }),
+                    new Example("Show more messages", new Options { File = "k105.i3d.shapes", Verbose = true }),
+                    new Example("Specific output folder", new Options { File = "k105.i3d.shapes", Out = @"C:\Users\Me\Desktop\I3D Extract"})
+                };
+        }
+
         private static void ExtractFile()
         {
             var file = new I3DShapesFile();
-            file.Load(InPath);
+            file.Load(Opts.File);
 
             string folder;
-            if (CreateDir)
+            if (Opts.CreateDir)
             {
-                folder = Path.Combine(OutPath, "extract_" + file.FileName);
+                folder = Path.Combine(Opts.Out, "extract_" + file.FileName);
                 Directory.CreateDirectory(folder);
             }
             else
             {
-                folder = OutPath;
+                folder = Opts.Out;
             }
 
             foreach (var shape in file.Shapes)
             {
-                if (DumpBinary)
+                if (Opts.DumpBinary)
                 {
                     var binFileName = $"shape_{shape.Name}.bin";
                     File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawBytes);
@@ -48,130 +79,85 @@ namespace I3DShapesTool
             }
         }
 
-        private static void ShowHelp(OptionSet p)
-        {
-            Logger.Info("Usage: I3DShapesTool [-dhv --out=outPath] [-b] inFile");
-            Logger.Info("Extract model data from GIANTS engine's .i3d.shapes files.");
-
-            string optionDescriptions;
-            using (var ms = new MemoryStream())
-            {
-                using (var tw = new StreamWriter(ms, Encoding.ASCII))
-                {
-                    p.WriteOptionDescriptions(tw);
-                }
-                optionDescriptions = Encoding.ASCII.GetString(ms.ToArray());
-            }
-
-            foreach (var s in optionDescriptions.Split('\n'))
-            {
-                Logger.Info(s);
-            }
-        }
-
-        public static int Verbosity;
-        public static string InPath;
-        public static string OutPath;
-        public static bool CreateDir;
-        public static bool DumpBinary;
         public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        public static Options Opts;
 
         private static void SetupLogging()
         {
             var config = new NLog.Config.LoggingConfiguration();
 
-            var logconsole = new NLog.Targets.ConsoleTarget("logConsole");
-            logconsole.Layout = new SimpleLayout("[${level:uppercase=true}] ${message}");
+            var logconsole = new NLog.Targets.ConsoleTarget("logConsole")
+            {
+                Layout = new SimpleLayout("[${level:uppercase=true}] ${message}")
+            };
 
-            LogLevel minLevel;
-            if (Verbosity >= 2)
-                minLevel = LogLevel.Trace;
-            else if (Verbosity == 1)
-                minLevel = LogLevel.Debug;
-            else
-                minLevel = LogLevel.Info;
+            var minLevel = LogLevel.Info;
+            if (Opts != null)
+            {
+                minLevel = Opts.Verbose ? LogLevel.Debug : LogLevel.Info;
+                if (Opts.Quiet)
+                    minLevel = LogLevel.Error;
+            }
 
             config.AddRule(minLevel, LogLevel.Fatal, logconsole);
 
-            NLog.LogManager.Configuration = config;
+            LogManager.Configuration = config;
         }
 
         private static void Main(string[] args)
         {
             SetupLogging();
 
-            bool showHelp = false;
-
-            OptionSet p = new OptionSet
-            {
-                {
-                    "h|help", "show this message and exit", v => showHelp = v != null
-                },
-                {
-                    "v|verbose", "increase debug message verbosity", v =>
-                    {
-                        if (v != null) Verbosity++;
-                    }
-                },
-                {
-                    "d|createdir", "extract the files to a folder in the output directory instead of directly to the output directory", v => CreateDir = v != null
-                },
-                {
-                    "out:", "the {DIRECTORY} files should be extracted to\ndefaults to the directory of the input file", v => OutPath = v
-                },
-                {
-                    "b|bin", "dump the raw decrypted binary file",  v => DumpBinary = v != null
-                },
-            };
-
             try
             {
-                List<string> extra = p.Parse(args);
-
-                if (extra.Count == 0)
-                {
-                    showHelp = true;
-                }
-                else
-                {
-                    InPath = extra[0];
-                    if (!File.Exists(InPath))
-                        throw new OptionException("File doesn't exist.", "--file");
-                }
-
-                if (OutPath == null)
-                {
-                    OutPath = Path.GetDirectoryName(InPath);
-                }
-                else
-                {
-                    if (!Directory.Exists(OutPath))
-                        throw new OptionException("Directory doesn't exist.", "--out");
-                }
+                var result = Parser.Default.ParseArguments<Options>(args);
+                result
+                    .WithParsed(Run)
+                    .WithNotParsed(errs => DisplayHelp(result, errs));
             }
-            catch (OptionException e)
+            catch (ArgumentValidationException e)
             {
-                Logger.Info(e.Message);
-                Logger.Info("Try 'I3DShapesTool --help' for more information.");
-                return;
+                Logger.Error(e.Message);
+                throw;
             }
+            finally
+            {
+                LogManager.Shutdown();
+            }
+        }
+
+        private static void Run(Options opt)
+        {
+            Opts = opt;
+            SetupLogging(); // Set it up again now that we have verbosity information
             
-            if (showHelp)
-            {
-                Logger.Info("This program needs to be run from a batch file or Windows command line.");
-                ShowHelp(p);
-                Logger.Info("Press enter to exit...");
-                Console.Read();
-                return;
-            }
+            if (!File.Exists(opt.File))
+                throw new ArgumentValidationException($"File {opt.File} does not exist.");
+
+            if (opt.Out == null)
+                opt.Out = Path.GetDirectoryName(opt.File);
+            else if (!Directory.Exists(opt.Out))
+                throw new ArgumentValidationException($"Directory {opt.Out} does not exist.");
 
             ExtractFile();
 
             Logger.Info("Done");
             Logger.Info("Press enter to exit...");
             Console.Read();
+        }
 
-            LogManager.Shutdown();
+        private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
+        {
+            var helpText = HelpText.AutoBuild(result, h =>
+            {
+                return HelpText.DefaultParsingErrorsHandler(result, h);
+            }, e => e);
+
+            foreach (var s in helpText.ToString().Split('\n'))
+            {
+                Logger.Info(s);
+            }
         }
 
         /// <summary>
@@ -183,5 +169,10 @@ namespace I3DShapesTool
         {
             return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
+    }
+
+    class ArgumentValidationException : Exception
+    {
+        public ArgumentValidationException(string message) : base(message) { }
     }
 }
