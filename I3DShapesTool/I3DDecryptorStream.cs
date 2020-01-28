@@ -49,10 +49,10 @@ namespace I3DShapesTool
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int i = 0;
+            var i = 0;
             while (i < count)
             {
-                int read = _input.Read(buffer, offset + i, count - i);
+                var read = _input.Read(buffer, offset + i, count - i);
                 if (read < 1)
                     return read;
                 i += read;

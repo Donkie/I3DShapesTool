@@ -147,10 +147,7 @@ namespace I3DShapesTool
 
         private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
         {
-            var helpText = HelpText.AutoBuild(result, h =>
-            {
-                return HelpText.DefaultParsingErrorsHandler(result, h);
-            }, e => e);
+            var helpText = HelpText.AutoBuild(result, h => HelpText.DefaultParsingErrorsHandler(result, h), e => e);
 
             foreach (var s in helpText.ToString().Split('\n'))
             {

@@ -532,8 +532,8 @@ namespace I3DShapesTool
         public void Init(byte seed)
         {
             _key = new uint[0x10];
-            int startIdx = seed << 4;
-            for (int i = 0; i < _key.Length; i++)
+            var startIdx = seed << 4;
+            for (var i = 0; i < _key.Length; i++)
                 _key[i] = KeyConst[startIdx + i];
             //Block Counter
             _key[0x8] = 0;
@@ -588,13 +588,13 @@ namespace I3DShapesTool
             if (buf.Length % 0x10 != 0)
                 throw new Exception("Expecting 16 byte blocks");
 
-            uint[] tempKey = new uint[_key.Length];
+            var tempKey = new uint[_key.Length];
             ulong blockCounter = _key[8] | (_key[9] << 32);
-            for (int i = 0; i < buf.Length; i += 0x10)
+            for (var i = 0; i < buf.Length; i += 0x10)
             {
                 _key.CopyTo(tempKey, 0);
 
-                for (int j = 0; j < 10; j++)
+                for (var j = 0; j < 10; j++)
                 {
                     Shuffle1(tempKey, 0x0, 0xC, 0x4, 0x8);
                     Shuffle1(tempKey, 0x5, 0x1, 0x9, 0xD);
@@ -606,7 +606,7 @@ namespace I3DShapesTool
                     Shuffle2(tempKey, 0xE, 0xF, 0xC, 0xD);
                 }
 
-                for (int j = 0; j < _key.Length; j++)
+                for (var j = 0; j < _key.Length; j++)
                     buf[i + j] ^= _key[j] + tempKey[j];
 
                 blockCounter++;
@@ -622,10 +622,10 @@ namespace I3DShapesTool
 
         public void Decrypt(byte[] buf, int idx, int len)
         {
-            byte[] copy = new byte[RoundUpTo(len, 64)];
+            var copy = new byte[RoundUpTo(len, 64)];
             buf.CopyTo(copy, idx);
 
-            uint[] blocks = new uint[copy.Length / 4];
+            var blocks = new uint[copy.Length / 4];
             CopyTo(copy, 0, blocks);
 
             DecryptBlocks(blocks);

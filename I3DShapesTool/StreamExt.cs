@@ -32,7 +32,7 @@ namespace I3DShapesTool
             }
             else
             {
-                int offset = 0x0;
+                var offset = 0x0;
                 do
                 {
                     read = stream.Read(Buffer, offset, numBytes - offset);
@@ -54,7 +54,7 @@ namespace I3DShapesTool
 
         public static string ReadNullTerminatedString(this Stream stream)
         {
-            List<byte> bytes = new List<byte>();
+            var bytes = new List<byte>();
             byte b;
             do
             {
@@ -69,7 +69,7 @@ namespace I3DShapesTool
 
         public static byte ReadInt8(this Stream s)
         {
-            int read = s.ReadByte();
+            var read = s.ReadByte();
             if (read == -1)
                 throw new EndOfStreamException("End of stream");
             return (byte) read;
@@ -148,11 +148,11 @@ namespace I3DShapesTool
 
             //count = I3DDecryptor.RoundUpTo(count, 4);
 
-            byte[] buffer = new byte[count];
-            int offset = 0x0;
+            var buffer = new byte[count];
+            var offset = 0x0;
             do
             {
-                int num2 = s.Read(buffer, offset, count);
+                var num2 = s.Read(buffer, offset, count);
                 if (num2 == 0x0)
                     break;
                 offset += num2;
@@ -161,7 +161,7 @@ namespace I3DShapesTool
 
             if (offset != buffer.Length)
             {
-                byte[] dst = new byte[offset];
+                var dst = new byte[offset];
                 System.Buffer.BlockCopy(buffer, 0x0, dst, 0x0, offset);
                 buffer = dst;
             }
