@@ -9,7 +9,6 @@ namespace I3DShapesToolTest
     {
         public UnitTest()
         {
-            SteamHelper.LoadSteamGameDirectories();
         }
 
         private static void AssertShapesFile(I3DShapesFile file, int seed, int version, int shapeCount)
