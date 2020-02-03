@@ -1,20 +1,15 @@
 ﻿using System.IO;
+using I3DShapesTool.Lib.Export;
+using I3DShapesTool.Lib.Tools;
+using I3DShapesTool.Lib.Tools.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace I3DShapesTool.Lib
+namespace I3DShapesTool.Lib.Model
 {
-    public class I3DShape
+    public class I3DShape : I3DPart
     {
-        public int Type { get; }
+        private readonly ILogger _logger;
 
-        public int Size { get; }
-
-        public byte[] RawBytes { get; }
-
-        public string Name { get; private set; }
-
-        public uint ShapeId { get; private set; }
-        
         public float BoundingVolumeX { get; private set; }
 
         public float BoundingVolumeY { get; private set; }
@@ -47,49 +42,41 @@ namespace I3DShapesTool.Lib
 
         public I3DUV[] UVs { get; private set; }
 
-        public I3DShape(int type, int size, byte[] rawBytes)
+        public I3DShape(byte[] rawData, Endian endian, int version)
+            : base(ShapeType.Shape, rawData, endian, version)
         {
-            Type = type;
-            Size = size;
-            RawBytes = rawBytes;
+            Load();
         }
 
-        public void Load(BinaryReader br, int fileVersion, ILogger logger = null)
+        protected override void Load(BinaryReader reader)
         {
-            var nameLength = (int) br.ReadUInt32();
-            Name = System.Text.Encoding.ASCII.GetString(br.ReadBytes(nameLength));
-            
-            br.BaseStream.Align(4); // Align the stream to short
-            
-            ShapeId = br.ReadUInt32();
-
-            BoundingVolumeX = br.ReadSingle();
-            BoundingVolumeY = br.ReadSingle();
-            BoundingVolumeZ = br.ReadSingle();
-            BoundingVolumeR = br.ReadSingle();
-            VertexCount = br.ReadUInt32();
-            Unknown6 = br.ReadUInt32();
-            Vertices = br.ReadUInt32();
-            Unknown7 = br.ReadUInt32();
-            Unknown8 = br.ReadUInt32();
-            UvCount = br.ReadUInt32();
-            Unknown9 = br.ReadUInt32();
-            VertexCount2 = br.ReadUInt32();
+            BoundingVolumeX = reader.ReadSingle();
+            BoundingVolumeY = reader.ReadSingle();
+            BoundingVolumeZ = reader.ReadSingle();
+            BoundingVolumeR = reader.ReadSingle();
+            VertexCount = reader.ReadUInt32();
+            Unknown6 = reader.ReadUInt32();
+            Vertices = reader.ReadUInt32();
+            Unknown7 = reader.ReadUInt32();
+            Unknown8 = reader.ReadUInt32();
+            UvCount = reader.ReadUInt32();
+            Unknown9 = reader.ReadUInt32();
+            VertexCount2 = reader.ReadUInt32();
 
             var isZeroBased = false;
             Triangles = new I3DTri[VertexCount / 3];
             for (var i = 0; i < VertexCount / 3; i++)
             {
-                Triangles[i] = new I3DTri(br);
+                Triangles[i] = new I3DTri(reader);
 
                 if (Triangles[i].P1Idx == 0 || Triangles[i].P2Idx == 0 || Triangles[i].P3Idx == 0)
                     isZeroBased = true;
             }
-            
+
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if (isZeroBased)
             {
-                logger?.LogDebug("Shape has zero-based face indices");
+                _logger?.LogDebug("Shape has zero-based face indices");
                 foreach (var t in Triangles)
                 {
                     t.P1Idx += 1;
@@ -98,35 +85,35 @@ namespace I3DShapesTool.Lib
                 }
             }
 
-            if(fileVersion < 4) // Could be 5 as well
-                br.BaseStream.Align(4);
+            if (Version < 4) // Could be 5 as well
+                reader.BaseStream.Align(4);
 
             Positions = new I3DVector[Vertices];
             for (var i = 0; i < Vertices; i++)
             {
-                Positions[i] = new I3DVector(br);
+                Positions[i] = new I3DVector(reader);
             }
 
             Normals = new I3DVector[Vertices];
             for (var i = 0; i < Vertices; i++)
             {
-                Normals[i] = new I3DVector(br);
+                Normals[i] = new I3DVector(reader);
             }
 
-            if (fileVersion >= 4) // Could be 5 as well
+            if (Version >= 4) // Could be 5 as well
             {
-                var bytesLeft = br.BaseStream.Length - br.BaseStream.Position;
+                var bytesLeft = reader.BaseStream.Length - reader.BaseStream.Position;
                 var unknownBytes = bytesLeft - UvCount * 2 * 4;
                 if (unknownBytes > 4)
                 {
-                    br.BaseStream.Seek(unknownBytes, SeekOrigin.Current);
+                    reader.BaseStream.Seek(unknownBytes, SeekOrigin.Current);
                 }
             }
 
             UVs = new I3DUV[UvCount];
             for (var i = 0; i < UvCount; i++)
             {
-                UVs[i] = new I3DUV(br, fileVersion);
+                UVs[i] = new I3DUV(reader, Version);
             }
         }
 
