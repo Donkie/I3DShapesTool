@@ -1,7 +1,6 @@
-using System;
 using System.IO;
 using Xunit;
-using I3DShapesTool;
+using I3DShapesTool.Lib;
 
 namespace I3DShapesToolTest
 {
