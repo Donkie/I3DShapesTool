@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace I3DShapesTool.Lib
+namespace I3DShapesTool.Lib.Model
 {
     public class I3DTri
     {

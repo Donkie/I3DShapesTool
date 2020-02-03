@@ -5,7 +5,7 @@ using System.Linq;
 using CommandLine;
 using CommandLine.Text;
 using I3DShapesTool.Configuration;
-using I3DShapesTool.Lib;
+using I3DShapesTool.Lib.Model;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Layouts;
@@ -65,13 +65,13 @@ namespace I3DShapesTool
 
         private static void ExtractFile(CommandLineOptions options)
         {
-            var file = new I3DShapesFile();
-            file.Load(options.File, Logger);
+            var file = new ShapesFile(Logger);
+            file.Load(options.File);
 
             string folder;
             if (options.CreateDir)
             {
-                folder = Path.Combine(options.Out, "extract_" + file.FileName);
+                folder = Path.Combine(options.Out, "extract_" + Path.GetFileName(file.FilePath));
                 Directory.CreateDirectory(folder);
             }
             else
@@ -84,13 +84,13 @@ namespace I3DShapesTool
                 if (options.DumpBinary)
                 {
                     var binFileName = $"shape_{shape.Name}.bin";
-                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawBytes);
+                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawData);
                 }
 
                 var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
 
                 var objfile = shape.ToObj();
-                objfile.Name = file.FileName.Replace(".i3d.shapes", "");
+                objfile.Name = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
                 var dataBlob = objfile.ExportToBlob();
 
                 if (File.Exists(mdlFileName))

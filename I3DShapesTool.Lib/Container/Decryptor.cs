@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace I3DShapesTool.Lib
+namespace I3DShapesTool.Lib.Container
 {
     /// <summary>
     /// Created by "high" https://facepunch.com/member.php?u=60704
     /// </summary>
-    class I3DDecryptor
+    public partial class I3DDecryptor
     {
         #region KeyConstant
 

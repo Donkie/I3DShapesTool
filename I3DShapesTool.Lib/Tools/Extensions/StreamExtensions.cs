@@ -3,24 +3,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace I3DShapesTool.Lib
+namespace I3DShapesTool.Lib.Tools.Extensions
 {
     /// <summary>
     /// Created by "high" https://facepunch.com/member.php?u=60704
     /// </summary>
-    public static class StreamExt
+    public static class StreamExtension
     {
-        [ThreadStatic]
-        private static byte[] _buffer;
+        private const int MaxBufferLength = 16;
 
-        private static byte[] Buffer => _buffer ?? (_buffer = new byte[16]);
-
-        public static void FillBuffer(this Stream stream, int numBytes)
+        public static byte[] FillBuffer(this Stream stream, int numBytes)
         {
-            if (numBytes < 0x0 || numBytes > Buffer.Length)
+            if (numBytes < 0x0 || numBytes > MaxBufferLength)
                 throw new ArgumentOutOfRangeException(nameof(numBytes));
             if (numBytes < 1)
-                return;
+                return new byte[0];
+
+            var buffer = new byte[numBytes];
 
             int read;
             if (numBytes == 0x1)
@@ -28,19 +27,21 @@ namespace I3DShapesTool.Lib
                 read = stream.ReadByte();
                 if (read == -1)
                     throw new EndOfStreamException("End of stream");
-                Buffer[0x0] = (byte) read;
+                buffer[0x0] = (byte) read;
             }
             else
             {
                 var offset = 0x0;
                 do
                 {
-                    read = stream.Read(Buffer, offset, numBytes - offset);
+                    read = stream.Read(buffer, offset, numBytes - offset);
                     if (read == 0x0)
                         throw new EndOfStreamException("End of stream");
                     offset += read;
                 } while (offset < numBytes);
             }
+
+            return buffer;
         }
 
         public static void Align(this Stream s, byte wordSize)
@@ -82,38 +83,38 @@ namespace I3DShapesTool.Lib
 
         public static short ReadInt16(this Stream s, Endian endian)
         {
-            s.FillBuffer(0x2);
+            var buffer = s.FillBuffer(0x2);
 
             if (endian == Endian.Big)
-                return (short)(Buffer[0x1] | (Buffer[0x0] << 0x8));
+                return (short)(buffer[0x1] | (buffer[0x0] << 0x8));
 
-            return (short) (Buffer[0x0] | (Buffer[0x1] << 0x8));
+            return (short) (buffer[0x0] | (buffer[0x1] << 0x8));
         }
 
         public static int ReadInt32(this Stream s, Endian endian)
         {
-            s.FillBuffer(0x4);
+            var buffer = s.FillBuffer(0x4);
 
             if (endian == Endian.Big)
-                return Buffer[0x3] | (Buffer[0x2] << 0x8) | (Buffer[0x1] << 0x10) | (Buffer[0x0] << 0x18);
+                return buffer[0x3] | (buffer[0x2] << 0x8) | (buffer[0x1] << 0x10) | (buffer[0x0] << 0x18);
             
-            return Buffer[0x0] | (Buffer[0x1] << 0x8) | (Buffer[0x2] << 0x10) | (Buffer[0x3] << 0x18);
+            return buffer[0x0] | (buffer[0x1] << 0x8) | (buffer[0x2] << 0x10) | (buffer[0x3] << 0x18);
         }
 
         public static long ReadInt64(this Stream s, Endian endian)
         {
-            s.FillBuffer(0x8);
+            var buffer = s.FillBuffer(0x8);
 
             if (endian == Endian.Big)
             {
-                ulong num = (uint)(Buffer[0x3] | (Buffer[0x2] << 0x8) | (Buffer[0x1] << 0x10) | (Buffer[0x0] << 0x18));
-                ulong num2 = (uint)(Buffer[0x7] | (Buffer[0x6] << 0x8) | (Buffer[0x5] << 0x10) | (Buffer[0x4] << 0x18));
+                ulong num = (uint)(buffer[0x3] | (buffer[0x2] << 0x8) | (buffer[0x1] << 0x10) | (buffer[0x0] << 0x18));
+                ulong num2 = (uint)(buffer[0x7] | (buffer[0x6] << 0x8) | (buffer[0x5] << 0x10) | (buffer[0x4] << 0x18));
                 return (long)((num << 0x20) | num2);
             }
             else
             {
-                ulong num = (uint)(Buffer[0x0] | (Buffer[0x1] << 0x8) | (Buffer[0x2] << 0x10) | (Buffer[0x3] << 0x18));
-                ulong num2 = (uint)(Buffer[0x4] | (Buffer[0x5] << 0x8) | (Buffer[0x6] << 0x10) | (Buffer[0x7] << 0x18));
+                ulong num = (uint)(buffer[0x0] | (buffer[0x1] << 0x8) | (buffer[0x2] << 0x10) | (buffer[0x3] << 0x18));
+                ulong num2 = (uint)(buffer[0x4] | (buffer[0x5] << 0x8) | (buffer[0x6] << 0x10) | (buffer[0x7] << 0x18));
                 return (long)((num2 << 0x20) | num);
             }
 

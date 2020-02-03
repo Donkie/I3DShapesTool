@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
+using I3DShapesTool.Lib.Container;
 
-namespace I3DShapesTool.Lib
+namespace I3DShapesTool.Lib.Tools
 {
     /// <summary>
     /// Created by "high" https://facepunch.com/member.php?u=60704
