@@ -1,6 +1,7 @@
 ﻿using System.IO;
+using Microsoft.Extensions.Logging;
 
-namespace I3DShapesTool
+namespace I3DShapesTool.Lib
 {
     public class I3DShape
     {
@@ -53,7 +54,7 @@ namespace I3DShapesTool
             RawBytes = rawBytes;
         }
 
-        public void Load(BinaryReader br, int fileVersion)
+        public void Load(BinaryReader br, int fileVersion, ILogger logger = null)
         {
             var nameLength = (int) br.ReadUInt32();
             Name = System.Text.Encoding.ASCII.GetString(br.ReadBytes(nameLength));
@@ -88,7 +89,7 @@ namespace I3DShapesTool
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if (isZeroBased)
             {
-                Program.Logger.Debug("Shape has zero-based face indices");
+                logger?.LogDebug("Shape has zero-based face indices");
                 foreach (var t in Triangles)
                 {
                     t.P1Idx += 1;

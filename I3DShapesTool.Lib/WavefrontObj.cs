@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Text;
 
-namespace I3DShapesTool
+namespace I3DShapesTool.Lib
 {
     public class WavefrontObj
     {

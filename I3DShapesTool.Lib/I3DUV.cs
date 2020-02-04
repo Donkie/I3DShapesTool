@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace I3DShapesTool
+namespace I3DShapesTool.Lib
 {
     public class I3DUV
     {

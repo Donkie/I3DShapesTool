@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace I3DShapesTool
+namespace I3DShapesTool.Lib
 {
     /// <summary>
     /// Created by "high" https://facepunch.com/member.php?u=60704

@@ -1,4 +1,4 @@
-﻿namespace I3DShapesTool
+﻿namespace I3DShapesTool.Lib
 {
     struct I3DShapesHeader
     {

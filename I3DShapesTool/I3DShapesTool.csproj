@@ -9,6 +9,11 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.7.82" />
     <PackageReference Include="NLog" Version="4.6.8" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="1.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\I3DShapesTool.Lib\I3DShapesTool.Lib.csproj" />
   </ItemGroup>
 
 </Project>
