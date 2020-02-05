@@ -11,13 +11,12 @@ namespace I3DShapesTool.Lib.Container
     public class FileContainer
     {
         private readonly ILogger _logger;
-        private readonly I3DDecryptor _decryptor;
+        private readonly IDecryptor _decryptor;
 
         public FileContainer(string filePath, ILogger logger = null)
         {
             FilePath = filePath;
             _logger = logger;
-            _decryptor = new I3DDecryptor();
 
 
             if (!File.Exists(FilePath))
@@ -26,13 +25,23 @@ namespace I3DShapesTool.Lib.Container
                 throw new FileNotFoundException("File not found.", filePath);
             }
 
+            Initialize();
+
+            _decryptor = new Decryptor(Header.Seed);
+        }
+
+        private void Initialize()
+        {
             Header = ReadHeader(FilePath);
+            _logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
+            _logger?.LogDebug("File version: {version}", Header.Version);
 
             if (Header.Version < 2 || Header.Version > 5)
             {
-                logger?.LogCritical("Unsupported version: {version}", Header.Version);
+                _logger?.LogCritical("Unsupported version: {version}", Header.Version);
                 throw new NotSupportedException("Unsupported version");
             }
+
             Endian = GetEndian(Header.Version);
         }
 
@@ -74,30 +83,36 @@ namespace I3DShapesTool.Lib.Container
             return buffer;
         }
 
-        private static FileHeader ReadHeader(string fileName, ILogger logger = null)
+        /// <summary>
+        /// Read <inheritdoc cref="FileHeader"/> by file name
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        private static FileHeader ReadHeader(string fileName)
         {
             using (var stream = File.OpenRead(fileName))
             {
-                return ReadHeader(stream, logger);
+                return ReadHeader(stream);
             }
         }
 
-        private static FileHeader ReadHeader(Stream stream, ILogger logger = null)
+        /// <summary>
+        /// Read <inheritdoc cref="FileHeader"/> by <inheritdoc cref="Stream"/>
+        /// </summary>
+        /// <param name="stream"><inheritdoc cref="Stream"/></param>
+        /// <returns><inheritdoc cref="FileHeader"/></returns>
+        private static FileHeader ReadHeader(Stream stream)
         {
             var readHeader = FileHeader.Read(stream);
-            logger?.LogDebug("File seed: {fileSeed}", readHeader.Seed);
-            logger?.LogDebug("File version: {version}", readHeader.Version);
             return readHeader;
         }
 
-        private static ICollection<Entity> ReadEntities(I3DDecryptor decryptor, string fileName, ILogger logger = null)
+        private static ICollection<Entity> ReadEntities(IDecryptor decryptor, string fileName)
         {
             using (var stream = File.OpenRead(fileName))
             {
                 var header = ReadHeader(stream);
                 var endian = GetEndian(header.Version);
-
-                decryptor.Init(header.Seed);
 
                 var cryptBlockIndex = 0ul;
 

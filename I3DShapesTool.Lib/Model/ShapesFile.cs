@@ -34,37 +34,41 @@ namespace I3DShapesTool.Lib.Model
 
             _logger?.LogInformation($"Loading file: {Path.GetFileName(path)}");
 
-            var parts = _container.ReadRawData(_container.GetEntities())
-                .Select((entityRaw, index) =>
-                {
-                    try
-                    {
-                        var convert = Convert(entityRaw, _container.Endian, _container.Header.Version);
-                        entityRaw.RawData = null;
-                        entityRaw.Entity.Dispose();
-                        return convert;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                        _logger?.LogCritical(
-                            "Cant load parts {index}.",
-                            index
-                        );
-                    }
+            var entities = _container.GetEntities();
+            var parts = _container
+                        .ReadRawData(entities)
+                        .Select(
+                            (entityRaw, index) =>
+                            {
+                                try
+                                {
+                                    var convert = Convert(entityRaw, _container.Endian, _container.Header.Version);
+                                    entityRaw.RawData = null;
+                                    entityRaw.Entity.Dispose();
+                                    return convert;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex);
+                                    _logger?.LogCritical(
+                                        "Cant load parts {index}.",
+                                        index
+                                    );
+                                }
 
-                    return null;
-                })
-                .Where(part => part != null)
-                .ToArray();
+                                return null;
+                            }
+                        )
+                        .Where(part => part != null)
+                        .ToArray();
             ShapeCount = parts.Length;
 
             Shapes = parts
-                .OfType<I3DShape>()
-                .ToArray();
+                     .OfType<I3DShape>()
+                     .ToArray();
             Splines = parts
-                .OfType<Spline>()
-                .ToArray();
+                      .OfType<Spline>()
+                      .ToArray();
         }
 
         private static I3DPart Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)
@@ -104,7 +108,7 @@ namespace I3DShapesTool.Lib.Model
         public static string CleanFileName(string fileName)
         {
             return Path.GetInvalidFileNameChars()
-                .Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
+                       .Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
     }
 }

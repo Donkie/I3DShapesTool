@@ -3,6 +3,9 @@ using System.IO;
 
 namespace I3DShapesTool.Lib.Container
 {
+    /// <summary>
+    /// File header
+    /// </summary>
     public class FileHeader
     {
         public short Version { get; private set; }

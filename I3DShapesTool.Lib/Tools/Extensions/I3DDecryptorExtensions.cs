@@ -7,7 +7,7 @@ namespace I3DShapesTool.Lib.Tools.Extensions
     public static class I3DDecryptorExtensions
     {
         public static Int32 ReadInt32(
-            this I3DDecryptor decryptor,
+            this IDecryptor decryptor,
             Stream stream,
             ulong cryptBlockIndex,
             ref ulong nextCryptBlockIndex,

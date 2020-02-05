@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace I3DShapesTool.Lib.Container
 {
     /// <summary>
     /// Created by "high" https://facepunch.com/member.php?u=60704
     /// </summary>
-    public partial class I3DDecryptor
+    public partial class Decryptor
     {
         #region KeyConstant
 
@@ -527,9 +528,12 @@ namespace I3DShapesTool.Lib.Container
 
         #endregion
 
-        private uint[] _key;
+        /// <summary>
+        /// Key by seed
+        /// </summary>
+        private readonly uint[] _key;
 
-        public void Init(byte seed)
+        public Decryptor(byte seed)
         {
             _key = new uint[0x10];
             var startIdx = seed << 4;
@@ -540,15 +544,15 @@ namespace I3DShapesTool.Lib.Container
             _key[0x9] = 0;
         }
 
-        private static void CopyTo(byte[] src, int srcIdx, uint[] dest)
+        private static void CopyTo(IReadOnlyList<byte> src, int srcIdx, IList<uint> dest)
         {
-            for (int i = srcIdx, o = 0; o < dest.Length && i < src.Length; i += 4, o++)
+            for (int i = srcIdx, o = 0; o < dest.Count && i < src.Count; i += 4, o++)
                 dest[o] = (uint) ((src[i + 3] << 24) | (src[i + 2] << 16) | (src[i + 1] << 8) | src[i]);
         }
 
-        private static void CopyTo(uint[] src, int srcIdx, byte[] dest)
+        private static void CopyTo(IReadOnlyList<uint> src, int srcIdx, IList<byte> dest)
         {
-            for (int i = srcIdx, o = 0; o < dest.Length && i < src.Length; i++, o += 4)
+            for (int i = srcIdx, o = 0; o < dest.Count && i < src.Count; i++, o += 4)
             {
                 dest[o] = (byte) src[i];
                 dest[o + 1] = (byte) (src[i] >> 8);
@@ -583,55 +587,9 @@ namespace I3DShapesTool.Lib.Container
             key[idx2] ^= Ror(key[idx4] + key[idx1], 14);
         }
 
-        public void DecryptBlocks(uint[] buf)
-        {
-            if (buf.Length % 0x10 != 0)
-                throw new Exception("Expecting 16 byte blocks");
-
-            var tempKey = new uint[_key.Length];
-            ulong blockCounter = _key[8] | (_key[9] << 32);
-            for (var i = 0; i < buf.Length; i += 0x10)
-            {
-                _key.CopyTo(tempKey, 0);
-
-                for (var j = 0; j < 10; j++)
-                {
-                    Shuffle1(tempKey, 0x0, 0xC, 0x4, 0x8);
-                    Shuffle1(tempKey, 0x5, 0x1, 0x9, 0xD);
-                    Shuffle1(tempKey, 0xA, 0x6, 0xE, 0x2);
-                    Shuffle1(tempKey, 0xF, 0xB, 0x3, 0x7);
-                    Shuffle2(tempKey, 0x3, 0x0, 0x1, 0x2);
-                    Shuffle2(tempKey, 0x4, 0x5, 0x6, 0x7);
-                    Shuffle1(tempKey, 0xA, 0x9, 0xB, 0x8);
-                    Shuffle2(tempKey, 0xE, 0xF, 0xC, 0xD);
-                }
-
-                for (var j = 0; j < _key.Length; j++)
-                    buf[i + j] ^= _key[j] + tempKey[j];
-
-                blockCounter++;
-                _key[8] = (uint) (blockCounter & 0xFFFFFFFF);
-                _key[9] = (uint) (blockCounter >> 32);
-            }
-        }
-
-        public static int RoundUpTo(int val, int toNearest)
+        private static int RoundUpTo(int val, int toNearest)
         {
             return val % toNearest != 0 ? val + (toNearest - val % toNearest) : val;
-        }
-
-        public void Decrypt(byte[] buf, int idx, int len)
-        {
-            var copy = new byte[RoundUpTo(len, 64)];
-            buf.CopyTo(copy, idx);
-
-            var blocks = new uint[copy.Length / 4];
-            CopyTo(copy, 0, blocks);
-
-            DecryptBlocks(blocks);
-
-            CopyTo(blocks, 0, copy);
-            Array.Copy(copy, 0, buf, idx, len);
         }
     }
 }

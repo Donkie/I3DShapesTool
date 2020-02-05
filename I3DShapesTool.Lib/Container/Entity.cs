@@ -40,7 +40,7 @@ namespace I3DShapesTool.Lib.Container
         /// <param name="endian">File endian.</param>
         /// <param name="version">File version.</param>
         /// <returns></returns>
-        public static Entity Read(Stream stream, I3DDecryptor decryptor, ref ulong decryptIndexBlock, Endian endian)
+        public static Entity Read(Stream stream, IDecryptor decryptor, ref ulong decryptIndexBlock, Endian endian)
         {
             var cryptBlockCount = 0ul;
             var nextDecrIndex = 0ul;
@@ -48,16 +48,16 @@ namespace I3DShapesTool.Lib.Container
             var type = decryptor.ReadInt32(stream, decryptIndexBlock + cryptBlockCount, ref nextDecrIndex, endian);
 
             var blockSize = (ulong)Marshal.SizeOf(type);
-            cryptBlockCount += (blockSize + I3DDecryptor.CryptBlockSize - 1) / I3DDecryptor.CryptBlockSize;
+            cryptBlockCount += (blockSize + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize;
 
             var size = decryptor.ReadInt32(stream, decryptIndexBlock + cryptBlockCount, ref nextDecrIndex, endian);
             blockSize = (ulong)Marshal.SizeOf(size);
-            cryptBlockCount += (blockSize + I3DDecryptor.CryptBlockSize - 1) / I3DDecryptor.CryptBlockSize;
+            cryptBlockCount += (blockSize + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize;
             var startDecryptIndexBlock = decryptIndexBlock + cryptBlockCount;
 
             var offset = stream.Position;
 
-            cryptBlockCount += (ulong)((size + I3DDecryptor.CryptBlockSize - 1) / I3DDecryptor.CryptBlockSize);
+            cryptBlockCount += (ulong)((size + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize);
             stream.Seek(size, SeekOrigin.Current);
 
             decryptIndexBlock += cryptBlockCount;

@@ -2,15 +2,10 @@
 
 namespace I3DShapesTool.Lib.Container
 {
-    public partial class I3DDecryptor
+    public partial class Decryptor : IDecryptor
     {
         public const int CryptBlockSize = 64;
 
-        /// <summary>
-        /// Decrypt buffer by decrypt block index
-        /// </summary>
-        /// <param name="buf"></param>
-        /// <param name="blockIndex"></param>
         public void DecryptBlocks(uint[] buf, ulong blockIndex)
         {
             var key = GetKeyByIndexBlock(_key, blockIndex);
