@@ -1,4 +1,4 @@
-﻿namespace I3DShapesTool.Lib
+﻿namespace I3DShapesTool.Lib.Tools
 {
     public enum Endian
     {
