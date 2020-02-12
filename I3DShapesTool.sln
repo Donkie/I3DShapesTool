@@ -7,7 +7,22 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "I3DShapesToolTest", "I3DSha
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "I3DShapesTool", "I3DShapesTool\I3DShapesTool.csproj", "{EF54181D-04BB-437D-9880-910191CF0575}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "I3DShapesTool.Lib", "I3DShapesTool.Lib\I3DShapesTool.Lib.csproj", "{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "I3dShapes", "I3dShapes\I3dShapes.csproj", "{A481CE89-5E75-49F8-8048-1C14DEEC818A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{884A27B3-FAD7-47F9-957C-3C4C3B8E5BE3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReverseEngineering", "ReverseEngineering", "{8640E782-1399-4B5F-BB52-C85D860C12A8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{03983522-6499-4757-8953-6CC08797C705}"
+	ProjectSection(SolutionItems) = preProject
+		ReverseEngineering\Templates\Template.i3d.shapes.bt = ReverseEngineering\Templates\Template.i3d.shapes.bt
+		ReverseEngineering\Templates\Template.Shape.Attach.tm.bt = ReverseEngineering\Templates\Template.Shape.Attach.tm.bt
+		ReverseEngineering\Templates\Template.Type1.Shape.bt = ReverseEngineering\Templates\Template.Type1.Shape.bt
+		ReverseEngineering\Templates\Template.Type2.Spline.bt = ReverseEngineering\Templates\Template.Type2.Spline.bt
+		ReverseEngineering\Templates\Template.Type3.NavMesh.bt = ReverseEngineering\Templates\Template.Type3.NavMesh.bt
+		ReverseEngineering\Templates\Template.Type4.bt = ReverseEngineering\Templates\Template.Type4.bt
+		ReverseEngineering\Templates\Template.Type5.bt = ReverseEngineering\Templates\Template.Type5.bt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,21 +58,25 @@ Global
 		{EF54181D-04BB-437D-9880-910191CF0575}.Release|x64.Build.0 = Release|Any CPU
 		{EF54181D-04BB-437D-9880-910191CF0575}.Release|x86.ActiveCfg = Release|Any CPU
 		{EF54181D-04BB-437D-9880-910191CF0575}.Release|x86.Build.0 = Release|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Debug|x64.Build.0 = Debug|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Debug|x86.Build.0 = Debug|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Release|x64.ActiveCfg = Release|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Release|x64.Build.0 = Release|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Release|x86.ActiveCfg = Release|Any CPU
-		{EE02927A-F8C3-40BC-9DC2-F0D78E21FD0E}.Release|x86.Build.0 = Release|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Debug|x64.Build.0 = Debug|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Debug|x86.Build.0 = Debug|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Release|x64.ActiveCfg = Release|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Release|x64.Build.0 = Release|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Release|x86.ActiveCfg = Release|Any CPU
+		{A481CE89-5E75-49F8-8048-1C14DEEC818A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8640E782-1399-4B5F-BB52-C85D860C12A8} = {884A27B3-FAD7-47F9-957C-3C4C3B8E5BE3}
+		{03983522-6499-4757-8953-6CC08797C705} = {8640E782-1399-4B5F-BB52-C85D860C12A8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {02F6C15E-5476-4907-AA9D-8CD2C6C1C6F9}

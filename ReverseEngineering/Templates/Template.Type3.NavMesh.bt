@@ -1,0 +1,66 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: 
+//   Authors: Sotin Nikoaly aka VirRus77
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 02.02.2020 - Create
+//------------------------------------------------
+
+struct Point{
+  float x <bgcolor=0x20F080>;
+  float y <bgcolor=0xF08080>;
+  float z <bgcolor=0x20F0F0>;
+};
+
+struct IndexBlock {
+  short P1 <bgcolor=0x20F080>;
+  short P2 <bgcolor=0xF08080>;
+};
+
+struct CountIndexBlock {
+  uint count <bgcolor=0x20F0F0>;
+  IndexBlock Indexis[count];
+};
+
+void Align(int mod){
+  local int pos = FTell();
+  local int newPos = ((pos+3)/4)*4;
+  if(newPos - pos != 0) {
+    byte Skip[newPos - pos] <bgcolor=0x808080,fgcolor=0x0000F0>;
+  }
+  //FSeek(newPos);
+  Printf("Seed: %d -> %d\n", pos, newPos);
+}
+
+// Comment
+//BigEndian();
+
+uint nameLen;
+char Name[nameLen] <fgcolor=0xF0F000>;
+Align(4);
+
+uint ShapeId <bgcolor=0x20F080>;
+float Unknow1;
+float Unknow2;
+float Unknow3;
+float Unknow4;
+float Unknow5;
+float Unknow6;
+float Unknow7;
+float Unknow8;
+int  CountPoints <bgcolor=0x20F0F0>;
+int  CountIndexis <bgcolor=0x20F080>;
+int  Unknown11 <bgcolor=0xF08080>;
+Point Points[CountPoints];
+CountIndexBlock IndexBlocks[CountIndexis] <optimize=false>;
+//Point p[10];
+/*
+float x<bgcolor=0x20F080>;
+float x<bgcolor=0xF08080>;
+float x<bgcolor=0x20F0F0>;
+*/

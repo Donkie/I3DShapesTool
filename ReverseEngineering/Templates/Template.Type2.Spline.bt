@@ -1,0 +1,40 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: 
+//   Authors: Sotin Nikoaly aka VirRus77
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 02.02.2020 - Create
+//------------------------------------------------
+
+struct Point{
+  float x <bgcolor=0x20F080>;
+  float y <bgcolor=0xF08080>;
+  float z <bgcolor=0x20F0F0>;
+};
+
+void Align(int mod){
+  local int pos = FTell();
+  local int newPos = ((pos+3)/4)*4;
+  if(newPos - pos != 0) {
+    byte Skip[newPos - pos] <bgcolor=0x808080,fgcolor=0x0000F0>;
+  }
+  //FSeek(newPos);
+  Printf("Seed: %d -> %d\n", pos, newPos);
+}
+
+// Comment
+//BigEndian();
+
+uint nameLen;
+char Name[nameLen] <fgcolor=0xF0F000>;
+Align(4);
+
+uint ShapeId;
+byte unknowFlags[4];
+uint PointCount;
+Point Points[PointCount] <fgcolor=0x20F080>;

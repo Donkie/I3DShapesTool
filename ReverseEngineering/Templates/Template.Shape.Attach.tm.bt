@@ -1,0 +1,87 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: 
+//   Authors: Sotin Nikoaly aka VirRus77
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 02.02.2020 - Create
+//------------------------------------------------
+
+struct Point {
+  float X;
+  float Y;
+  float Z;
+};
+
+struct ShortIndex {
+  float X;
+  float Y;
+  float Z;
+};
+
+void PrintPos() {
+  Printf("Position: %d/%d %d", FTell(), FileSize(), FileSize() - FTell());
+}
+
+local uint MagicWord = 0x00036D74;
+
+uint magic <bgcolor=0x80F0F0>;
+
+if(magic != MagicWord){
+  return;
+}
+
+uint fileSize <bgcolor=0x80F080>;
+uint countPoints <bgcolor=0xF08080>;
+uint u3 <bgcolor=0x8080F0>;
+PrintPos();
+
+Point points[countPoints] <bgcolor=0x80F080>;
+
+ushort buf[u3];
+
+float unknownStruct[12];
+
+ushort b[123];
+/*
+uint buf3[5]<bgcolor=0x80F080>;
+uint c1<bgcolor=0xF08080>;
+float buf4[15]<bgcolor=0x80F080>;
+uint c2<bgcolor=0xF08080>;
+float buf5[7]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+
+float buf6[3]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf7[7]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf8[7]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf9[3]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+
+float buf10[11]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+
+float buf11[7]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf12[3]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf13[7]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf14[7]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf15[3]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+
+float buf16[5]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+float buf17[8]<bgcolor=0x80F080>;
+uint c3<bgcolor=0xF08080>;
+int xxx;
+int buf18[24]<bgcolor=0x80F080>;
+*/

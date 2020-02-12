@@ -1,78 +1,125 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using I3dShapes.Container;
+using I3dShapes.Model;
+using I3dShapes.Model.Contract;
+using I3dShapes.Tools;
+using I3DShapesToolTest.Model;
+using I3DShapesToolTest.Tools;
+using MoreLinq;
 using Xunit;
-using I3DShapesTool.Lib.Model;
 
 namespace I3DShapesToolTest
 {
     public class UnitTest
     {
-        public UnitTest()
+        /// <summary>
+        /// Read ALL shapes in game directory.
+        /// </summary>
+        [Fact]
+        public void ReadAllShapes()
         {
+            var versions = new[]
+            {
+                FarmSimulatorVersion.FarmingSimulator2013,
+                FarmSimulatorVersion.FarmingSimulator2015,
+                FarmSimulatorVersion.FarmingSimulator2017,
+                FarmSimulatorVersion.FarmingSimulator2019,
+            };
+            var hasError = false;
+            versions
+                .Select(version => (Version: version, Path: GamePaths.GetGamePath(version)))
+                .Where(v => v.Path != null)
+                .SelectMany(
+                    v =>
+                    {
+                        var shapeFiles = Directory.GetFiles(v.Path, $"*{GameConstants.SchapesFileExtension}", SearchOption.AllDirectories);
+                        return shapeFiles.Select(file => (Version: v.Version, FilePath: file));
+                    }
+                )
+                .AsParallel()
+                .WithDegreeOfParallelism(Environment.ProcessorCount)
+                .ForEach(
+                    v =>
+                    {
+                        try
+                        {
+                            var container = new FileContainer(v.FilePath);
+                            var entities = container.GetEntities();
+                            foreach (var valueTuple in container.ReadRawData(entities))
+                            {
+                                using (var stream = new MemoryStream(valueTuple.RawData))
+                                {
+                                    try
+                                    {
+                                        using (var reader = new EndianBinaryReader(stream, container.Endian, true))
+                                        {
+                                            switch (valueTuple.Entity.Type)
+                                            {
+                                                case 1:
+                                                    var shape = new Shape(reader, container.Header.Version);
+                                                    break;
+                                                case 2:
+                                                    var spline = new Spline(reader);
+                                                    break;
+                                                case 3:
+                                                    var mesh = new NavMesh(reader);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        hasError = true;
+                                        stream.Seek(0, SeekOrigin.Begin);
+                                        using (var reader = new EndianBinaryReader(stream, container.Endian))
+                                        {
+                                            SaveErrorShape(
+                                                v.Version,
+                                                v.FilePath,
+                                                new RawNamedShapeObject(valueTuple.Entity.Type, reader, container.Endian)
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            hasError = true;
+                        }
+                    }
+                );
+
+            Assert.False(hasError);
         }
 
-        private static void AssertShapesFile(ShapesFile file, int seed, int version, int shapeCount)
+        /// <summary>
+        /// Save error parse shape in directory.
+        /// </summary>
+        /// <param name="version"></param>
+        /// <param name="shapeFileName"></param>
+        /// <param name="rawShape"></param>
+        private static void SaveErrorShape(FarmSimulatorVersion version, string shapeFileName, IRawNamedShapeObject rawShape)
         {
-            Assert.Equal(seed, file.Seed);
-            Assert.Equal(version, file.Version);
-            Assert.Equal(shapeCount, file.ShapeCount);
-        }
+            var curentPath = Directory.GetCurrentDirectory();
+            var outputPath = "Output";
+            var outputDirectory = Path.Combine(
+                curentPath,
+                outputPath,
+                version.ToString(),
+                Path.GetFileName(shapeFileName)
+                    .Replace(GameConstants.SchapesFileExtension, "")
+            );
+            if (!Directory.Exists(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
 
-        private static void AssertShape(I3DShape shape, string name, uint shapeId, int vertexCount, int faceCount)
-        {
-            Assert.Equal(name, shape.Name);
-            Assert.Equal(shapeId, shape.Id);
-            Assert.Equal(vertexCount, shape.Positions.Length);
-            Assert.Equal(vertexCount, shape.Normals.Length);
-            Assert.Equal(vertexCount, shape.UVs.Length);
-            Assert.Equal(faceCount, shape.Triangles.Length);
-        }
-
-        [SkippableFact]
-        public void TestFS19()
-        {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 19");
-            Skip.If(gameFolder == null);
-
-            var file = new ShapesFile();
-            file.Load(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
-            AssertShapesFile(file, 201, 5, 9);
-            AssertShape(file.Shapes[0], "colPartBackShape1", 4, 24, 12);
-        }
-
-        [SkippableFact]
-        public void TestFS17_1()
-        {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 17");
-            Skip.If(gameFolder == null);
-
-            var file = new ShapesFile();
-            file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
-            AssertShapesFile(file, 49, 5, 12);
-            AssertShape(file.Shapes[0], "wheelLoaderLogForkShape", 1, 24, 12);
-        }
-
-        [SkippableFact]
-        public void TestFS15_1()
-        {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 15");
-            Skip.If(gameFolder == null);
-
-            var file = new ShapesFile();
-            file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\grimme\grimmeFT300.i3d.shapes"));
-            AssertShapesFile(file, 188, 3, 16);
-            AssertShape(file.Shapes[0], "grimmeFTShape300", 1, 40, 20);
-        }
-
-        [SkippableFact]
-        public void TestFS13_1()
-        {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 2013");
-            Skip.If(gameFolder == null);
-
-            var file = new ShapesFile();
-            file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
-            AssertShapesFile(file, 68, 2, 32);
-            AssertShape(file.Shapes[0], "blanketBarShape2", 26, 68, 44);
+            var fileName = $"[{rawShape.Id}]_[{rawShape.RawType}]_{FileTool.CleanFileName(rawShape.Name)}.bin";
+            File.WriteAllBytes(Path.Combine(outputDirectory, fileName), rawShape.RawData);
         }
     }
 }

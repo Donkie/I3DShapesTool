@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\I3DShapesTool.Lib\I3DShapesTool.Lib.csproj" />
+    <ProjectReference Include="..\I3dShapes\I3dShapes.csproj" />
   </ItemGroup>
 
 </Project>

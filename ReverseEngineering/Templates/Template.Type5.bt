@@ -1,0 +1,96 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: 
+//   Authors: Sotin Nikoaly aka VirRus77
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 02.02.2020 - Create
+//------------------------------------------------
+
+void Align(int mod){
+  local int pos = FTell();
+  local int newPos = ((pos+3)/4)*4;
+  if(newPos - pos != 0) {
+    byte Skip[newPos - pos] <bgcolor=0xF0F000,fgcolor=0x0000F0>;
+  }
+
+  Printf("Seed: %d -> %d\n", pos, newPos);
+}
+struct RecordHeader{
+  uint offset;
+  uint size;
+  uint offset2;
+  uint size2;
+};
+
+struct structPart{
+  byte buf[24];
+  //double b[3];
+};
+struct structBuffer (RecordHeader &record){
+  structPart buffer[record.size];
+};
+
+struct recordContent (RecordHeader record[]){
+local int i;
+for(i = 0; i < countRecord; i++) {
+  switch(i%3) {
+    case 0:
+        structBuffer buf(unkr1[i])<bgcolor=0xF080F0,optimize=false>;
+        break;
+    case 1:
+        structBuffer buf(unkr1[i])<bgcolor=0x4060F0,optimize=false>;
+        break;
+    default:
+        structBuffer buf(unkr1[i])<bgcolor=0x2080F0,optimize=false>;
+    }
+  }
+};
+
+struct unkBlock{
+  byte buf[24];
+};
+struct unkBlock2{
+  byte buf[16];
+};
+struct unkBlock3{
+  byte buf[2];
+};
+
+uint nameLen <bgcolor=0x20F020>;
+char Name[nameLen] <bgcolor=0x20F0F0,fgcolor=0xF0F000>;
+Align(4);
+uint ShapeId <bgcolor=0x20F020,fgcolor=0x000000>;
+uint fullSize2 <bgcolor=0xF080F0>;
+uint countRecord <bgcolor=0x4060F0>;
+uint fullSize <bgcolor=0x2020F0>;
+uint magicUnknown <bgcolor=0x2020F0>;
+RecordHeader unkr1[countRecord]<bgcolor=0x2080F0>;
+local int pos = FTell();
+Printf("Size: %d\n", FileSize() - pos);
+Printf("LastHeader: %d %d\n", unkr1[countRecord-1].offset + unkr1[countRecord-1].size,unkr1[countRecord-1].offset2 + unkr1[countRecord-1].size2);
+ushort unkIndexis[fullSize2]<bgcolor=0x2080F0>;
+Align(4);
+Printf("Size: %d\n", FileSize() - FTell());
+recordContent unkR(unkr1)<bgcolor=0x2080F0>;
+//unkBlock blocks[fullSize]<bgcolor=0x2080F0>;
+unkBlock2 blocks2[fullSize]<bgcolor=0x4060F0>;
+//byte unk1[7840]<bgcolor=0x20F020>;
+//byte unk2[5404]<bgcolor=0x2080F0>;
+Printf("Size: %d\n", FileSize() - FTell());
+unkBlock3 blocks3[fullSize2]<bgcolor=0x20F0F0>;
+Printf("Size: %d\n", FileSize() - FTell());
+//recordContent unkR(unkr1);
+//recordContent content(unkr1);
+
+//uint unkb2[unk3]<bgcolor=0xF080F0>;
+/*
+uint unk2  <bgcolor=0x2080F0>;
+uint unk3  <bgcolor=0x2060F0>;
+uint unk4  <bgcolor=0xF080F0>;
+*/
+//ushort Unk[PointCount] <bgcolor=0x2080F0>;

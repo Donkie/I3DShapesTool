@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using CommandLine;
 using CommandLine.Text;
+using I3dShapes.Model;
 using I3DShapesTool.Configuration;
-using I3DShapesTool.Lib.Model;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Layouts;
@@ -65,45 +65,48 @@ namespace I3DShapesTool
 
         private static void ExtractFile(CommandLineOptions options)
         {
-            var file = new ShapesFile(Logger);
-            file.Load(options.File);
+            var file = new ShapeFile(options.File, Logger);
 
             string folder;
             if (options.CreateDir)
             {
                 folder = Path.Combine(options.Out, "extract_" + Path.GetFileName(file.FilePath));
-                Directory.CreateDirectory(folder);
             }
             else
             {
                 folder = options.Out;
             }
 
-            foreach (var shape in file.Shapes)
+            if (!Directory.Exists(folder))
             {
-                if (options.DumpBinary)
-                {
-                    var binFileName = $"shape_{shape.Name}.bin";
-                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawData);
-                }
+                Directory.CreateDirectory(folder);
+            }
 
-                var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
+            foreach (var shape in file.ReadKnowTypes(ShapeType.Shape).OfType<Shape>())
+            {
+                //if (options.DumpBinary)
+                //{
+                //    var binFileName = $"shape_{shape.Name}.bin";
+                //    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawData);
+                //}
 
-                var objfile = shape.ToObj();
-                objfile.Name = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
-                var dataBlob = objfile.ExportToBlob();
+                //var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
 
-                if (File.Exists(mdlFileName))
-                    File.Delete(mdlFileName);
+                //var objfile = shape.ToObj();
+                //objfile.Name = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
+                //var dataBlob = objfile.ExportToBlob();
 
-                File.WriteAllBytes(mdlFileName, dataBlob);
+                //if (File.Exists(mdlFileName))
+                //    File.Delete(mdlFileName);
+
+                //File.WriteAllBytes(mdlFileName, dataBlob);
             }
         }
 
         private static void Run(CommandLineOptions options)
         {
             SetupLogging(options); // Set it up again now that we have verbosity information
-            
+
             if (!File.Exists(options.File))
                 throw new ArgumentValidationException($"File {options.File} does not exist.");
 
