@@ -82,17 +82,28 @@ namespace I3DShapesTool.Lib.Container
 
         public ICollection<Entity> GetEntities()
         {
-            using (var stream = File.OpenRead(FilePath)) // TODO: Don't open the file stream twice for the parsing process
+            try
             {
-                FileHeader.Read(stream);
+                using (var stream = File.OpenRead(FilePath)) // TODO: Don't open the file stream twice for the parsing process
+                {
+                    FileHeader.Read(stream);
 
-                var cryptBlockIndex = 0ul;
+                    var cryptBlockIndex = 0ul;
 
-                var countEntities = _decryptor.ReadInt32(stream, cryptBlockIndex, ref cryptBlockIndex, Endian);
+                    var countEntities = _decryptor.ReadInt32(stream, cryptBlockIndex, ref cryptBlockIndex, Endian);
+                    if(countEntities < 0 || countEntities > 1e6) // I don't think any i3d file would contain more than a million shapes..
+                        throw new DecryptFailureException();
 
-                return Enumerable.Range(0, countEntities)
-                    .Select(v => Entity.Read(stream, _decryptor, ref cryptBlockIndex, Endian))
-                    .ToArray();
+                    return Enumerable.Range(0, countEntities)
+                        .Select(v => Entity.Read(stream, _decryptor, ref cryptBlockIndex, Endian))
+                        .ToArray();
+                }
+            }
+            catch (Exception e)
+            {
+                if (e is ArgumentOutOfRangeException || e is IOException || e is OutOfMemoryException)
+                    throw new DecryptFailureException();
+                throw;
             }
         }
 
