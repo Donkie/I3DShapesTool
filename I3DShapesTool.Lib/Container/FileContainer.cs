@@ -32,7 +32,7 @@ namespace I3DShapesTool.Lib.Container
 
         private void Initialize()
         {
-            Header = ReadHeader(FilePath);
+            Header = ReadHeader();
             _logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
             _logger?.LogDebug("File version: {version}", Header.Version);
 
@@ -51,11 +51,6 @@ namespace I3DShapesTool.Lib.Container
 
         public Endian Endian { get; private set; }
 
-        public ICollection<Entity> GetEntities()
-        {
-            return ReadEntities(_decryptor, FilePath);
-        }
-
         public IEnumerable<(Entity Entity, byte[] RawData)> ReadRawData(IEnumerable<Entity> entities)
         {
             using (var stream = File.OpenRead(FilePath))
@@ -64,14 +59,6 @@ namespace I3DShapesTool.Lib.Container
                 {
                     yield return (Entity: entity, RawData: ReadRawData(stream, entity));
                 }
-            }
-        }
-
-        public byte[] ReadRawData(Entity entity)
-        {
-            using (var stream = File.OpenRead(FilePath))
-            {
-                return ReadRawData(stream, entity);
             }
         }
 
@@ -86,40 +73,25 @@ namespace I3DShapesTool.Lib.Container
         /// <summary>
         /// Read <inheritdoc cref="FileHeader"/> by file name
         /// </summary>
-        /// <param name="fileName"></param>
         /// <returns></returns>
-        private static FileHeader ReadHeader(string fileName)
+        private FileHeader ReadHeader()
         {
-            using (var stream = File.OpenRead(fileName))
-            {
-                return ReadHeader(stream);
-            }
+            using (var stream = File.OpenRead(FilePath))
+                return FileHeader.Read(stream);
         }
 
-        /// <summary>
-        /// Read <inheritdoc cref="FileHeader"/> by <inheritdoc cref="Stream"/>
-        /// </summary>
-        /// <param name="stream"><inheritdoc cref="Stream"/></param>
-        /// <returns><inheritdoc cref="FileHeader"/></returns>
-        private static FileHeader ReadHeader(Stream stream)
+        public ICollection<Entity> GetEntities()
         {
-            var readHeader = FileHeader.Read(stream);
-            return readHeader;
-        }
-
-        private static ICollection<Entity> ReadEntities(IDecryptor decryptor, string fileName)
-        {
-            using (var stream = File.OpenRead(fileName))
+            using (var stream = File.OpenRead(FilePath)) // TODO: Don't open the file stream twice for the parsing process
             {
-                var header = ReadHeader(stream);
-                var endian = GetEndian(header.Version);
+                FileHeader.Read(stream);
 
                 var cryptBlockIndex = 0ul;
 
-                var countEntities = decryptor.ReadInt32(stream, cryptBlockIndex, ref cryptBlockIndex, endian);
+                var countEntities = _decryptor.ReadInt32(stream, cryptBlockIndex, ref cryptBlockIndex, Endian);
 
                 return Enumerable.Range(0, countEntities)
-                    .Select(v => Entity.Read(stream, decryptor, ref cryptBlockIndex, endian))
+                    .Select(v => Entity.Read(stream, _decryptor, ref cryptBlockIndex, Endian))
                     .ToArray();
             }
         }
