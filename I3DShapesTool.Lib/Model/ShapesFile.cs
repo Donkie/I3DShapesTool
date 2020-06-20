@@ -30,8 +30,6 @@ namespace I3DShapesTool.Lib.Model
         public void Load(string path, byte? forceSeed = null)
         {
             FilePath = path;
-
-            _logger?.LogInformation($"Loading file: {Path.GetFileName(path)}");
             _container = new FileContainer(path, _logger, forceSeed);
 
             var entities = _container.GetEntities();

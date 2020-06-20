@@ -5,6 +5,7 @@ using System.Linq;
 using CommandLine;
 using CommandLine.Text;
 using I3DShapesTool.Configuration;
+using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Model;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -63,10 +64,74 @@ namespace I3DShapesTool
             LogManager.Configuration = config;
         }
 
-        private static void ExtractFile(CommandLineOptions options)
+        /// <summary>
+        /// Tests if the shapes loaded from this file are valid shapes
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        private static bool IsFileLoadSuccessful(ShapesFile file)
+        {
+            // All shape names should contain only valid ASCII characters, if they don't we know something has gone wrong
+            return file.Shapes.SelectMany(shape => shape.Name).All(c => c >= 0x20 && c <= 0x7E);
+        }
+
+        private static ShapesFile LoadFileBruteForce(CommandLineOptions options)
         {
             var file = new ShapesFile(Logger);
-            file.Load(options.File);
+            var success = false;
+
+            byte seed;
+            for (seed = 0; seed < 0xFF; seed++)
+            {
+                try
+                {
+                    file.Load(options.File, seed);
+                }
+                catch (DecryptFailureException)
+                {
+                    continue;
+                }
+
+                if (!IsFileLoadSuccessful(file))
+                    continue;
+
+                success = true;
+                break;
+            }
+
+            if (!success)
+            {
+                Logger.LogWarning("Failed to find any matching seed for this file.");
+                return null;
+            }
+
+            Logger.LogInformation($"Found successful seed {seed}");
+            return file;
+        }
+
+        private static ShapesFile LoadFile(CommandLineOptions options)
+        {
+            var file = new ShapesFile(Logger);
+
+            Logger.LogInformation($"Loading file: {Path.GetFileName(options.File)}");
+            try
+            {
+                file.Load(options.File);
+            }
+            catch (DecryptFailureException)
+            {
+                Logger.LogInformation("Failed decrypting file. Attempting to brute-force the seed...");
+                return LoadFileBruteForce(options);
+            }
+
+            return file;
+        }
+
+        private static void ExtractFile(CommandLineOptions options)
+        {
+            var file = LoadFile(options);
+            if (file == null)
+                return;
 
             string folder;
             if (options.CreateDir)
