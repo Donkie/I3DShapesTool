@@ -13,7 +13,7 @@ namespace I3DShapesTool.Lib.Container
         private readonly ILogger _logger;
         private readonly IDecryptor _decryptor;
 
-        public FileContainer(string filePath, ILogger logger = null)
+        public FileContainer(string filePath, ILogger logger = null, byte? forceSeed = null)
         {
             FilePath = filePath;
             _logger = logger;
@@ -26,6 +26,11 @@ namespace I3DShapesTool.Lib.Container
             }
 
             Initialize();
+
+            if (forceSeed != null)
+            {
+                Header.Seed = (byte) forceSeed;
+            }
 
             _decryptor = new Decryptor(Header.Seed);
         }
