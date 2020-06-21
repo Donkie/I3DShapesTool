@@ -85,7 +85,7 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if (Version < 4) // Could be 5 as well
+            //if (Version < 4) // Could be 5 as well
                 reader.BaseStream.Align(4);
 
             Positions = new I3DVector[Vertices];
