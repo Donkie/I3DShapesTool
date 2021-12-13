@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using I3DShapesTool.Lib.Export;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
 using Microsoft.Extensions.Logging;
@@ -280,22 +279,6 @@ namespace I3DShapesTool.Lib.Model
             writer.Write((uint)UnknownData3.Length);
             foreach (var data in UnknownData3)
                 data.Write(writer);
-        }
-
-        public WavefrontObj ToObj()
-        {
-            var geomname = Name;
-            if (geomname.EndsWith("Shape"))
-                geomname = geomname.Substring(0, geomname.Length - 5);
-
-            return new WavefrontObj
-            {
-                GeometryName = geomname,
-                Positions = Positions,
-                Normals = Normals,
-                UVs = UVSets[0],
-                Triangles = Triangles
-            };
         }
 
         public override string ToString()

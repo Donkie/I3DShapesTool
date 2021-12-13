@@ -6,6 +6,7 @@ using CommandLine;
 using CommandLine.Text;
 using I3DShapesTool.Configuration;
 using I3DShapesTool.Lib.Container;
+using I3DShapesTool.Lib.Export;
 using I3DShapesTool.Lib.Model;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -154,8 +155,8 @@ namespace I3DShapesTool
 
                 var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
 
-                var objfile = shape.ToObj();
-                objfile.Name = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
+                var objFileInternalName = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
+                var objfile = new WavefrontObj(shape, objFileInternalName);
                 var dataBlob = objfile.ExportToBlob();
 
                 if (File.Exists(mdlFileName))

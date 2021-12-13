@@ -6,23 +6,38 @@ namespace I3DShapesTool.Lib.Export
 {
     public class WavefrontObj
     {
-        public string Name { get; set; }
+        public string Name { get; }
 
-        public string GeometryName { get; set; }
+        public string GeometryName { get; }
 
-        public float Scale { get; set; }
+        public float Scale { get; }
 
-        public I3DTri[] Triangles { get; set; }
+        public I3DTri[] Triangles { get; }
 
-        public I3DVector[] Positions { get; set; }
+        public I3DVector[] Positions { get; }
 
-        public I3DVector[] Normals { get; set;  }
+        public I3DVector[]? Normals { get; }
 
-        public I3DUV[] UVs { get; set; }
+        public I3DUV[]? UVs { get; }
 
-        public WavefrontObj()
+        public WavefrontObj(I3DShape shape, string name)
         {
             Scale = 100;
+
+            var geomname = shape.Name;
+            if (geomname.EndsWith("Shape"))
+                geomname = geomname.Substring(0, geomname.Length - 5);
+
+            Name = name;
+            GeometryName = geomname;
+            Positions = shape.Positions;
+            Triangles = shape.Triangles;
+
+            if(shape.Normals != null)
+                Normals = shape.Normals;
+
+            if(shape.UVSets.Length > 0)
+                UVs = shape.UVSets[0];
         }
 
         private void WriteHeader(StringBuilder sb)
@@ -75,13 +90,19 @@ namespace I3DShapesTool.Lib.Export
             {
                 AddVertex(sb, t);
             }
-            foreach (var t in UVs)
+            if(UVs != null)
             {
-                AddUV(sb, t);
+                foreach (var t in UVs)
+                {
+                    AddUV(sb, t);
+                }
             }
-            foreach (var t in Normals)
+            if (Normals != null)
             {
-                AddNormal(sb, t);
+                foreach (var t in Normals)
+                {
+                    AddNormal(sb, t);
+                }
             }
             SetSmoothing(sb, false);
             SetGroup(sb, GeometryName);
