@@ -54,6 +54,18 @@ namespace I3DShapesToolTest
                 }
             }
         }
+
+        [SkippableFact]
+        public void TestFS22()
+        {
+            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 22");
+            Skip.If(gameFolder == null);
+
+            var file = new ShapesFile();
+            file.Load(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
+            AssertShapesFile(file, 153, 7, 24);
+            AssertShape(file.Shapes[0], "alphaShape", 20, 368, 260);
+            AssertShapeData(file);
         }
 
         [SkippableFact]

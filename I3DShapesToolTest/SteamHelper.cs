@@ -42,7 +42,9 @@ namespace I3DShapesToolTest
             {
                 using (var subKey = registryKey.OpenSubKey(subKeyName))
                 {
-                    var steamPath = subKey?.GetValue("InstallPath").ToString();
+                    var steamPath = subKey?.GetValue("InstallPath")?.ToString();
+                    if (steamPath == null)
+                        continue;
                     var configPath = $"{steamPath}/steamapps/libraryfolders.vdf";
                     const string driveRegex = @"[A-Z]:\\";
                     if (!File.Exists(configPath))
