@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using I3DShapesTool.Lib.Export;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
@@ -9,44 +10,40 @@ namespace I3DShapesTool.Lib.Model
     public class I3DShape : I3DPart
     {
         private readonly ILogger _logger;
-
         public float BoundingVolumeX { get; private set; }
-
         public float BoundingVolumeY { get; private set; }
-
         public float BoundingVolumeZ { get; private set; }
-
         public float BoundingVolumeR { get; private set; }
 
+        /// <summary>
+        /// Number of triangle corners
+        /// </summary>
+        public uint CornerCount { get; private set; }
+        public uint NumExtraStuff { get; private set; }
+        /// <summary>
+        /// Number of unique vertices
+        /// </summary>
         public uint VertexCount { get; private set; }
-
-        public uint Unknown6 { get; private set; }
-
-        public uint Vertices { get; private set; }
-
-        public uint Unknown7 { get; private set; }
-
-        public uint Unknown8 { get; private set; }
-
-        public uint UvCount { get; private set; }
-
-        public uint Unknown9 { get; private set; }
-
-        public uint VertexCount2 { get; private set; }
-
+        public I3DShapeOptions Options { get; private set; }
+        public I3DShapeExtra[] ExtraStuff { get; private set; }
         public I3DTri[] Triangles { get; private set; }
-
         public I3DVector[] Positions { get; private set; }
-
         public I3DVector[] Normals { get; private set; }
+        public I3DVector4[]? Some4DData { get; private set; }
+        public I3DUV[][] UVSets { get; private set; }
+        public I3DVector4[]? Unknown4DVect { get; private set; }
+        public byte[]? UnknownData1_1 { get; private set; }
+        public byte[]? UnknownData1_2 { get; private set; }
+        public float[]? UnknownData2 { get; private set; }
+        public I3DShapeExtra2[]? UnknownData3 { get; private set; }
 
-        public I3DUV[] UVs { get; private set; }
-
+#nullable disable
         public I3DShape(byte[] rawData, Endian endian, int version)
             : base(ShapeType.Shape, rawData, endian, version)
         {
             Load();
         }
+#nullable restore
 
         protected override void Load(BinaryReader reader)
         {
@@ -54,18 +51,22 @@ namespace I3DShapesTool.Lib.Model
             BoundingVolumeY = reader.ReadSingle();
             BoundingVolumeZ = reader.ReadSingle();
             BoundingVolumeR = reader.ReadSingle();
+            CornerCount = reader.ReadUInt32();
+            NumExtraStuff = reader.ReadUInt32();
             VertexCount = reader.ReadUInt32();
-            Unknown6 = reader.ReadUInt32();
-            Vertices = reader.ReadUInt32();
-            Unknown7 = reader.ReadUInt32();
-            Unknown8 = reader.ReadUInt32();
-            UvCount = reader.ReadUInt32();
-            Unknown9 = reader.ReadUInt32();
-            VertexCount2 = reader.ReadUInt32();
+            Options = (I3DShapeOptions)reader.ReadUInt32();
+            var extraStuff = new I3DShapeExtra[NumExtraStuff];
+            for(var i = 0; i < NumExtraStuff; i++)
+            {
+                extraStuff[i] = new I3DShapeExtra(reader, Version, Options);
+            }
+
+            //if (CornerCount > 65536) // This has a special case in the loading which is not RE yet
+            //    throw new NotImplementedException("Models with more than 65536 vertices is not supported at the moment");
 
             var isZeroBased = false;
-            Triangles = new I3DTri[VertexCount / 3];
-            for (var i = 0; i < VertexCount / 3; i++)
+            Triangles = new I3DTri[CornerCount / 3];
+            for (var i = 0; i < CornerCount / 3; i++)
             {
                 Triangles[i] = new I3DTri(reader);
 
@@ -85,36 +86,107 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
+            // TODO: figure out the exact logic for this
             //if (Version < 4) // Could be 5 as well
                 reader.BaseStream.Align(4);
 
-            Positions = new I3DVector[Vertices];
-            for (var i = 0; i < Vertices; i++)
+            Positions = new I3DVector[VertexCount];
+            for (var i = 0; i < VertexCount; i++)
             {
                 Positions[i] = new I3DVector(reader);
             }
 
-            Normals = new I3DVector[Vertices];
-            for (var i = 0; i < Vertices; i++)
+            if (Options.HasFlag(I3DShapeOptions.HasNormals))
             {
-                Normals[i] = new I3DVector(reader);
-            }
-
-            if (Version >= 4) // Could be 5 as well
-            {
-                var bytesLeft = reader.BaseStream.Length - reader.BaseStream.Position;
-                var unknownBytes = bytesLeft - UvCount * 2 * 4;
-                if (unknownBytes > 4)
+                Normals = new I3DVector[VertexCount];
+                for (var i = 0; i < VertexCount; i++)
                 {
-                    reader.BaseStream.Seek(unknownBytes, SeekOrigin.Current);
+                    Normals[i] = new I3DVector(reader);
                 }
             }
 
-            UVs = new I3DUV[UvCount];
-            for (var i = 0; i < UvCount; i++)
+            if (Version >= 4 && Options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData)) // Not sure of exact version here
             {
-                UVs[i] = new I3DUV(reader, Version);
+                Some4DData = new I3DVector4[VertexCount];
+                for (var i = 0; i < VertexCount; i++)
+                {
+                    Some4DData[i] = new I3DVector4(reader);
+                }
             }
+
+            UVSets = new I3DUV[4][];
+            for(int uvSet = 0; uvSet < 4; uvSet++)
+            {
+                if(Options.HasFlag((I3DShapeOptions)((uint)I3DShapeOptions.HasUV1 << uvSet)))
+                {
+                    var uvs = new I3DUV[VertexCount];
+                    for(var i = 0; i < VertexCount; i++)
+                    {
+                        uvs[i] = new I3DUV(reader, Version);
+                    }
+                    UVSets[uvSet] = uvs;
+                }
+            }
+
+            if (Options.HasFlag(I3DShapeOptions.HasUnknown4DVect))
+            {
+                Unknown4DVect = new I3DVector4[VertexCount];
+                for(var i = 0; i < VertexCount; i++)
+                {
+                    Unknown4DVect[i] = new I3DVector4(reader);
+                }
+            }
+
+            // I have no idea what this data is, let alone how to store it properly
+            if (Options.HasFlag(I3DShapeOptions.HasUnknownData1))
+            {
+                bool isSingleValue = Options.HasFlag(I3DShapeOptions.UnknownData1IsSingleValue);
+                int numValues = isSingleValue ? 1 : 4;
+
+                if (!isSingleValue)
+                {
+                    UnknownData1_1 = reader.ReadBytes((int)(4 * VertexCount * numValues));
+                }
+                UnknownData1_2 = reader.ReadBytes((int)(VertexCount * numValues));
+            }
+
+            if (Options.HasFlag(I3DShapeOptions.HasUnknownData2))
+            {
+                UnknownData2 = new float[VertexCount];
+                for (var i = 0; i < VertexCount; i++)
+                {
+                    UnknownData2[i] = reader.ReadSingle();
+                }
+            }
+
+            /*
+            TODO: Implement this if necessary
+            if (Version < 5 && !Options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData))
+            {
+                Some4DData = Compute4DData(Vertices, Normals, FirstNonNullUVMap);
+            }
+            */
+
+            /*
+            TODO: Implement this if necessary
+            if (Version < 6)
+            {
+                foreach(var extra in ExtraStuff)
+                {
+                    // Loop over the 4 UV floats in extra and set them based on some math done on the vertex and UV set data
+                }
+            }
+            */
+
+            uint numUnknownData3 = reader.ReadUInt32();
+            UnknownData3 = new I3DShapeExtra2[numUnknownData3];
+            for(int i = 0; i < numUnknownData3; i++)
+            {
+                UnknownData3[i] = new I3DShapeExtra2(reader);
+            }
+
+            if (reader.BaseStream.Position != reader.BaseStream.Length)
+                throw new DecodeException("Failed to read the entire shape data");
         }
 
         public WavefrontObj ToObj()
@@ -128,9 +200,14 @@ namespace I3DShapesTool.Lib.Model
                 GeometryName = geomname,
                 Positions = Positions,
                 Normals = Normals,
-                UVs = UVs,
+                UVs = UVSets[0],
                 Triangles = Triangles
             };
+        }
+
+        public override string ToString()
+        {
+            return $"I3DShape #{Id} V{Version} {Name}";
         }
     }
 }

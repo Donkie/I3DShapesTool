@@ -14,5 +14,10 @@ namespace I3DShapesTool.Lib.Model
             P2Idx = br.ReadUInt16();
             P3Idx = br.ReadUInt16();
         }
+
+        public override string ToString()
+        {
+            return $"Tri ({P1Idx}, {P2Idx}, {P3Idx})";
+        }
     }
 }

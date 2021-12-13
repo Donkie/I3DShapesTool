@@ -41,7 +41,7 @@ namespace I3DShapesTool.Lib.Container
             _logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
             _logger?.LogDebug("File version: {version}", Header.Version);
 
-            if (Header.Version < 2 || Header.Version > 5)
+            if (Header.Version < 2 || Header.Version > 7)
             {
                 _logger?.LogCritical("Unsupported version: {version}", Header.Version);
                 throw new NotSupportedException("Unsupported version");

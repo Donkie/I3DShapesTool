@@ -6,6 +6,7 @@ namespace I3DShapesTool.Lib.Model
 {
     public abstract class I3DPart
     {
+#nullable disable
         protected I3DPart(ShapeType type, byte[] rawData, Endian endian, int version)
         {
             Type = type;
@@ -13,6 +14,7 @@ namespace I3DShapesTool.Lib.Model
             Endian = endian;
             Version = version;
         }
+#nullable restore
 
         public ShapeType Type { get; protected set; }
 
@@ -50,5 +52,10 @@ namespace I3DShapesTool.Lib.Model
         }
 
         protected abstract void Load(BinaryReader reader);
+
+        public override string ToString()
+        {
+            return $"I3DPart #{Id} V{Version} {Name}";
+        }
     }
 }

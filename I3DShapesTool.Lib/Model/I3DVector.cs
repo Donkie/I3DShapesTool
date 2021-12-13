@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace I3DShapesTool.Lib.Model
 {
@@ -13,6 +14,21 @@ namespace I3DShapesTool.Lib.Model
             X = br.ReadSingle();
             Y = br.ReadSingle();
             Z = br.ReadSingle();
+        }
+
+        public double Length()
+        {
+            return Math.Sqrt(X * X + Y * Y + Z * Z);
+        }
+
+        public bool IsUnitLength()
+        {
+            return Math.Abs(Length() - 1.0) < 1e-6;
+        }
+
+        public override string ToString()
+        {
+            return $"3D ({X}, {Y}, {Z}), L={Length()}";
         }
     }
 }

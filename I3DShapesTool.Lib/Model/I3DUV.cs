@@ -20,5 +20,10 @@ namespace I3DShapesTool.Lib.Model
                 V = br.ReadSingle();
             }
         }
+
+        public override string ToString()
+        {
+            return $"UV ({U}, {V})";
+        }
     }
 }
