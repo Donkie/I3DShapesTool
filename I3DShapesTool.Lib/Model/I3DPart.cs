@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
 
@@ -37,21 +38,45 @@ namespace I3DShapesTool.Lib.Model
 
         public int Version { get; protected set; }
 
-        protected void Load()
+        private void ReadHeader(BinaryReader reader)
         {
-            using (var stream = new MemoryStream(RawData))
-            using (var reader = new EndianBinaryReader(stream, Endian))
-            {
-                var nameLength = reader.ReadInt32();
-                Name = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(nameLength));
-                reader.Align(4);
-                Id = reader.ReadUInt32();
-
-                Load(reader);
-            }
+            var nameLength = reader.ReadInt32();
+            Name = Encoding.ASCII.GetString(reader.ReadBytes(nameLength));
+            reader.Align(4);
+            Id = reader.ReadUInt32();
         }
 
-        protected abstract void Load(BinaryReader reader);
+        private void WriteHeader(BinaryWriter writer)
+        {
+            var nameBytes = Encoding.ASCII.GetBytes(Name);
+            writer.Write(nameBytes.Length);
+            writer.Write(nameBytes);
+            writer.Align(4);
+            writer.Write(Id);
+        }
+
+        protected void Read(BinaryReader reader)
+        {
+            ReadHeader(reader);
+            ReadContents(reader);
+        }
+
+        protected void ReadFromRawData()
+        {
+            using var stream = new MemoryStream(RawData);
+            using var reader = new EndianBinaryReader(stream, Endian);
+            Read(reader);
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            WriteHeader(writer);
+            WriteContents(writer);
+        }
+
+        protected abstract void ReadContents(BinaryReader reader);
+
+        protected abstract void WriteContents(BinaryWriter writer);
 
         public override string ToString()
         {

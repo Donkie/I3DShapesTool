@@ -28,5 +28,18 @@ namespace I3DShapesTool.Lib.Model
             if (Data.Length != numBytes)
                 throw new DecodeException("Tried to read past end of file");
         }
+
+        public void Write(BinaryWriter bw)
+        {
+            bw.Write(Flags);
+            if(Floats != null)
+            {
+                bw.Write(Floats[0]);
+                bw.Write(Floats[1]);
+                bw.Write(Floats[2]);
+            }
+            bw.Write(Data.Length);
+            bw.Write(Data);
+        }
     }
 }

@@ -80,9 +80,10 @@ namespace I3DShapesTool.Lib.Tools
             return BitConverter.ToInt64(data, 0);
         }
 
-        public void Swipe(byte[] data)
+        private void Swipe(byte[] data)
         {
-            if (BitConverter.IsLittleEndian && Endian == Endian.Big)
+            if ((BitConverter.IsLittleEndian && Endian == Endian.Big)
+                || (!BitConverter.IsLittleEndian && Endian == Endian.Little))
             {
                 Array.Reverse(data);
             }

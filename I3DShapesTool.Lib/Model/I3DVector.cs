@@ -16,6 +16,13 @@ namespace I3DShapesTool.Lib.Model
             Z = br.ReadSingle();
         }
 
+        public void Write(BinaryWriter bw)
+        {
+            bw.Write(X);
+            bw.Write(Y);
+            bw.Write(Z);
+        }
+
         public double Length()
         {
             return Math.Sqrt(X * X + Y * Y + Z * Z);

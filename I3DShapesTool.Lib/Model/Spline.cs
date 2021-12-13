@@ -15,10 +15,10 @@ namespace I3DShapesTool.Lib.Model
         public Spline(byte[] rawData, Endian endian, int version) 
             : base(ShapeType.Spline, rawData, endian, version)
         {
-            Load();
+            ReadFromRawData();
         }
 
-        protected override void Load(BinaryReader binaryReader)
+        protected override void ReadContents(BinaryReader binaryReader)
         {
             UnknownFlags = binaryReader.ReadBytes(4);
 
@@ -29,8 +29,16 @@ namespace I3DShapesTool.Lib.Model
 
             if (binaryReader.BaseStream.Position != binaryReader.BaseStream.Length)
             {
-                throw new Exception("Unknown format.");
+                throw new DecodeException("Failed to read to all of spline data.");
             }
+        }
+
+        protected override void WriteContents(BinaryWriter writer)
+        {
+            writer.Write(UnknownFlags);
+            writer.Write(Points.Count);
+            foreach (var point in Points)
+                point.Write(writer);
         }
     }
 }

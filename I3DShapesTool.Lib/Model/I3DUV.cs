@@ -21,6 +21,20 @@ namespace I3DShapesTool.Lib.Model
             }
         }
 
+        public void Write(BinaryWriter bw, int fileVersion)
+        {
+            if(fileVersion >= 4) // Can be 5 as well
+            {
+                bw.Write(V);
+                bw.Write(U);
+            }
+            else
+            {
+                bw.Write(U);
+                bw.Write(V);
+            }
+        }
+
         public override string ToString()
         {
             return $"UV ({U}, {V})";

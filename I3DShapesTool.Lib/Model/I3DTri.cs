@@ -15,6 +15,15 @@ namespace I3DShapesTool.Lib.Model
             P3Idx = br.ReadUInt16();
         }
 
+        public void Write(BinaryWriter bw, bool zeroBasedIndicesInRawData)
+        {
+            int offset = zeroBasedIndicesInRawData ? -1 : 0;
+
+            bw.Write((ushort)(P1Idx + offset));
+            bw.Write((ushort)(P2Idx + offset));
+            bw.Write((ushort)(P3Idx + offset));
+        }
+
         public override string ToString()
         {
             return $"Tri ({P1Idx}, {P2Idx}, {P3Idx})";

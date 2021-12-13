@@ -32,5 +32,25 @@ namespace I3DShapesTool.Lib.Model
                     FloatUV4 = br.ReadSingle();
             }
         }
+
+        public void Write(BinaryWriter bw, int version, I3DShapeOptions options)
+        {
+            bw.Write(Integer1);
+            bw.Write(Integer2);
+            bw.Write(Integer3);
+            bw.Write(Integer4);
+
+            if(version >= 6)
+            {
+                if (options.HasFlag(I3DShapeOptions.HasUV1) && FloatUV1 != null)
+                    bw.Write((float)FloatUV1);
+                if (options.HasFlag(I3DShapeOptions.HasUV2) && FloatUV2 != null)
+                    bw.Write((float)FloatUV2);
+                if (options.HasFlag(I3DShapeOptions.HasUV3) && FloatUV3 != null)
+                    bw.Write((float)FloatUV3);
+                if (options.HasFlag(I3DShapeOptions.HasUV4) && FloatUV4 != null)
+                    bw.Write((float)FloatUV4);
+            }
+        }
     }
 }

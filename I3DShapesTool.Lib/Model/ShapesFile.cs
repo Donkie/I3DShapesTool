@@ -18,9 +18,9 @@ namespace I3DShapesTool.Lib.Model
 
         public int Seed => _container.Header.Seed;
         public int Version => _container.Header.Version;
-        public int ShapeCount { get; private set; }
-        public I3DShape[] Shapes { get; private set; }
-        public ICollection<Spline> Splines { get; private set; }
+        public I3DPart[] Parts { get; private set; }
+        public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
+        public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
         public ShapesFile(ILogger logger = null)
         {
@@ -33,7 +33,7 @@ namespace I3DShapesTool.Lib.Model
             _container = new FileContainer(path, _logger, forceSeed);
 
             var entities = _container.GetEntities();
-            var parts = _container
+            Parts = _container
                         .ReadRawData(entities)
                         .Select(
                             (entityRaw, index) =>
@@ -59,14 +59,6 @@ namespace I3DShapesTool.Lib.Model
                         )
                         .Where(part => part != null)
                         .ToArray();
-            ShapeCount = parts.Length;
-
-            Shapes = parts
-                     .OfType<I3DShape>()
-                     .ToArray();
-            Splines = parts
-                      .OfType<Spline>()
-                      .ToArray();
         }
 
         private static I3DPart Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)

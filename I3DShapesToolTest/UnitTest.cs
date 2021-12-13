@@ -3,6 +3,7 @@ using Xunit;
 using I3DShapesTool.Lib.Model;
 using System.Linq;
 using System;
+using I3DShapesTool.Lib.Tools;
 
 namespace I3DShapesToolTest
 {
@@ -18,7 +19,7 @@ namespace I3DShapesToolTest
         {
             Assert.Equal(seed, file.Seed);
             Assert.Equal(version, file.Version);
-            Assert.Equal(shapeCount, file.ShapeCount);
+            Assert.Equal(shapeCount, file.Parts.Length);
         }
 
         private static void AssertShape(I3DShape shape, string name, uint shapeId, int vertexCount, int faceCount)
@@ -55,6 +56,30 @@ namespace I3DShapesToolTest
             }
         }
 
+        private static void TestRewrite(ShapesFile file)
+        {
+            foreach (var part in file.Parts)
+            {
+                var originalRaw = part.RawData;
+
+                using var ms = new MemoryStream();
+                using var bw = new EndianBinaryWriter(ms, part.Endian);
+                part.Write(bw);
+                bw.Flush();
+
+                var newRaw = ms.ToArray();
+                /*
+                //Useful for debugging but a bit slow so leaving uncommented
+                for(var i = 0; i < originalRaw.Length; i++)
+                {
+                    Assert.Equal(originalRaw[i], newRaw[i]);
+                }
+                */
+                Assert.Equal(originalRaw.Length, newRaw.Length);
+                Assert.Equal(originalRaw, newRaw);
+            }
+        }
+
         [SkippableFact]
         public void TestFS22()
         {
@@ -64,8 +89,9 @@ namespace I3DShapesToolTest
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
             AssertShapesFile(file, 153, 7, 24);
-            AssertShape(file.Shapes[0], "alphaShape", 20, 368, 260);
+            AssertShape(file.Shapes.First(), "alphaShape", 20, 368, 260);
             AssertShapeData(file);
+            TestRewrite(file);
         }
 
         [SkippableFact]
@@ -77,8 +103,9 @@ namespace I3DShapesToolTest
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
             AssertShapesFile(file, 201, 5, 9);
-            AssertShape(file.Shapes[0], "colPartBackShape1", 4, 24, 12);
+            AssertShape(file.Shapes.First(), "colPartBackShape1", 4, 24, 12);
             AssertShapeData(file);
+            TestRewrite(file);
         }
 
         [SkippableFact]
@@ -90,8 +117,9 @@ namespace I3DShapesToolTest
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
             AssertShapesFile(file, 49, 5, 12);
-            AssertShape(file.Shapes[0], "wheelLoaderLogForkShape", 1, 24, 12);
+            AssertShape(file.Shapes.First(), "wheelLoaderLogForkShape", 1, 24, 12);
             AssertShapeData(file);
+            TestRewrite(file);
         }
 
         [SkippableFact]
@@ -103,8 +131,9 @@ namespace I3DShapesToolTest
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\grimme\grimmeFT300.i3d.shapes"));
             AssertShapesFile(file, 188, 3, 16);
-            AssertShape(file.Shapes[0], "grimmeFTShape300", 1, 40, 20);
+            AssertShape(file.Shapes.First(), "grimmeFTShape300", 1, 40, 20);
             AssertShapeData(file);
+            TestRewrite(file);
         }
 
         [SkippableFact]
@@ -116,8 +145,9 @@ namespace I3DShapesToolTest
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
             AssertShapesFile(file, 68, 2, 32);
-            AssertShape(file.Shapes[0], "blanketBarShape2", 26, 68, 44);
+            AssertShape(file.Shapes.First(), "blanketBarShape2", 26, 68, 44);
             AssertShapeData(file);
+            TestRewrite(file);
         }
     }
 }

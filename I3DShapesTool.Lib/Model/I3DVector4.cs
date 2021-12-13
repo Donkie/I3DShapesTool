@@ -17,6 +17,14 @@ namespace I3DShapesTool.Lib.Model
             W = br.ReadSingle();
         }
 
+        public void Write(BinaryWriter bw)
+        {
+            bw.Write(X);
+            bw.Write(Y);
+            bw.Write(Z);
+            bw.Write(W);
+        }
+
         public override string ToString()
         {
             return $"4D ({X}, {Y}, {Z}, {W})";
