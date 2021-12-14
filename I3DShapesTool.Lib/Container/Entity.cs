@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;

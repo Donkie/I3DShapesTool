@@ -4,10 +4,10 @@ namespace I3DShapesTool.Lib.Model
 {
     public class I3DVector4
     {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
-        public float W { get; set; }
+        public float X { get; }
+        public float Y { get; }
+        public float Z { get; }
+        public float W { get; }
 
         public I3DVector4(BinaryReader br)
         {

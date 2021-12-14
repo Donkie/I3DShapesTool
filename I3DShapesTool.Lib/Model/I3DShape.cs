@@ -2,7 +2,6 @@
 using System.IO;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
-using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool.Lib.Model
 {

@@ -5,15 +5,25 @@ namespace I3DShapesTool.Lib.Model
 {
     public class I3DVector
     {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public float X { get; }
+        public float Y { get; }
+        public float Z { get; }
+
+        public static I3DVector Zero = new I3DVector(0, 0, 0);
+        public static I3DVector One = new I3DVector(1, 1, 1);
 
         public I3DVector(BinaryReader br)
         {
             X = br.ReadSingle();
             Y = br.ReadSingle();
             Z = br.ReadSingle();
+        }
+
+        public I3DVector(float x, float y, float z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
         }
 
         public void Write(BinaryWriter bw)
