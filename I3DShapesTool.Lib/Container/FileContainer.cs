@@ -10,10 +10,10 @@ namespace I3DShapesTool.Lib.Container
 {
     public class FileContainer
     {
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
         private readonly IDecryptor _decryptor;
 
-        public FileContainer(string filePath, ILogger logger = null, byte? forceSeed = null)
+        public FileContainer(string filePath, ILogger? logger = null, byte? forceSeed = null)
         {
             FilePath = filePath;
             _logger = logger;
@@ -26,6 +26,9 @@ namespace I3DShapesTool.Lib.Container
             }
 
             Initialize();
+
+            if (Header == null)
+                throw new InvalidOperationException("Header is null");
 
             if (forceSeed != null)
             {

@@ -8,9 +8,9 @@ namespace I3DShapesTool.Lib.Model
 {
     public class Spline : I3DPart
     {
-        public byte[] UnknownFlags { get; set; }
+        public uint? UnknownFlags { get; set; }
 
-        public ICollection<I3DVector> Points { get; set; }
+        public IList<I3DVector>? Points { get; set; }
 
         public Spline(byte[] rawData, Endian endian, int version) 
             : base(ShapeType.Spline, rawData, endian, version)
@@ -20,7 +20,7 @@ namespace I3DShapesTool.Lib.Model
 
         protected override void ReadContents(BinaryReader binaryReader)
         {
-            UnknownFlags = binaryReader.ReadBytes(4);
+            UnknownFlags = binaryReader.ReadUInt32();
 
             var pointCount = binaryReader.ReadInt32();
             Points = Enumerable.Range(0, pointCount)
@@ -35,7 +35,10 @@ namespace I3DShapesTool.Lib.Model
 
         protected override void WriteContents(BinaryWriter writer)
         {
-            writer.Write(UnknownFlags);
+            if (UnknownFlags == null || Points == null)
+                throw new InvalidOperationException("Data not set on class");
+
+            writer.Write((uint)UnknownFlags);
             writer.Write(Points.Count);
             foreach (var point in Points)
                 point.Write(writer);

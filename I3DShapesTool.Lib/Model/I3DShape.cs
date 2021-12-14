@@ -10,7 +10,6 @@ namespace I3DShapesTool.Lib.Model
     {
         private const int VERSION_PRECOMPUTED4DDATA = 4; // Not sure of exact version here
 
-        private readonly ILogger _logger;
         public float BoundingVolumeX { get; private set; }
         public float BoundingVolumeY { get; private set; }
         public float BoundingVolumeZ { get; private set; }
@@ -79,7 +78,6 @@ namespace I3DShapesTool.Lib.Model
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if (ZeroBasedIndicesInRawData)
             {
-                _logger?.LogDebug("Shape has zero-based face indices");
                 foreach (var t in Triangles)
                 {
                     t.P1Idx += 1;

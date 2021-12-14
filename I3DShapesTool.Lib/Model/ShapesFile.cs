@@ -10,19 +10,19 @@ namespace I3DShapesTool.Lib.Model
 {
     public class ShapesFile
     {
-        private readonly ILogger _logger;
+        private readonly ILogger? _logger;
 
-        private FileContainer _container;
+        private FileContainer? _container;
 
-        public string FilePath { get; private set; }
+        public string? FilePath { get; private set; }
 
-        public int Seed => _container.Header.Seed;
-        public int Version => _container.Header.Version;
-        public I3DPart[] Parts { get; private set; }
+        public int? Seed => _container?.Header.Seed;
+        public int? Version => _container?.Header.Version;
+        public I3DPart[]? Parts { get; private set; }
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
-        public ShapesFile(ILogger logger = null)
+        public ShapesFile(ILogger? logger = null)
         {
             _logger = logger;
         }
@@ -40,28 +40,22 @@ namespace I3DShapesTool.Lib.Model
                             {
                                 try
                                 {
-                                    var convert = Convert(entityRaw, _container.Endian, _container.Header.Version);
-                                    entityRaw.RawData = null;
-                                    entityRaw.Entity.Dispose();
-                                    return convert;
+                                    return Convert(entityRaw, _container.Endian, _container.Header.Version);
                                 }
                                 catch (Exception ex)
                                 {
                                     Console.WriteLine(ex);
-                                    _logger?.LogCritical(
-                                        "Cant load parts {index}.",
-                                        index
-                                    );
+                                    _logger?.LogCritical("Failed to load part {index}.", index);
+                                    return null;
                                 }
-
-                                return null;
                             }
                         )
                         .Where(part => part != null)
+                        .Cast<I3DPart>()
                         .ToArray();
         }
 
-        private static I3DPart Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)
+        private static I3DPart? Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)
         {
             var partType = GetPartType(entityRaw.Entity.Type);
             switch (partType)

@@ -9,7 +9,7 @@ namespace I3DShapesTool.Lib.Container
     /// <summary>
     /// Entity.
     /// </summary>
-    public class Entity : IDisposable
+    public class Entity
     {
         /// <summary>
         /// Entity type.
@@ -68,10 +68,6 @@ namespace I3DShapesTool.Lib.Container
                 OffsetRawBlock = offset,
                 DecryptIndexBlock = startDecryptIndexBlock,
             };
-        }
-
-        public void Dispose()
-        {
         }
     }
 }
