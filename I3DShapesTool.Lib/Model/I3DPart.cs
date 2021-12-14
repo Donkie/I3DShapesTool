@@ -64,6 +64,8 @@ namespace I3DShapesTool.Lib.Model
 
         public int Version { get; }
 
+        private byte[] contents;
+
         private void ReadHeader(BinaryReader reader)
         {
             var nameLength = reader.ReadInt32();
@@ -102,10 +104,12 @@ namespace I3DShapesTool.Lib.Model
 
         protected virtual void ReadContents(BinaryReader reader)
         {
+            contents = reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
         }
 
         protected virtual void WriteContents(BinaryWriter writer)
         {
+            writer.Write(contents);
         }
 
         public override string ToString()
