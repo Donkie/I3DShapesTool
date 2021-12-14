@@ -42,7 +42,6 @@ namespace I3DShapesTool.Lib.Model
         public I3DShape(byte[] rawData, Endian endian, int version)
             : base(ShapeType.Shape, rawData, endian, version)
         {
-            ReadFromRawData();
         }
 #nullable restore
 

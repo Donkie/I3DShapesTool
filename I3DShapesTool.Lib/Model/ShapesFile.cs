@@ -40,7 +40,12 @@ namespace I3DShapesTool.Lib.Model
                             {
                                 try
                                 {
-                                    return Convert(entityRaw, _container.Endian, _container.Header.Version);
+                                    var part = Convert(entityRaw, _container.Endian, _container.Header.Version);
+                                    if(part.Type == ShapeType.Unknown)
+                                    {
+                                        _logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
+                                    }
+                                    return part;
                                 }
                                 catch (Exception ex)
                                 {
@@ -55,20 +60,16 @@ namespace I3DShapesTool.Lib.Model
                         .ToArray();
         }
 
-        private static I3DPart? Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)
+        private static I3DPart Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)
         {
             var partType = GetPartType(entityRaw.Entity.Type);
-            switch (partType)
+            return partType switch
             {
-                case ShapeType.Shape:
-                    return new I3DShape(entityRaw.RawData, endian, version);
-                case ShapeType.Spline:
-                    return new Spline(entityRaw.RawData, endian, version);
-                case ShapeType.Unknown:
-                    return null;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                ShapeType.Shape => new I3DShape(entityRaw.RawData, endian, version),
+                ShapeType.Spline => new Spline(entityRaw.RawData, endian, version),
+                ShapeType.Unknown => new I3DPart(entityRaw.Entity.Type, entityRaw.RawData, endian, version),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         private static ShapeType GetPartType(int rawType)

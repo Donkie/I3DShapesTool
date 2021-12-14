@@ -15,7 +15,6 @@ namespace I3DShapesTool.Lib.Model
         public Spline(byte[] rawData, Endian endian, int version) 
             : base(ShapeType.Spline, rawData, endian, version)
         {
-            ReadFromRawData();
         }
 
         protected override void ReadContents(BinaryReader binaryReader)

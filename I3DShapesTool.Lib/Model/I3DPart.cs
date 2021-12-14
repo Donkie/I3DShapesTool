@@ -5,38 +5,64 @@ using I3DShapesTool.Lib.Tools.Extensions;
 
 namespace I3DShapesTool.Lib.Model
 {
-    public abstract class I3DPart
+    public class I3DPart
     {
 #nullable disable
+        /// <summary>
+        /// Construct I3DPart with a known part type.
+        /// Should only be used by child classes, since if you know of a type you should have a child class for it.
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <param name="rawData">Raw binary data</param>
+        /// <param name="endian">Endian</param>
+        /// <param name="version">File version</param>
         protected I3DPart(ShapeType type, byte[] rawData, Endian endian, int version)
         {
             Type = type;
             RawData = rawData;
             Endian = endian;
             Version = version;
+            RawType = (int)type;
+
+            ReadFromRawData();
+        }
+
+        /// <summary>
+        /// Construct I3DPart with unknown part type.
+        /// Type will get set to ShapeType.Unknown
+        /// </summary>
+        /// <param name="rawType">Raw type number</param>
+        /// <param name="rawData">Raw binary data</param>
+        /// <param name="endian">Endian</param>
+        /// <param name="version">File version</param>
+        public I3DPart(int rawType, byte[] rawData, Endian endian, int version) : this(ShapeType.Unknown, rawData, endian, version)
+        {
+            RawType = rawType;
         }
 #nullable restore
 
-        public ShapeType Type { get; protected set; }
+        public ShapeType Type { get; }
+
+        public int RawType { get; }
 
         /// <summary>
         /// Shape name
         /// </summary>
-        public string Name { get; protected set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Shape ID
         /// </summary>
-        public uint Id { get; protected set; }
+        public uint Id { get; private set; }
 
         /// <summary>
         /// Shape Raw Data 
         /// </summary>
-        public byte[] RawData { get; protected set; }
+        public byte[] RawData { get; }
 
-        public Endian Endian { get; protected set; }
+        public Endian Endian { get; }
 
-        public int Version { get; protected set; }
+        public int Version { get; }
 
         private void ReadHeader(BinaryReader reader)
         {
@@ -55,13 +81,13 @@ namespace I3DShapesTool.Lib.Model
             writer.Write(Id);
         }
 
-        protected void Read(BinaryReader reader)
+        private void Read(BinaryReader reader)
         {
             ReadHeader(reader);
             ReadContents(reader);
         }
 
-        protected void ReadFromRawData()
+        private void ReadFromRawData()
         {
             using var stream = new MemoryStream(RawData);
             using var reader = new EndianBinaryReader(stream, Endian);
@@ -74,9 +100,13 @@ namespace I3DShapesTool.Lib.Model
             WriteContents(writer);
         }
 
-        protected abstract void ReadContents(BinaryReader reader);
+        protected virtual void ReadContents(BinaryReader reader)
+        {
+        }
 
-        protected abstract void WriteContents(BinaryWriter writer);
+        protected virtual void WriteContents(BinaryWriter writer)
+        {
+        }
 
         public override string ToString()
         {

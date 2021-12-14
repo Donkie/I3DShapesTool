@@ -145,14 +145,17 @@ namespace I3DShapesTool
                 folder = options.Out;
             }
 
+            if (options.DumpBinary)
+            {
+                foreach (var part in file.Parts)
+                {
+                    var binFileName = $"{PartBinaryFilePrefix(part)}_{part.Name}.bin";
+                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), part.RawData);
+                }
+            }
+
             foreach (var shape in file.Shapes)
             {
-                if (options.DumpBinary)
-                {
-                    var binFileName = $"shape_{shape.Name}.bin";
-                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), shape.RawData);
-                }
-
                 var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
 
                 var objFileInternalName = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
@@ -164,6 +167,16 @@ namespace I3DShapesTool
 
                 File.WriteAllBytes(mdlFileName, dataBlob);
             }
+        }
+
+        private static string PartBinaryFilePrefix(I3DPart part)
+        {
+            return part.Type switch
+            {
+                ShapeType.Shape => "shape",
+                ShapeType.Spline => "spline",
+                _ => $"part_type{part.RawType}",
+            };
         }
 
         private static void Run(CommandLineOptions options)
