@@ -30,7 +30,17 @@ namespace I3DShapesTool.Lib.Model
 
         public bool IsUnitLength()
         {
-            return Math.Abs(Length() - 1.0) < 1e-6;
+            return Math.Abs(X * X + Y * Y + Z * Z - 1.0) < 1e-3;
+        }
+
+        public bool IsZero()
+        {
+            return Math.Abs(X) < 1e-6 && Math.Abs(Y) < 1e-6 && Math.Abs(Z) < 1e-6;
+        }
+
+        public bool IsValidNormal()
+        {
+            return IsUnitLength() || IsZero();
         }
 
         public override string ToString()
