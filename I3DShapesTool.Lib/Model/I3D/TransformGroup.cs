@@ -49,5 +49,16 @@ namespace I3DShapesTool.Lib.Model.I3D
                 child.UpdateAbsoluteTransform();
             }
         }
+
+        public void PrintTree(int depth = 0)
+        {
+            var nameStr = Name != null ? $" {Name}" : "";
+            var spaces = new string('-', depth);
+            Console.WriteLine($"{spaces}<{GetType().Name}{nameStr}>");
+            foreach (var child in Children)
+            {
+                child.PrintTree(depth + 1);
+            }
+        }
     }
 }

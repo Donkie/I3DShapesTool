@@ -6,6 +6,6 @@ namespace I3DShapesTool.Lib.Model.I3D
     {
         public string? Name { get; set; }
         public string? Version { get; set; }
-        public IList<TransformGroup> Scene { get; } = new List<TransformGroup>();
+        public TransformGroup SceneRoot { get; } = new TransformGroup("root", 0, I3DVector.Zero, I3DVector.Zero, I3DVector.One);
     }
 }
