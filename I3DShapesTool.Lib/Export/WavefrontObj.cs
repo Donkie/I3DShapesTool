@@ -73,7 +73,7 @@ namespace I3DShapesTool.Lib.Export
             sb.AppendFormat(CultureInfo.InvariantCulture, "vn {0:F6} {1:F6} {2:F6}\n", vec.X, vec.Y, vec.Z);
         }
 
-        private static void AddTriangleFace(StringBuilder sb, ushort idx, bool hasUV, bool hasNormal)
+        private static void AddTriangleFace(StringBuilder sb, uint idx, bool hasUV, bool hasNormal)
         {
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0:F0}", idx);
 

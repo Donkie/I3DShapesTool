@@ -61,14 +61,11 @@ namespace I3DShapesTool.Lib.Model
                 ExtraStuff[i] = new I3DShapeExtra(reader, Version, Options);
             }
 
-            //if (CornerCount > 65536) // This has a special case in the loading which is not RE yet
-            //    throw new NotImplementedException("Models with more than 65536 vertices is not supported at the moment");
-
             ZeroBasedIndicesInRawData = false;
             Triangles = new I3DTri[CornerCount / 3];
             for (var i = 0; i < CornerCount / 3; i++)
             {
-                Triangles[i] = new I3DTri(reader);
+                Triangles[i] = new I3DTri(reader, VertexCount > (ushort.MaxValue+1));
 
                 if (Triangles[i].P1Idx == 0 || Triangles[i].P2Idx == 0 || Triangles[i].P3Idx == 0)
                     ZeroBasedIndicesInRawData = true;
@@ -202,7 +199,7 @@ namespace I3DShapesTool.Lib.Model
                 extra.Write(writer, Version, Options);
 
             foreach (var tri in Triangles)
-                tri.Write(writer, ZeroBasedIndicesInRawData);
+                tri.Write(writer, ZeroBasedIndicesInRawData, VertexCount > (ushort.MaxValue + 1));
 
             writer.Align(4);
 
