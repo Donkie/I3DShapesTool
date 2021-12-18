@@ -40,7 +40,8 @@ namespace I3DShapesTool.Lib.Model
                             {
                                 try
                                 {
-                                    var part = Convert(entityRaw, _container.Endian, _container.Header.Version);
+                                    var partType = GetPartType(entityRaw.Entity.Type);
+                                    var part = LoadPart(entityRaw, partType, _container.Endian, _container.Header.Version);
                                     if(part.Type == ShapeType.Unknown)
                                     {
                                         _logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
@@ -50,8 +51,18 @@ namespace I3DShapesTool.Lib.Model
                                 catch (Exception ex)
                                 {
                                     Console.WriteLine(ex);
-                                    _logger?.LogCritical("Failed to load part {index}.", index);
-                                    return null;
+                                    _logger?.LogError("Failed to decode part {index}.", index);
+
+                                    // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
+                                    try
+                                    {
+                                        return LoadPart(entityRaw, ShapeType.Unknown, _container.Endian, _container.Header.Version);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        // We even failed to decode it as a generic part, just return null then instead.
+                                        return null;
+                                    }
                                 }
                             }
                         )
@@ -60,9 +71,8 @@ namespace I3DShapesTool.Lib.Model
                         .ToArray();
         }
 
-        private static I3DPart Convert((Entity Entity, byte[] RawData) entityRaw, Endian endian, int version)
+        private static I3DPart LoadPart((Entity Entity, byte[] RawData) entityRaw, ShapeType partType, Endian endian, int version)
         {
-            var partType = GetPartType(entityRaw.Entity.Type);
             return partType switch
             {
                 ShapeType.Shape => new I3DShape(entityRaw.RawData, endian, version),
