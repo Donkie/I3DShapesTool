@@ -60,22 +60,41 @@ namespace I3DShapesTool.Lib.Export
 
         private void AddVertex(StringBuilder sb, I3DVector vec)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "v {0:G} {1:G} {2:G}\n", vec.X * Scale, vec.Y * Scale, vec.Z * Scale);
+            sb.AppendFormat(CultureInfo.InvariantCulture, "v {0:F4} {1:F4} {2:F4}\n", vec.X * Scale, vec.Y * Scale, vec.Z * Scale);
         }
 
         private static void AddUV(StringBuilder sb, I3DUV uv)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "vt {0:F} {1:F}\n", uv.U, uv.V);
+            sb.AppendFormat(CultureInfo.InvariantCulture, "vt {0:F6} {1:F6}\n", uv.U, uv.V);
         }
 
         private static void AddNormal(StringBuilder sb, I3DVector vec)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "vn {0:F4} {1:F4} {2:F4}\n", vec.X, vec.Y, vec.Z);
+            sb.AppendFormat(CultureInfo.InvariantCulture, "vn {0:F6} {1:F6} {2:F6}\n", vec.X, vec.Y, vec.Z);
         }
 
-        private static void AddTriangle(StringBuilder sb, I3DTri tri)
+        private static void AddTriangleFace(StringBuilder sb, uint idx, bool hasUV, bool hasNormal)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "f {0:F0}/{0:F0}/{0:F0} {1:F0}/{1:F0}/{1:F0} {2:F0}/{2:F0}/{2:F0}\n", tri.P1Idx, tri.P2Idx, tri.P3Idx);
+            sb.AppendFormat(CultureInfo.InvariantCulture, "{0:F0}", idx);
+
+            if (hasUV)
+                sb.AppendFormat(CultureInfo.InvariantCulture, "/{0:F0}", idx);
+            else if (hasNormal)
+                sb.Append('/');
+
+            if (hasNormal)
+                sb.AppendFormat(CultureInfo.InvariantCulture, "/{0:F0}", idx);
+        }
+
+        private static void AddTriangle(StringBuilder sb, I3DTri tri, bool hasUV, bool hasNormal)
+        {
+            sb.Append("f ");
+            AddTriangleFace(sb, tri.P1Idx, hasUV, hasNormal);
+            sb.Append(" ");
+            AddTriangleFace(sb, tri.P2Idx, hasUV, hasNormal);
+            sb.Append(" ");
+            AddTriangleFace(sb, tri.P3Idx, hasUV, hasNormal);
+            sb.Append("\n");
         }
 
         public byte[] ExportToBlob()
@@ -108,7 +127,7 @@ namespace I3DShapesTool.Lib.Export
             SetGroup(sb, GeometryName);
             foreach (var t in Triangles)
             {
-                AddTriangle(sb, t);
+                AddTriangle(sb, t, UVs != null, Normals != null);
             }
             
             return Encoding.ASCII.GetBytes(sb.ToString());

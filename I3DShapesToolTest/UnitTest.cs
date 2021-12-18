@@ -2,7 +2,6 @@ using System.IO;
 using Xunit;
 using I3DShapesTool.Lib.Model;
 using System.Linq;
-using System;
 using I3DShapesTool.Lib.Tools;
 using System.Collections.Generic;
 
@@ -129,8 +128,8 @@ namespace I3DShapesToolTest
             foreach(var filePath in shapeFiles)
             {
                 var file = new ShapesFile();
-                file.Load(filePath);
                 AssertShapeData(file);
+                file.Load(filePath, null, true);
             }
         }
 
@@ -160,8 +159,8 @@ namespace I3DShapesToolTest
             foreach (var filePath in shapeFiles)
             {
                 var file = new ShapesFile();
-                file.Load(filePath);
                 AssertShapeData(file);
+                file.Load(filePath, null, true);
             }
         }
 
@@ -191,8 +190,8 @@ namespace I3DShapesToolTest
             foreach (var filePath in shapeFiles)
             {
                 var file = new ShapesFile();
-                file.Load(filePath);
                 AssertShapeData(file);
+                file.Load(filePath, null, true);
             }
         }
 
@@ -222,8 +221,8 @@ namespace I3DShapesToolTest
             foreach (var filePath in shapeFiles)
             {
                 var file = new ShapesFile();
-                file.Load(filePath);
                 AssertShapeData(file);
+                file.Load(filePath, null, true);
             }
         }
 
@@ -253,8 +252,8 @@ namespace I3DShapesToolTest
             foreach (var filePath in shapeFiles)
             {
                 var file = new ShapesFile();
-                file.Load(filePath);
                 AssertShapeData(file);
+                file.Load(filePath, null, true);
             }
         }
     }
