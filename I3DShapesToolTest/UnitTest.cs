@@ -105,8 +105,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS22()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 22");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
 
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
@@ -119,8 +118,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS22Full()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 22");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
 
             var shapeFiles = new HashSet<string>();
             FindShapesFiles(Path.Combine(gameFolder, "data"), shapeFiles);
@@ -136,8 +134,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS19()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 19");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 19");
 
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
@@ -150,8 +147,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS19Full()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 19");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 19");
 
             var shapeFiles = new HashSet<string>();
             FindShapesFiles(Path.Combine(gameFolder, "data"), shapeFiles);
@@ -167,8 +163,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS17()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 17");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 17");
 
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
@@ -181,8 +176,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS17Full()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 17");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 17");
 
             var shapeFiles = new HashSet<string>();
             FindShapesFiles(Path.Combine(gameFolder, "data"), shapeFiles);
@@ -198,8 +192,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS15()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 15");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 15");
 
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\grimme\grimmeFT300.i3d.shapes"));
@@ -212,8 +205,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS15Full()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 15");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 15");
 
             var shapeFiles = new HashSet<string>();
             FindShapesFiles(Path.Combine(gameFolder, "data"), shapeFiles);
@@ -229,8 +221,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS13()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 2013");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 2013");
 
             var file = new ShapesFile();
             file.Load(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
@@ -243,8 +234,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestFS13Full()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 2013");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 2013");
 
             var shapeFiles = new HashSet<string>();
             FindShapesFiles(Path.Combine(gameFolder, "data"), shapeFiles);

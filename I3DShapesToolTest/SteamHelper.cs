@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
+using Xunit;
 
 namespace I3DShapesToolTest
 {
@@ -67,8 +68,16 @@ namespace I3DShapesToolTest
 
         public static string GetGameDirectory(string gameFolderName)
         {
-            return _steamGameDirs.Select(v => Path.Combine(v, gameFolderName))
+            return _steamGameDirs
+                .Select(v => Path.Combine(v, gameFolderName))
                 .FirstOrDefault(v => Directory.Exists(v));
+        }
+
+        public static string GetGameDirectoryOrSkip(string gameFolderName)
+        {
+            var gameDir = GetGameDirectory(gameFolderName);
+            Skip.If(gameDir == null);
+            return gameDir;
         }
     }
 }

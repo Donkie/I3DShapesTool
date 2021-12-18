@@ -9,8 +9,7 @@ namespace I3DShapesToolTest
         [SkippableFact]
         public void TestRead()
         {
-            var gameFolder = SteamHelper.GetGameDirectory("Farming Simulator 22");
-            Skip.If(gameFolder == null);
+            var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
 
             I3DXMLReader.ParseXML(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d"));
         }
