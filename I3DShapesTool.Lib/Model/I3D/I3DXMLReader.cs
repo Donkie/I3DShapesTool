@@ -130,6 +130,8 @@ namespace I3DShapesTool.Lib.Model.I3D
                 }
             }
 
+            result.Setup();
+
             return result;
         }
     }
