@@ -5,9 +5,9 @@ namespace I3DShapesTool.Lib.Model
 {
     public class I3DVector
     {
-        public float X { get; }
-        public float Y { get; }
-        public float Z { get; }
+        public double X { get; }
+        public double Y { get; }
+        public double Z { get; }
 
         public static I3DVector Zero = new I3DVector(0, 0, 0);
         public static I3DVector One = new I3DVector(1, 1, 1);
@@ -19,7 +19,7 @@ namespace I3DShapesTool.Lib.Model
             Z = br.ReadSingle();
         }
 
-        public I3DVector(float x, float y, float z)
+        public I3DVector(double x, double y, double z)
         {
             X = x;
             Y = y;
@@ -28,9 +28,9 @@ namespace I3DShapesTool.Lib.Model
 
         public void Write(BinaryWriter bw)
         {
-            bw.Write(X);
-            bw.Write(Y);
-            bw.Write(Z);
+            bw.Write((float)X);
+            bw.Write((float)Y);
+            bw.Write((float)Z);
         }
 
         public double Length()
