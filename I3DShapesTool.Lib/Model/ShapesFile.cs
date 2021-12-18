@@ -27,7 +27,7 @@ namespace I3DShapesTool.Lib.Model
             _logger = logger;
         }
 
-        public void Load(string path, byte? forceSeed = null)
+        public void Load(string path, byte? forceSeed = null, bool strict = false)
         {
             FilePath = path;
             _container = new FileContainer(path, _logger, forceSeed);
@@ -50,6 +50,9 @@ namespace I3DShapesTool.Lib.Model
                                 }
                                 catch (Exception ex)
                                 {
+                                    if (strict)
+                                        throw;
+
                                     Console.WriteLine(ex);
                                     _logger?.LogError("Failed to decode part {index}.", index);
 
