@@ -1,6 +1,9 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Text;
+using System.Linq;
 using I3DShapesTool.Lib.Model;
+using I3DShapesTool.Lib.Model.I3D;
 
 namespace I3DShapesTool.Lib.Export
 {
@@ -38,6 +41,30 @@ namespace I3DShapesTool.Lib.Export
 
             if(shape.UVSets.Length > 0)
                 UVs = shape.UVSets[0];
+        }
+
+        public WavefrontObj(Shape shape, string name)
+        {
+            var shapeData = shape.ShapeData;
+            if (shapeData == null)
+                throw new ArgumentException("Input shape doesn't have any assigned shape data");
+
+            Scale = 1;
+
+            var geomname = name;
+            if (geomname.EndsWith("Shape"))
+                geomname = geomname[0..^5];
+
+            Name = name;
+            GeometryName = geomname;
+            Positions = shapeData.Positions.Select(v => shape.AbsoluteTransform * v).ToArray();
+            Triangles = shapeData.Triangles;
+
+            if (shapeData.Normals != null)
+                Normals = shapeData.Normals;
+
+            if (shapeData.UVSets.Length > 0)
+                UVs = shapeData.UVSets[0];
         }
 
         private void WriteHeader(StringBuilder sb)

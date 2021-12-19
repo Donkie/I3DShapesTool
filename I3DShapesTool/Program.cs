@@ -8,6 +8,7 @@ using I3DShapesTool.Configuration;
 using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Export;
 using I3DShapesTool.Lib.Model;
+using I3DShapesTool.Lib.Model.I3D;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Layouts;
@@ -76,7 +77,7 @@ namespace I3DShapesTool
             return file.Shapes.SelectMany(shape => shape.Name).All(c => c >= 0x20 && c <= 0x7E);
         }
 
-        private static ShapesFile LoadFileBruteForce(CommandLineOptions options)
+        private static ShapesFile LoadFileBruteForce(string filePath)
         {
             var file = new ShapesFile(Logger);
             var success = false;
@@ -86,7 +87,7 @@ namespace I3DShapesTool
             {
                 try
                 {
-                    file.Load(options.File, seed);
+                    file.Load(filePath, seed);
                 }
                 catch (DecryptFailureException)
                 {
@@ -110,40 +111,60 @@ namespace I3DShapesTool
             return file;
         }
 
-        private static ShapesFile LoadFile(CommandLineOptions options)
+        private static ShapesFile LoadFile(string filePath)
         {
             var file = new ShapesFile(Logger);
 
-            Logger.LogInformation($"Loading file: {Path.GetFileName(options.File)}");
+            Logger.LogInformation($"Loading file: {Path.GetFileName(filePath)}");
             try
             {
-                file.Load(options.File);
+                file.Load(filePath);
             }
             catch (DecryptFailureException)
             {
                 Logger.LogInformation("Failed decrypting file. Attempting to brute-force the seed...");
-                return LoadFileBruteForce(options);
+                return LoadFileBruteForce(filePath);
             }
 
             return file;
         }
 
-        private static void ExtractFile(CommandLineOptions options)
+        private static string GetTargetFolder(CommandLineOptions options, string folderName)
         {
-            var file = LoadFile(options);
-            if (file == null)
-                return;
-
             string folder;
             if (options.CreateDir)
             {
-                folder = Path.Combine(options.Out, "extract_" + Path.GetFileName(file.FilePath));
+                folder = Path.Combine(options.Out, "extract_" + folderName);
                 Directory.CreateDirectory(folder);
             }
             else
             {
                 folder = options.Out;
             }
+            return folder;
+        }
+
+        private static void ExtractFile(I3D i3dFile, CommandLineOptions options)
+        {
+            string folder = GetTargetFolder(options, Path.GetFileName(i3dFile.Name));
+
+            foreach (var shape in i3dFile.GetShapes())
+            {
+                var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
+
+                var objfile = new WavefrontObj(shape, i3dFile.Name);
+                var dataBlob = objfile.ExportToBlob();
+
+                if (File.Exists(mdlFileName))
+                    File.Delete(mdlFileName);
+
+                File.WriteAllBytes(mdlFileName, dataBlob);
+            }
+        }
+
+        private static void ExtractFile(ShapesFile file, CommandLineOptions options)
+        {
+            string folder = GetTargetFolder(options, Path.GetFileName(file.FilePath));
 
             if (options.DumpBinary)
             {
@@ -169,6 +190,52 @@ namespace I3DShapesTool
             }
         }
 
+        private static void ProcessFileInput(CommandLineOptions options)
+        {
+            string i3dFile = null;
+            if (options.File.EndsWith(".i3d.shapes"))
+            {
+                var i3dFileCandidate = options.File[0..^7];
+                if (File.Exists(i3dFileCandidate))
+                {
+                    // Found .i3d file in same directory as the supplied .i3d.shapes
+                    i3dFile = i3dFileCandidate;
+                }
+            }
+            else if (options.File.EndsWith(".i3d"))
+            {
+                i3dFile = options.File;
+            }
+            else
+            {
+                throw new ArgumentValidationException($"Unrecognized file {options.File}.");
+            }
+
+            if(i3dFile != null)
+            {
+                Logger.LogInformation("File is I3D, parsing data from XML.");
+
+                I3D i3d = I3DXMLReader.ParseXML(i3dFile);
+                if (i3d.ExternalShapesFile == null || !File.Exists(i3d.ExternalShapesFile))
+                {
+                    Logger.LogInformation("No valid externalShapesFile specified in I3D, nothing to do.");
+                    return;
+                }
+
+                var file = LoadFile(i3d.ExternalShapesFile);
+                i3d.LinkShapesFile(file);
+                ExtractFile(i3d, options);
+            }
+            else
+            {
+                // i3dFile is null but shapesFile isn't
+                Logger.LogInformation("Couldn't find matching I3D XML file, parsing only raw shapes data.");
+
+                var file = LoadFile(options.File);
+                ExtractFile(file, options);
+            }
+        }
+
         private static string PartBinaryFilePrefix(I3DPart part)
         {
             return part.Type switch
@@ -191,7 +258,7 @@ namespace I3DShapesTool
             else if (!Directory.Exists(options.Out))
                 throw new ArgumentValidationException($"Directory {options.Out} does not exist.");
 
-            ExtractFile(options);
+            ProcessFileInput(options);
 
             Logger.LogInformation("Done");
         }
