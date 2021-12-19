@@ -10,6 +10,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public string? Name { get; set; }
         public string? Version { get; set; }
+        public string? ExternalShapesFile { get; set; }
         public TransformGroup SceneRoot { get; } = new TransformGroup("root", 0, I3DVector.Zero, I3DVector.Zero, I3DVector.One);
 
         private IDictionary<uint, Shape>? _shapesMap;

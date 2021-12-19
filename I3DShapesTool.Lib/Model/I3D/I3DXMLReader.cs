@@ -121,6 +121,17 @@ namespace I3DShapesTool.Lib.Model.I3D
                             while(reader.MoveToNextAttribute());
                             break;
                         }
+                        if(reader.Name == "Shapes")
+                        {
+                            reader.MoveToFirstAttribute();
+                            do
+                            {
+                                if (reader.Name == "externalShapesFile")
+                                    result.ExternalShapesFile = Path.Combine(Path.GetDirectoryName(filePath), reader.Value);
+                            }
+                            while (reader.MoveToNextAttribute());
+                            break;
+                        }
                         if(reader.Name == "Scene")
                         {
                             reader.Read();
