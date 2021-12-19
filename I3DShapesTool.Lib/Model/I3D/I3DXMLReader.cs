@@ -82,6 +82,7 @@ namespace I3DShapesTool.Lib.Model.I3D
                     {
                         I3DSceneType.Shape => new Shape(name, id, shapeId, pos, rot, scl),
                         I3DSceneType.Light => new Light(name, id, pos, rot, scl),
+                        I3DSceneType.Camera => new Camera(name, id, pos, rot, scl),
                         _ => new TransformGroup(name, id, pos, rot, scl),
                     };
                     child.SetParent(parent);

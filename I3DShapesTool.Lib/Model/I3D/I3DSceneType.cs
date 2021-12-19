@@ -3,6 +3,7 @@
     public enum I3DSceneType
     {
         TransformGroup,
+        Camera,
         Shape,
         Light
     }
