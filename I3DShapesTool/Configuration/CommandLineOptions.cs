@@ -18,6 +18,9 @@ namespace I3DShapesTool.Configuration
         [Option('b', "binary", Required = false, HelpText = "Dump the raw binary files as well as the model files.")]
         public bool DumpBinary { get; set; }
 
+        [Option('t', "transform", Required = false, HelpText = "Apply scene transformations to output models, like how the editor does it.")]
+        public bool Transform { get; set; }
+
         [Option("out", Required = false, HelpText = "The directory files should be extracted to, defaults to the directory of the input file.")]
         public string Out { get; set; }
 

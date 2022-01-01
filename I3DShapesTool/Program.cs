@@ -152,7 +152,7 @@ namespace I3DShapesTool
             {
                 var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
 
-                var objfile = new WavefrontObj(shape, i3dFile.Name);
+                var objfile = new WavefrontObj(shape, i3dFile.Name, options.Transform);
                 var dataBlob = objfile.ExportToBlob();
 
                 if (File.Exists(mdlFileName))

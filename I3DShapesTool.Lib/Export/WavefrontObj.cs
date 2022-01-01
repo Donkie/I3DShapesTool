@@ -43,7 +43,7 @@ namespace I3DShapesTool.Lib.Export
                 UVs = shape.UVSets[0];
         }
 
-        public WavefrontObj(Shape shape, string name)
+        public WavefrontObj(Shape shape, string name, bool shouldTransform)
         {
             var shapeData = shape.ShapeData;
             if (shapeData == null)
@@ -57,7 +57,14 @@ namespace I3DShapesTool.Lib.Export
 
             Name = name;
             GeometryName = geomname;
-            Positions = shapeData.Positions.Select(v => shape.AbsoluteTransform * v).ToArray();
+            if (shouldTransform)
+            {
+                Positions = shapeData.Positions.Select(v => shape.AbsoluteTransform * v).ToArray();
+            }
+            else
+            {
+                Positions = shapeData.Positions;
+            }
             Triangles = shapeData.Triangles;
 
             if (shapeData.Normals != null)
