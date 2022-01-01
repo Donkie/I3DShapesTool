@@ -150,7 +150,7 @@ namespace I3DShapesTool
 
             foreach (var shape in i3dFile.GetShapes())
             {
-                var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
+                var mdlFileName = Path.Combine(folder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
 
                 var objfile = new WavefrontObj(shape, i3dFile.Name, options.Transform);
                 var dataBlob = objfile.ExportToBlob();
@@ -170,14 +170,14 @@ namespace I3DShapesTool
             {
                 foreach (var part in file.Parts)
                 {
-                    var binFileName = $"{PartBinaryFilePrefix(part)}_{part.Name}.bin";
+                    var binFileName = $"{PartBinaryFilePrefix(part)}_{part.Name}_{part.Id}.bin";
                     File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), part.RawData);
                 }
             }
 
             foreach (var shape in file.Shapes)
             {
-                var mdlFileName = Path.Combine(folder, CleanFileName(shape.Name + ".obj"));
+                var mdlFileName = Path.Combine(folder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
 
                 var objFileInternalName = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
                 var objfile = new WavefrontObj(shape, objFileInternalName);
