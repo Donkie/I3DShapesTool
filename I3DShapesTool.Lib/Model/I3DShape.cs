@@ -214,10 +214,16 @@ namespace I3DShapesTool.Lib.Model
             foreach (var extra in ExtraStuff)
                 extra.Write(writer, Version, Options);
 
+            if(Triangles.Length != CornerCount / 3)
+                throw new InvalidOperationException("Triangles array must be of size CornerCount / 3");
+
             foreach (var tri in Triangles)
                 tri.Write(writer, ZeroBasedIndicesInRawData, VertexCount > (ushort.MaxValue + 1));
 
             writer.Align(4);
+
+            if (Positions.Length != VertexCount)
+                throw new InvalidOperationException("Positions array must be of size VertexCount");
 
             foreach (var pos in Positions)
                 pos.Write(writer);
@@ -227,6 +233,9 @@ namespace I3DShapesTool.Lib.Model
                 if (Normals == null)
                     throw new InvalidOperationException("Options say we have normals but Normals field is null");
 
+                if (Normals.Length != VertexCount)
+                    throw new InvalidOperationException("Normals array must be of size VertexCount");
+
                 foreach (var norm in Normals)
                     norm.Write(writer);
             }
@@ -235,6 +244,9 @@ namespace I3DShapesTool.Lib.Model
             {
                 if (Some4DData == null)
                     throw new InvalidOperationException("Options say we have 4d data but Some4DData field is null");
+
+                if (Some4DData.Length != VertexCount)
+                    throw new InvalidOperationException("Some4DData array must be of size VertexCount");
 
                 foreach (var vec in Some4DData)
                     vec.Write(writer);
@@ -247,6 +259,9 @@ namespace I3DShapesTool.Lib.Model
                     if (UVSets[uvSet] == null)
                         throw new InvalidOperationException($"Options say we have UV set {uvSet + 1} but UVSets[{uvSet}] is null");
 
+                    if (UVSets[uvSet].Length != VertexCount)
+                        throw new InvalidOperationException($"UVSets[{uvSet}] array must be of size VertexCount");
+
                     foreach (var uv in UVSets[uvSet])
                         uv.Write(writer, Version);
                 }
@@ -256,6 +271,9 @@ namespace I3DShapesTool.Lib.Model
             {
                 if (VertexColor == null)
                     throw new InvalidOperationException("Options say we have vertex colors but VertexColor field is null");
+
+                if (VertexColor.Length != VertexCount)
+                    throw new InvalidOperationException("VertexColor array must be of size VertexCount");
 
                 foreach (var vec in VertexColor)
                     vec.Write(writer);
@@ -272,7 +290,13 @@ namespace I3DShapesTool.Lib.Model
                     if (BlendWeights == null)
                         throw new InvalidOperationException("Options say we have blend weights but BlendWeights field is null");
 
-                    for(var i = 0; i < BlendWeights.GetLength(0); i++)
+                    if (BlendWeights.GetLength(0) != VertexCount)
+                        throw new InvalidOperationException("First dimension of BlendWeights array must be of size VertexCount");
+
+                    if (BlendWeights.GetLength(1) != 4)
+                        throw new InvalidOperationException("Second dimension of BlendWeights array must be of size 4");
+
+                    for (var i = 0; i < BlendWeights.GetLength(0); i++)
                     {
                         for (var j = 0; j < BlendWeights.GetLength(1); j++)
                         {
@@ -280,6 +304,14 @@ namespace I3DShapesTool.Lib.Model
                         }
                     }
                 }
+
+                if (BlendIndices.GetLength(0) != VertexCount)
+                    throw new InvalidOperationException("First dimension of BlendIndices array must be of size VertexCount");
+
+                if (noBlendWeights && BlendIndices.GetLength(1) != 1)
+                    throw new InvalidOperationException("Second dimension of BlendIndices array must be of size 1 if there are no blend weights");
+                else if (!noBlendWeights && BlendIndices.GetLength(1) != 4)
+                    throw new InvalidOperationException("Second dimension of BlendIndices array must be of size 4 if there are blend weights");
 
                 for (var i = 0; i < BlendIndices.GetLength(0); i++)
                 {
@@ -294,6 +326,9 @@ namespace I3DShapesTool.Lib.Model
             {
                 if (UnknownData2 == null)
                     throw new InvalidOperationException("Options say we have UnknownData2 but UnknownData2 field is null");
+
+                if (UnknownData2.Length != VertexCount)
+                    throw new InvalidOperationException("UnknownData2 array must be of size VertexCount");
 
                 foreach (var v in UnknownData2)
                     writer.Write(v);
