@@ -32,8 +32,8 @@ namespace I3DShapesTool.Lib.Model
         public I3DVector4[]? Some4DData { get; private set; }
         public I3DUV[][] UVSets { get; private set; }
         public I3DVector4[]? Unknown4DVect { get; private set; }
-        public byte[]? UnknownData1_1 { get; private set; }
-        public byte[]? UnknownData1_2 { get; private set; }
+        public float[,]? BlendWeights { get; private set; }
+        public byte[,]? BlendIndices { get; private set; }
         public float[]? UnknownData2 { get; private set; }
         public I3DShapeExtra2[] UnknownData3 { get; private set; }
 
@@ -132,17 +132,34 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            // I have no idea what this data is, let alone how to store it properly
-            if (Options.HasFlag(I3DShapeOptions.HasUnknownData1))
+            if (Options.HasFlag(I3DShapeOptions.HasSkinningInfo))
             {
-                bool isSingleValue = Options.HasFlag(I3DShapeOptions.UnknownData1IsSingleValue);
-                int numValues = isSingleValue ? 1 : 4;
+                bool noBlendWeights = Options.HasFlag(I3DShapeOptions.NoBlendWeights);
+                bool blendWeights = !noBlendWeights;
 
-                if (!isSingleValue)
+                // Load blend weights first
+                if (blendWeights)
                 {
-                    UnknownData1_1 = reader.ReadBytes((int)(4 * VertexCount * numValues));
+                    BlendWeights = new float[VertexCount, 4];
+                    for(var i = 0; i < BlendWeights.GetLength(0); i++)
+                    {
+                        for(var j = 0; j < BlendWeights.GetLength(1); j++)
+                        {
+                            BlendWeights[i, j] = reader.ReadSingle();
+                        }
+                    }
                 }
-                UnknownData1_2 = reader.ReadBytes((int)(VertexCount * numValues));
+
+                // Load blend indices
+                // If weights exist, we will have 4 index slots per vertex, otherwise just 1.
+                BlendIndices = new byte[VertexCount, blendWeights ? 4 : 1];
+                for (var i = 0; i < BlendIndices.GetLength(0); i++)
+                {
+                    for (var j = 0; j < BlendIndices.GetLength(1); j++)
+                    {
+                        BlendIndices[i, j] = reader.ReadByte();
+                    }
+                }
             }
 
             if (Options.HasFlag(I3DShapeOptions.HasUnknownData2))
@@ -244,20 +261,33 @@ namespace I3DShapesTool.Lib.Model
                     vec.Write(writer);
             }
 
-            if (Options.HasFlag(I3DShapeOptions.HasUnknownData1))
+            if (Options.HasFlag(I3DShapeOptions.HasSkinningInfo))
             {
-                if (UnknownData1_2 == null)
-                    throw new InvalidOperationException("Options say we have UnknownData1 but UnknownData1_2 field is null");
+                if (BlendIndices == null)
+                    throw new InvalidOperationException("Options say we have skinning info but BlendIndices is null");
 
-                bool isSingleValue = Options.HasFlag(I3DShapeOptions.UnknownData1IsSingleValue);
-                if (!isSingleValue)
+                bool noBlendWeights = Options.HasFlag(I3DShapeOptions.NoBlendWeights);
+                if (!noBlendWeights)
                 {
-                    if (UnknownData1_2 == null)
-                        throw new InvalidOperationException("Options say we have UnknownData1 not single value but UnknownData1_1 field is null");
+                    if (BlendWeights == null)
+                        throw new InvalidOperationException("Options say we have blend weights but BlendWeights field is null");
 
-                    writer.Write(UnknownData1_1);
+                    for(var i = 0; i < BlendWeights.GetLength(0); i++)
+                    {
+                        for (var j = 0; j < BlendWeights.GetLength(1); j++)
+                        {
+                            writer.Write(BlendWeights[i, j]);
+                        }
+                    }
                 }
-                writer.Write(UnknownData1_2);
+
+                for (var i = 0; i < BlendIndices.GetLength(0); i++)
+                {
+                    for (var j = 0; j < BlendIndices.GetLength(1); j++)
+                    {
+                        writer.Write(BlendIndices[i, j]);
+                    }
+                }
             }
 
             if (Options.HasFlag(I3DShapeOptions.HasUnknownData2))

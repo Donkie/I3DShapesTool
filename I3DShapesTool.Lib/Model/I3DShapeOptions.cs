@@ -12,9 +12,9 @@ namespace I3DShapesTool.Lib.Model
         HasUV3 = 0x8,
         HasUV4 = 0x10,
         HasUnknown4DVect = 0x20,
-        HasUnknownData1 = 0x40,
+        HasSkinningInfo = 0x40,
         HasPrecomputed4DVectorData = 0x80,
-        UnknownData1IsSingleValue = 0x100,
+        NoBlendWeights = 0x100,
         HasUnknownData2 = 0x200
     }
 }
