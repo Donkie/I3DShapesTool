@@ -143,14 +143,21 @@ namespace I3DShapesTool
             }
             return folder;
         }
-
-        private static void ExtractFile(I3D i3dFile, CommandLineOptions options)
+        
+        private static void DumpBinary(ShapesFile file, string outFolder)
         {
-            string folder = GetTargetFolder(options, Path.GetFileName(i3dFile.Name));
+            foreach (var part in file.Parts)
+            {
+                var binFileName = $"{PartBinaryFilePrefix(part)}_{part.Name}_{part.Id}.bin";
+                File.WriteAllBytes(Path.Combine(outFolder, CleanFileName(binFileName)), part.RawData);
+            }
+        }
 
+        private static void ExtractFile(I3D i3dFile, string outFolder, CommandLineOptions options)
+        {
             foreach (var shape in i3dFile.GetShapes())
             {
-                var mdlFileName = Path.Combine(folder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
+                var mdlFileName = Path.Combine(outFolder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
 
                 var objfile = new WavefrontObj(shape, i3dFile.Name, options.Transform);
                 var dataBlob = objfile.ExportToBlob();
@@ -162,22 +169,11 @@ namespace I3DShapesTool
             }
         }
 
-        private static void ExtractFile(ShapesFile file, CommandLineOptions options)
+        private static void ExtractFile(ShapesFile file, string outFolder, CommandLineOptions options)
         {
-            string folder = GetTargetFolder(options, Path.GetFileName(file.FilePath));
-
-            if (options.DumpBinary)
-            {
-                foreach (var part in file.Parts)
-                {
-                    var binFileName = $"{PartBinaryFilePrefix(part)}_{part.Name}_{part.Id}.bin";
-                    File.WriteAllBytes(Path.Combine(folder, CleanFileName(binFileName)), part.RawData);
-                }
-            }
-
             foreach (var shape in file.Shapes)
             {
-                var mdlFileName = Path.Combine(folder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
+                var mdlFileName = Path.Combine(outFolder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
 
                 var objFileInternalName = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
                 var objfile = new WavefrontObj(shape, objFileInternalName);
@@ -224,7 +220,12 @@ namespace I3DShapesTool
 
                 var file = LoadFile(i3d.ExternalShapesFile);
                 i3d.LinkShapesFile(file);
-                ExtractFile(i3d, options);
+                string folder = GetTargetFolder(options, Path.GetFileName(i3d.Name));
+                if (options.DumpBinary)
+                {
+                    DumpBinary(file, folder);
+                }
+                ExtractFile(i3d, folder, options);
             }
             else
             {
@@ -232,7 +233,12 @@ namespace I3DShapesTool
                 Logger.LogInformation("Couldn't find matching I3D XML file, parsing only raw shapes data.");
 
                 var file = LoadFile(options.File);
-                ExtractFile(file, options);
+                string folder = GetTargetFolder(options, Path.GetFileName(file.FilePath));
+                if (options.DumpBinary)
+                {
+                    DumpBinary(file, folder);
+                }
+                ExtractFile(file, folder, options);
             }
         }
 
