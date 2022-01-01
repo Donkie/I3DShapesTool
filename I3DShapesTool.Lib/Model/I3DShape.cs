@@ -31,7 +31,7 @@ namespace I3DShapesTool.Lib.Model
         public I3DVector[]? Normals { get; private set; }
         public I3DVector4[]? Some4DData { get; private set; }
         public I3DUV[][] UVSets { get; private set; }
-        public I3DVector4[]? Unknown4DVect { get; private set; }
+        public I3DVector4[]? VertexColor { get; private set; }
         public float[,]? BlendWeights { get; private set; }
         public byte[,]? BlendIndices { get; private set; }
         public float[]? UnknownData2 { get; private set; }
@@ -123,12 +123,12 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if (Options.HasFlag(I3DShapeOptions.HasUnknown4DVect))
+            if (Options.HasFlag(I3DShapeOptions.HasVertexColor))
             {
-                Unknown4DVect = new I3DVector4[VertexCount];
+                VertexColor = new I3DVector4[VertexCount];
                 for(var i = 0; i < VertexCount; i++)
                 {
-                    Unknown4DVect[i] = new I3DVector4(reader);
+                    VertexColor[i] = new I3DVector4(reader);
                 }
             }
 
@@ -252,12 +252,12 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if (Options.HasFlag(I3DShapeOptions.HasUnknown4DVect))
+            if (Options.HasFlag(I3DShapeOptions.HasVertexColor))
             {
-                if (Unknown4DVect == null)
-                    throw new InvalidOperationException("Options say we have Unknown4DVect but Unknown4DVect field is null");
+                if (VertexColor == null)
+                    throw new InvalidOperationException("Options say we have vertex colors but VertexColor field is null");
 
-                foreach (var vec in Unknown4DVect)
+                foreach (var vec in VertexColor)
                     vec.Write(writer);
             }
 

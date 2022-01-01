@@ -11,7 +11,7 @@ namespace I3DShapesTool.Lib.Model
         HasUV2 = 0x4,
         HasUV3 = 0x8,
         HasUV4 = 0x10,
-        HasUnknown4DVect = 0x20,
+        HasVertexColor = 0x20,
         HasSkinningInfo = 0x40,
         HasPrecomputed4DVectorData = 0x80,
         NoBlendWeights = 0x100,
