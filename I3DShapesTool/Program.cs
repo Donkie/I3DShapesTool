@@ -79,7 +79,7 @@ namespace I3DShapesTool
 
         private static ShapesFile LoadFileBruteForce(string filePath)
         {
-            var file = new ShapesFile(Logger);
+            var file = new ShapesFile(filePath, Logger);
             var success = false;
 
             byte seed;
@@ -87,7 +87,7 @@ namespace I3DShapesTool
             {
                 try
                 {
-                    file.Load(filePath, seed);
+                    file.Load(seed);
                 }
                 catch (DecryptFailureException)
                 {
@@ -113,12 +113,12 @@ namespace I3DShapesTool
 
         private static ShapesFile LoadFile(string filePath)
         {
-            var file = new ShapesFile(Logger);
+            var file = new ShapesFile(filePath, Logger);
 
             Logger.LogInformation($"Loading file: {Path.GetFileName(filePath)}");
             try
             {
-                file.Load(filePath);
+                file.Load();
             }
             catch (DecryptFailureException)
             {

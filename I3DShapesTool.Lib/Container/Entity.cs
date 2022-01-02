@@ -1,6 +1,4 @@
 ﻿using System.IO;
-using I3DShapesTool.Lib.Tools;
-using I3DShapesTool.Lib.Tools.Extensions;
 
 namespace I3DShapesTool.Lib.Container
 {

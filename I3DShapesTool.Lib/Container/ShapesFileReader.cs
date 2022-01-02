@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using I3DShapesTool.Lib.Tools;
-using I3DShapesTool.Lib.Tools.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool.Lib.Container

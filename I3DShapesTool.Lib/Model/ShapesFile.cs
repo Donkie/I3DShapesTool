@@ -12,7 +12,7 @@ namespace I3DShapesTool.Lib.Model
     {
         private readonly ILogger? _logger;
 
-        public string? FilePath { get; private set; }
+        public string FilePath { get; }
 
         public int? Seed { get; private set; }
         public int? Version { get; private set; }
@@ -20,15 +20,15 @@ namespace I3DShapesTool.Lib.Model
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
-        public ShapesFile(ILogger? logger = null)
+        public ShapesFile(string path, ILogger? logger = null)
         {
+            FilePath = path;
             _logger = logger;
         }
 
-        public void Load(string path, byte? forceSeed = null, bool strict = false)
+        public void Load(byte? forceSeed = null, bool strict = false)
         {
-            FilePath = path;
-            using var _reader = new ShapesFileReader(path, _logger, forceSeed);
+            using var _reader = new ShapesFileReader(FilePath, _logger, forceSeed);
             Seed = _reader.Header.Seed;
             Version = _reader.Header.Version;
 
