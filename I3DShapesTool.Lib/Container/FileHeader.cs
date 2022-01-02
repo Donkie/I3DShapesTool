@@ -8,8 +8,14 @@ namespace I3DShapesTool.Lib.Container
     /// </summary>
     public class FileHeader
     {
-        public short Version { get; set; }
-        public byte Seed { get; set; }
+        public short Version { get; }
+        public byte Seed { get; }
+
+        public FileHeader(short version, byte seed)
+        {
+            Version = version;
+            Seed = seed;
+        }
 
         public static FileHeader Read(Stream stream)
         {
@@ -36,7 +42,7 @@ namespace I3DShapesTool.Lib.Container
                 throw new NotSupportedException("Unknown version");
             }
 
-            return new FileHeader
+            return new FileHeader(version, seed);
             {
                 Seed = seed,
                 Version = version

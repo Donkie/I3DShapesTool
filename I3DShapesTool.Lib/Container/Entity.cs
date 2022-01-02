@@ -28,10 +28,10 @@ namespace I3DShapesTool.Lib.Container
             Data = data;
         }
 
-        public static Entity Read(Stream stream, Endian endian)
+        public static Entity Read(BinaryReader stream)
         {
-            var type = stream.ReadInt32(endian);
-            var size = stream.ReadInt32(endian);
+            var type = stream.ReadInt32();
+            var size = stream.ReadInt32();
             var data = stream.ReadBytes(size);
 
             return new Entity(type, size, data);
