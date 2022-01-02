@@ -10,23 +10,14 @@ namespace I3DShapesTool.Lib.Container
     public class ShapesFileReader : IDisposable
     {
         private readonly ILogger? _logger;
-        private readonly CipherStream stream;
-        private readonly BinaryReader reader;
+        private readonly CipherStream cipherStream;
+        private readonly BinaryReader binaryReader;
 
-        public ShapesFileReader(string filePath, ILogger? logger = null, byte? forceSeed = null)
+        public ShapesFileReader(Stream inputStream, ILogger? logger = null, byte? forceSeed = null)
         {
-            FilePath = filePath;
             _logger = logger;
 
-            if (!File.Exists(FilePath))
-            {
-                _logger?.LogCritical("File not found: {filePath}.", filePath);
-                throw new FileNotFoundException("File not found.", filePath);
-            }
-
-            var fileStream = File.OpenRead(FilePath);
-
-            Header = FileHeader.Read(fileStream);
+            Header = FileHeader.Read(inputStream);
             _logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
             _logger?.LogDebug("File version: {version}", Header.Version);
 
@@ -43,11 +34,9 @@ namespace I3DShapesTool.Lib.Container
                 Header = new FileHeader(Header.Version, (byte)forceSeed);
             }
 
-            stream = new CipherStream(fileStream, new I3DCipherDecryptor(Header.Seed));
-            reader = new EndianBinaryReader(stream, Endian);
+            cipherStream = new CipherStream(inputStream, new I3DCipherDecryptor(Header.Seed));
+            binaryReader = new EndianBinaryReader(cipherStream, Endian);
         }
-
-        public string FilePath { get; }
 
         public FileHeader Header { get; private set; }
 
@@ -57,12 +46,12 @@ namespace I3DShapesTool.Lib.Container
         {
             try
             {
-                var countEntities = reader.ReadInt32();
+                var countEntities = binaryReader.ReadInt32();
                 if (countEntities < 0 || countEntities > 1e6) // I don't think any i3d file would contain more than a million shapes..
                     throw new DecryptFailureException();
 
                 return Enumerable.Range(0, countEntities)
-                    .Select(v => Entity.Read(reader))
+                    .Select(v => Entity.Read(binaryReader))
                     .ToArray();
             }
             catch (Exception e)
@@ -80,8 +69,8 @@ namespace I3DShapesTool.Lib.Container
 
         public void Dispose()
         {
-            stream.Dispose();
-            reader.Dispose();
+            cipherStream.Dispose();
+            binaryReader.Dispose();
         }
     }
 }

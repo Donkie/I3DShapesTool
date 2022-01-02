@@ -7,34 +7,28 @@ namespace I3DShapesTool.Lib.Container
 {
     public class ShapesFileWriter : IDisposable
     {
-        private readonly CipherStream stream;
-        private readonly BinaryWriter writer;
+        private readonly CipherStream cipherStream;
+        private readonly BinaryWriter binaryWriter;
 
-        public ShapesFileWriter(string filePath, byte seed, short version)
+        public ShapesFileWriter(Stream outputStream, byte seed, short version)
         {
-            FilePath = filePath;
-
-            var fileStream = File.OpenRead(FilePath);
-
             var header = new FileHeader(version, seed);
-            header.Write(fileStream);
+            header.Write(outputStream);
 
             Endian = GetEndian(version);
 
-            stream = new CipherStream(fileStream, new I3DCipherEncryptor(seed));
-            writer = new EndianBinaryWriter(stream, Endian);
+            cipherStream = new CipherStream(outputStream, new I3DCipherEncryptor(seed));
+            binaryWriter = new EndianBinaryWriter(cipherStream, Endian);
         }
 
-        public string FilePath { get; }
-
         public Endian Endian { get; private set; }
-        
+
         public void SaveEntities(ICollection<Entity> entities)
         {
-            writer.Write(entities.Count);
+            binaryWriter.Write(entities.Count);
             foreach (var entity in entities)
             {
-                entity.Write(writer);
+                entity.Write(binaryWriter);
             }
         }
 
@@ -45,8 +39,8 @@ namespace I3DShapesTool.Lib.Container
 
         public void Dispose()
         {
-            stream.Dispose();
-            writer.Dispose();
+            cipherStream.Dispose();
+            binaryWriter.Dispose();
         }
     }
 }

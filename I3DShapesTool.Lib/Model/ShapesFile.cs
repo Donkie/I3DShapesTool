@@ -12,23 +12,20 @@ namespace I3DShapesTool.Lib.Model
     {
         private readonly ILogger? _logger;
 
-        public string FilePath { get; }
-
         public byte? Seed { get; set; }
         public short? Version { get; set; }
         public I3DPart[]? Parts { get; set; }
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
-        public ShapesFile(string path, ILogger? logger = null)
+        public ShapesFile(ILogger? logger = null)
         {
-            FilePath = path;
             _logger = logger;
         }
 
-        public void Load(byte? forceSeed = null, bool strict = false)
+        public void Load(Stream inputStream, byte? forceSeed = null, bool strict = false)
         {
-            using var _reader = new ShapesFileReader(FilePath, _logger, forceSeed);
+            using var _reader = new ShapesFileReader(inputStream, _logger, forceSeed);
             Seed = _reader.Header.Seed;
             Version = _reader.Header.Version;
 
@@ -73,12 +70,12 @@ namespace I3DShapesTool.Lib.Model
                         .ToArray();
         }
 
-        public void Save()
+        public void Write(Stream outputStream)
         {
             if (Seed == null || Version == null)
                 throw new ArgumentNullException("Seed and Version must be set before saving.");
 
-            using var writer = new ShapesFileWriter(FilePath, (byte)Seed, (short)Version);
+            using var writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
             var entities = Parts.Select(part =>
             {
                 using var ms = new MemoryStream();

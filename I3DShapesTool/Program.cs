@@ -79,7 +79,9 @@ namespace I3DShapesTool
 
         private static ShapesFile LoadFileBruteForce(string filePath)
         {
-            var file = new ShapesFile(filePath, Logger);
+            using var fileStream = File.OpenRead(filePath);
+
+            var file = new ShapesFile(Logger);
             var success = false;
 
             byte seed;
@@ -87,7 +89,7 @@ namespace I3DShapesTool
             {
                 try
                 {
-                    file.Load(seed);
+                    file.Load(fileStream, seed);
                 }
                 catch (DecryptFailureException)
                 {
@@ -113,12 +115,14 @@ namespace I3DShapesTool
 
         private static ShapesFile LoadFile(string filePath)
         {
-            var file = new ShapesFile(filePath, Logger);
+            using var fileStream = File.OpenRead(filePath);
+
+            var file = new ShapesFile(Logger);
 
             Logger.LogInformation($"Loading file: {Path.GetFileName(filePath)}");
             try
             {
-                file.Load();
+                file.Load(fileStream);
             }
             catch (DecryptFailureException)
             {
@@ -169,14 +173,13 @@ namespace I3DShapesTool
             }
         }
 
-        private static void ExtractFile(ShapesFile file, string outFolder, CommandLineOptions options)
+        private static void ExtractFile(ShapesFile file, string shapesFileName, string outFolder, CommandLineOptions options)
         {
             foreach (var shape in file.Shapes)
             {
                 var mdlFileName = Path.Combine(outFolder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
 
-                var objFileInternalName = Path.GetFileName(file.FilePath).Replace(".i3d.shapes", "");
-                var objfile = new WavefrontObj(shape, objFileInternalName);
+                var objfile = new WavefrontObj(shape, shapesFileName);
                 var dataBlob = objfile.ExportToBlob();
 
                 if (File.Exists(mdlFileName))
@@ -233,12 +236,13 @@ namespace I3DShapesTool
                 Logger.LogInformation("Couldn't find matching I3D XML file, parsing only raw shapes data.");
 
                 var file = LoadFile(options.File);
-                string folder = GetTargetFolder(options, Path.GetFileName(file.FilePath));
+                string folder = GetTargetFolder(options, Path.GetFileName(options.File));
                 if (options.DumpBinary)
                 {
                     DumpBinary(file, folder);
                 }
-                ExtractFile(file, folder, options);
+                string shapesFileName = Path.GetFileName(options.File).Replace(".i3d.shapes", "");
+                ExtractFile(file, shapesFileName, folder, options);
             }
         }
 

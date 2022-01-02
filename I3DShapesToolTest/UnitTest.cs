@@ -107,8 +107,9 @@ namespace I3DShapesToolTest
         {
             var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
 
-            var file = new ShapesFile(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
-            file.Load();
+            using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
+            var file = new ShapesFile();
+            file.Load(fileStream);
             AssertShapesFile(file, 153, 7, 24);
             AssertShape(file.Shapes.First(), "alphaShape", 20, 368, 260);
             AssertShapeData(file);
@@ -125,8 +126,9 @@ namespace I3DShapesToolTest
 
             foreach(var filePath in shapeFiles)
             {
-                var file = new ShapesFile(filePath);
-                file.Load(null, true);
+                using var fileStream = File.OpenRead(filePath);
+                var file = new ShapesFile();
+                file.Load(fileStream, null, true);
                 AssertShapeData(file);
             }
         }
@@ -136,8 +138,9 @@ namespace I3DShapesToolTest
         {
             var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 19");
 
-            var file = new ShapesFile(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
-            file.Load();
+            using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
+            var file = new ShapesFile();
+            file.Load(fileStream);
             AssertShapesFile(file, 201, 5, 9);
             AssertShape(file.Shapes.First(), "colPartBackShape1", 4, 24, 12);
             AssertShapeData(file);
@@ -154,8 +157,9 @@ namespace I3DShapesToolTest
 
             foreach (var filePath in shapeFiles)
             {
-                var file = new ShapesFile(filePath);
-                file.Load(null, true);
+                using var fileStream = File.OpenRead(filePath);
+                var file = new ShapesFile();
+                file.Load(fileStream, null, true);
                 AssertShapeData(file);
             }
         }
@@ -165,8 +169,9 @@ namespace I3DShapesToolTest
         {
             var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 17");
 
-            var file = new ShapesFile(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
-            file.Load();
+            using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
+            var file = new ShapesFile();
+            file.Load(fileStream);
             AssertShapesFile(file, 49, 5, 12);
             AssertShape(file.Shapes.First(), "wheelLoaderLogForkShape", 1, 24, 12);
             AssertShapeData(file);
@@ -183,8 +188,9 @@ namespace I3DShapesToolTest
 
             foreach (var filePath in shapeFiles)
             {
-                var file = new ShapesFile(filePath);
-                file.Load(null, true);
+                using var fileStream = File.OpenRead(filePath);
+                var file = new ShapesFile();
+                file.Load(fileStream, null, true);
                 AssertShapeData(file);
             }
         }
@@ -194,8 +200,9 @@ namespace I3DShapesToolTest
         {
             var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 15");
 
-            var file = new ShapesFile(Path.Combine(gameFolder, @"data\vehicles\tools\grimme\grimmeFT300.i3d.shapes"));
-            file.Load();
+            using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\tools\grimme\grimmeFT300.i3d.shapes"));
+            var file = new ShapesFile();
+            file.Load(fileStream);
             AssertShapesFile(file, 188, 3, 16);
             AssertShape(file.Shapes.First(), "grimmeFTShape300", 1, 40, 20);
             AssertShapeData(file);
@@ -212,8 +219,9 @@ namespace I3DShapesToolTest
 
             foreach (var filePath in shapeFiles)
             {
-                var file = new ShapesFile(filePath);
-                file.Load(null, true);
+                using var fileStream = File.OpenRead(filePath);
+                var file = new ShapesFile();
+                file.Load(fileStream, null, true);
                 AssertShapeData(file);
             }
         }
@@ -223,8 +231,9 @@ namespace I3DShapesToolTest
         {
             var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 2013");
 
-            var file = new ShapesFile(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
-            file.Load();
+            using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
+            var file = new ShapesFile();
+            file.Load(fileStream);
             AssertShapesFile(file, 68, 2, 32);
             AssertShape(file.Shapes.First(), "blanketBarShape2", 26, 68, 44);
             AssertShapeData(file);
@@ -241,8 +250,9 @@ namespace I3DShapesToolTest
 
             foreach (var filePath in shapeFiles)
             {
-                var file = new ShapesFile(filePath);
-                file.Load(null, true);
+                using var fileStream = File.OpenRead(filePath);
+                var file = new ShapesFile();
+                file.Load(fileStream, null, true);
                 AssertShapeData(file);
             }
         }
