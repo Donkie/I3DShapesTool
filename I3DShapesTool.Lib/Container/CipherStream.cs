@@ -1,23 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace I3DShapesTool.Lib.Container
 {
-    public class DecryptorStream : Stream
+    public class CipherStream : Stream
     {
 
-        public DecryptorStream(Stream baseStream, IDecryptor decryptor)
+        public CipherStream(Stream baseStream, ICipher cipher)
         {
             BaseStream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
-            Decryptor = decryptor;
+            Cipher = cipher;
             BlockOffset = 0;
         }
 
         public Stream BaseStream { get; }
 
-        private readonly IDecryptor Decryptor;
+        private readonly ICipher Cipher;
         private ulong BlockOffset;
 
         public override bool CanRead => BaseStream.CanRead;
@@ -46,7 +44,7 @@ namespace I3DShapesTool.Lib.Container
                 i += read;
             }
             
-            BlockOffset = Decryptor.Decrypt(buffer, BlockOffset);
+            BlockOffset = Cipher.Process(buffer, BlockOffset);
             return i;
         }
 

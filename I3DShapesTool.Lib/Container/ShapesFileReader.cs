@@ -11,7 +11,7 @@ namespace I3DShapesTool.Lib.Container
     public class ShapesFileReader : IDisposable
     {
         private readonly ILogger? _logger;
-        private readonly DecryptorStream stream;
+        private readonly CipherStream stream;
 
         public ShapesFileReader(string filePath, ILogger? logger = null, byte? forceSeed = null)
         {
@@ -43,7 +43,7 @@ namespace I3DShapesTool.Lib.Container
                 Header.Seed = (byte) forceSeed;
             }
 
-            stream = new DecryptorStream(fileStream, new Decryptor(Header.Seed));
+            stream = new CipherStream(fileStream, new I3DCipherDecryptor(Header.Seed));
         }
 
         public string FilePath { get; }

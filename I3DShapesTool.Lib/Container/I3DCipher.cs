@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace I3DShapesTool.Lib.Container
 {
-    /// <summary>
-    /// Created by "high" https://facepunch.com/member.php?u=60704
-    /// </summary>
-    public partial class Decryptor
+    public abstract class I3DCipher : ICipher
     {
         #region KeyConstant
 
@@ -532,7 +530,7 @@ namespace I3DShapesTool.Lib.Container
         /// </summary>
         private readonly uint[] _key;
 
-        public Decryptor(byte seed)
+        public I3DCipher(byte seed)
         {
             _key = new uint[0x10];
             var startIdx = seed << 4;
@@ -560,17 +558,75 @@ namespace I3DShapesTool.Lib.Container
             }
         }
 
-        private static uint Rol(uint val, int bits)
+        protected static uint Rol(uint val, int bits)
         {
             return (val << bits) | (val >> (32 - bits));
         }
 
-        private static uint Ror(uint val, int bits)
+        protected static uint Ror(uint val, int bits)
         {
             return (val >> bits) | (val << (32 - bits));
         }
 
-        private static void Shuffle1(uint[] key, int idx1, int idx2, int idx3, int idx4)
+        private static int RoundUpTo(int val, int toNearest)
+        {
+            return val % toNearest != 0 ? val + (toNearest - val % toNearest) : val;
+        }
+        public const int CryptBlockSize = 64;
+
+        private void ProcessBlocks(uint[] buf, ulong blockIndex)
+        {
+            var key = GetKeyByIndexBlock(_key, blockIndex);
+            ProcessBlocks(key, buf);
+        }
+
+        protected abstract void ProcessBlocks(uint[] key, uint[] buf);
+
+        /// <summary>
+        /// Get key by index decrypt block
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="blockIndex"></param>
+        /// <returns></returns>
+        private static uint[] GetKeyByIndexBlock(uint[] key, ulong blockIndex)
+        {
+            var tempKey = new uint[key.Length];
+            Array.Copy(key, tempKey, tempKey.Length);
+
+            tempKey[8] = (uint)(blockIndex & 0xFFFFFFFF);
+            tempKey[9] = (uint)(blockIndex >> 32);
+            return tempKey;
+        }
+
+        /// <summary>
+        /// Decrypt the data in the buffer
+        /// </summary>
+        /// <param name="buffer">Data to decrypt</param>
+        /// <param name="blockIndex">Current block index</param>
+        /// <returns>Next block index</returns>
+        public ulong Process(byte[] buffer, ulong blockIndex)
+        {
+            var copy = new byte[RoundUpTo(buffer.Length, CryptBlockSize)];
+            buffer.CopyTo(copy, 0);
+
+            var blocks = new uint[copy.Length / 4];
+            CopyTo(copy, 0, blocks);
+
+            ProcessBlocks(blocks, blockIndex);
+
+            CopyTo(blocks, 0, copy);
+            Array.Copy(copy, buffer, buffer.Length);
+            return blockIndex + (ulong)(RoundUpTo(buffer.Length, CryptBlockSize) / CryptBlockSize);
+        }
+    }
+
+    public class I3DCipherDecryptor : I3DCipher
+    {
+        public I3DCipherDecryptor(byte seed) : base(seed)
+        {
+        }
+
+        private void Shuffle1(uint[] key, int idx1, int idx2, int idx3, int idx4)
         {
             key[idx3] ^= Rol(key[idx2] + key[idx1], 7);
             key[idx4] ^= Rol(key[idx3] + key[idx1], 9);
@@ -578,7 +634,7 @@ namespace I3DShapesTool.Lib.Container
             key[idx1] ^= Ror(key[idx2] + key[idx4], 14);
         }
 
-        private static void Shuffle2(uint[] key, int idx1, int idx2, int idx3, int idx4)
+        private void Shuffle2(uint[] key, int idx1, int idx2, int idx3, int idx4)
         {
             key[idx3] ^= Rol(key[idx2] + key[idx1], 7);
             key[idx4] ^= Rol(key[idx2] + key[idx3], 9);
@@ -586,9 +642,95 @@ namespace I3DShapesTool.Lib.Container
             key[idx2] ^= Ror(key[idx4] + key[idx1], 14);
         }
 
-        private static int RoundUpTo(int val, int toNearest)
+        protected override void ProcessBlocks(uint[] key, uint[] buf)
         {
-            return val % toNearest != 0 ? val + (toNearest - val % toNearest) : val;
+            if (buf.Length % 16 != 0)
+            {
+                throw new Exception("Expecting 16 byte blocks");
+            }
+
+            var tempKey = new uint[key.Length];
+            var blockCounter = key[8] | ((ulong)key[9] << 32);
+            for (var i = 0; i < buf.Length; i += 16)
+            {
+                key.CopyTo(tempKey, 0);
+
+                for (var j = 0; j < 10; j++)
+                {
+                    Shuffle1(tempKey, 0x0, 0xC, 0x4, 0x8);
+                    Shuffle1(tempKey, 0x5, 0x1, 0x9, 0xD);
+                    Shuffle1(tempKey, 0xA, 0x6, 0xE, 0x2);
+                    Shuffle1(tempKey, 0xF, 0xB, 0x3, 0x7);
+                    Shuffle2(tempKey, 0x3, 0x0, 0x1, 0x2);
+                    Shuffle2(tempKey, 0x4, 0x5, 0x6, 0x7);
+                    Shuffle1(tempKey, 0xA, 0x9, 0xB, 0x8);
+                    Shuffle2(tempKey, 0xE, 0xF, 0xC, 0xD);
+                }
+
+                for (var j = 0; j < key.Length; j++)
+                    buf[i + j] ^= key[j] + tempKey[j];
+
+                blockCounter++;
+                key[8] = (uint)(blockCounter & 0xFFFFFFFF);
+                key[9] = (uint)(blockCounter >> 32);
+            }
+        }
+    }
+
+    public class I3DCipherEncryptor : I3DCipher
+    {
+        public I3DCipherEncryptor(byte seed) : base(seed)
+        {
+        }
+
+        private void Shuffle1(uint[] key, int idx1, int idx2, int idx3, int idx4)
+        {
+            key[idx1] ^= Ror(key[idx2] + key[idx4], 14);
+            key[idx2] ^= Rol(key[idx3] + key[idx4], 13);
+            key[idx4] ^= Rol(key[idx3] + key[idx1], 9);
+            key[idx3] ^= Rol(key[idx2] + key[idx1], 7);
+        }
+
+        private void Shuffle2(uint[] key, int idx1, int idx2, int idx3, int idx4)
+        {
+            key[idx2] ^= Ror(key[idx4] + key[idx1], 14);
+            key[idx1] ^= Rol(key[idx3] + key[idx4], 13);
+            key[idx4] ^= Rol(key[idx2] + key[idx3], 9);
+            key[idx3] ^= Rol(key[idx2] + key[idx1], 7);
+        }
+
+        protected override void ProcessBlocks(uint[] key, uint[] buf)
+        {
+            if (buf.Length % 16 != 0)
+            {
+                throw new Exception("Expecting 16 byte blocks");
+            }
+
+            var tempKey = new uint[key.Length];
+            var blockCounter = key[8] | ((ulong)key[9] << 32);
+            for (var i = 0; i < buf.Length; i += 16)
+            {
+                key.CopyTo(tempKey, 0);
+
+                for (var j = 0; j < 10; j++)
+                {
+                    Shuffle2(tempKey, 0xE, 0xF, 0xC, 0xD);
+                    Shuffle1(tempKey, 0xA, 0x9, 0xB, 0x8);
+                    Shuffle2(tempKey, 0x4, 0x5, 0x6, 0x7);
+                    Shuffle2(tempKey, 0x3, 0x0, 0x1, 0x2);
+                    Shuffle1(tempKey, 0xF, 0xB, 0x3, 0x7);
+                    Shuffle1(tempKey, 0xA, 0x6, 0xE, 0x2);
+                    Shuffle1(tempKey, 0x5, 0x1, 0x9, 0xD);
+                    Shuffle1(tempKey, 0x0, 0xC, 0x4, 0x8);
+                }
+
+                for (var j = 0; j < key.Length; j++)
+                    buf[i + j] ^= key[j] + tempKey[j];
+
+                blockCounter++;
+                key[8] = (uint)(blockCounter & 0xFFFFFFFF);
+                key[9] = (uint)(blockCounter >> 32);
+            }
         }
     }
 }
