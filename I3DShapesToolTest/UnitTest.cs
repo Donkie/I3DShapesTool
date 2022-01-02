@@ -15,7 +15,7 @@ namespace I3DShapesToolTest
         {
         }
 
-        private static void AssertShapesFile(ShapesFile file, int seed, int version, int shapeCount)
+        private static void AssertShapesFile(ShapesFile file, byte seed, short version, int shapeCount)
         {
             Assert.Equal(seed, file.Seed);
             Assert.Equal(version, file.Version);

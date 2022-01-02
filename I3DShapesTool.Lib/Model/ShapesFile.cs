@@ -14,9 +14,9 @@ namespace I3DShapesTool.Lib.Model
 
         public string FilePath { get; }
 
-        public int? Seed { get; private set; }
-        public int? Version { get; private set; }
-        public I3DPart[]? Parts { get; private set; }
+        public byte? Seed { get; set; }
+        public short? Version { get; set; }
+        public I3DPart[]? Parts { get; set; }
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
@@ -71,6 +71,28 @@ namespace I3DShapesTool.Lib.Model
                         .Where(part => part != null)
                         .Cast<I3DPart>()
                         .ToArray();
+        }
+
+        public void Save()
+        {
+            if (Seed == null || Version == null)
+                throw new ArgumentNullException("Seed and Version must be set before saving.");
+
+            using var writer = new ShapesFileWriter(FilePath, (byte)Seed, (short)Version);
+            var entities = Parts.Select(part =>
+            {
+                using var ms = new MemoryStream();
+                using var bw = new EndianBinaryWriter(ms, writer.Endian);
+
+                part.Write(bw);
+
+                bw.Flush();
+                var data = ms.ToArray();
+
+                return new Entity(part.RawType, data.Length, data);
+            }).ToArray();
+
+            writer.SaveEntities(entities);
         }
 
         private static I3DPart LoadPart(Entity entityRaw, ShapeType partType, Endian endian, int version)

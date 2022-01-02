@@ -43,10 +43,24 @@ namespace I3DShapesTool.Lib.Container
             }
 
             return new FileHeader(version, seed);
+        }
+
+        public void Write(Stream stream)
+        {
+            if (Version >= 4) // Might be 5 as well
             {
-                Seed = seed,
-                Version = version
-            };
+                stream.WriteByte((byte)Version);
+                stream.WriteByte(0);
+                stream.WriteByte(Seed);
+                stream.WriteByte(0);
+            }
+            else
+            {
+                stream.WriteByte(0);
+                stream.WriteByte(Seed);
+                stream.WriteByte(0);
+                stream.WriteByte((byte)Version);
+            }
         }
     }
 }

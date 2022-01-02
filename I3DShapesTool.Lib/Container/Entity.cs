@@ -34,5 +34,12 @@ namespace I3DShapesTool.Lib.Container
 
             return new Entity(type, size, data);
         }
+
+        public void Write(BinaryWriter stream)
+        {
+            stream.Write(Type);
+            stream.Write(Data.Length);
+            stream.Write(Data);
+        }
     }
 }
