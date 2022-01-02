@@ -6,7 +6,7 @@ namespace I3DShapesTool.Lib.Container
     {
         public const int CryptBlockSize = 64;
 
-        public void DecryptBlocks(uint[] buf, ulong blockIndex)
+        private void DecryptBlocks(uint[] buf, ulong blockIndex)
         {
             var key = GetKeyByIndexBlock(_key, blockIndex);
             DecryptBlocks(key, buf);
@@ -62,19 +62,13 @@ namespace I3DShapesTool.Lib.Container
             return tempKey;
         }
 
-        public void Decrypt(byte[] buffer, ulong blockIndex)
-        {
-            var nextBlockIndex = 0ul;
-            Decrypt(buffer, blockIndex, ref nextBlockIndex);
-        }
-
         /// <summary>
-        /// Decrypt block
+        /// Decrypt the data in the buffer
         /// </summary>
-        /// <param name="buffer">Decrypt block</param>
-        /// <param name="blockIndex">Decrypt block index</param>
-        /// <param name="nextBlockIndex">Next decrypt block index</param>
-        public void Decrypt(byte[] buffer, ulong blockIndex, ref ulong nextBlockIndex)
+        /// <param name="buffer">Data to decrypt</param>
+        /// <param name="blockIndex">Current block index</param>
+        /// <returns>Next block index</returns>
+        public ulong Decrypt(byte[] buffer, ulong blockIndex)
         {
             var copy = new byte[RoundUpTo(buffer.Length, CryptBlockSize)];
             buffer.CopyTo(copy, 0);
@@ -86,7 +80,7 @@ namespace I3DShapesTool.Lib.Container
 
             CopyTo(blocks, 0, copy);
             Array.Copy(copy, buffer, buffer.Length);
-            nextBlockIndex = blockIndex + (ulong)(RoundUpTo(buffer.Length, CryptBlockSize) / CryptBlockSize);
+            return blockIndex + (ulong)(RoundUpTo(buffer.Length, CryptBlockSize) / CryptBlockSize);
         }
     }
 }

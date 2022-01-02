@@ -8,7 +8,7 @@ namespace I3DShapesTool.Lib.Container
     /// </summary>
     public class FileHeader
     {
-        public short Version { get; private set; }
+        public short Version { get; set; }
         public byte Seed { get; set; }
 
         public static FileHeader Read(Stream stream)

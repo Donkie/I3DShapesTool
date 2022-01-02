@@ -12,12 +12,10 @@ namespace I3DShapesTool.Lib.Model
     {
         private readonly ILogger? _logger;
 
-        private FileContainer? _container;
-
         public string? FilePath { get; private set; }
 
-        public int? Seed => _container?.Header.Seed;
-        public int? Version => _container?.Header.Version;
+        public int? Seed { get; private set; }
+        public int? Version { get; private set; }
         public I3DPart[]? Parts { get; private set; }
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
@@ -30,18 +28,19 @@ namespace I3DShapesTool.Lib.Model
         public void Load(string path, byte? forceSeed = null, bool strict = false)
         {
             FilePath = path;
-            _container = new FileContainer(path, _logger, forceSeed);
+            using var _reader = new ShapesFileReader(path, _logger, forceSeed);
+            Seed = _reader.Header.Seed;
+            Version = _reader.Header.Version;
 
-            var entities = _container.GetEntities();
-            Parts = _container
-                        .ReadRawData(entities)
+            var entities = _reader.GetEntities();
+            Parts = entities
                         .Select(
                             (entityRaw, index) =>
                             {
                                 try
                                 {
-                                    var partType = GetPartType(entityRaw.Entity.Type);
-                                    var part = LoadPart(entityRaw, partType, _container.Endian, _container.Header.Version);
+                                    var partType = GetPartType(entityRaw.Type);
+                                    var part = LoadPart(entityRaw, partType, _reader.Endian, _reader.Header.Version);
                                     if(part.Type == ShapeType.Unknown)
                                     {
                                         _logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
@@ -59,7 +58,7 @@ namespace I3DShapesTool.Lib.Model
                                     // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
                                     try
                                     {
-                                        return LoadPart(entityRaw, ShapeType.Unknown, _container.Endian, _container.Header.Version);
+                                        return LoadPart(entityRaw, ShapeType.Unknown, _reader.Endian, _reader.Header.Version);
                                     }
                                     catch (Exception)
                                     {
@@ -74,13 +73,13 @@ namespace I3DShapesTool.Lib.Model
                         .ToArray();
         }
 
-        private static I3DPart LoadPart((Entity Entity, byte[] RawData) entityRaw, ShapeType partType, Endian endian, int version)
+        private static I3DPart LoadPart(Entity entityRaw, ShapeType partType, Endian endian, int version)
         {
             return partType switch
             {
-                ShapeType.Shape => new I3DShape(entityRaw.RawData, endian, version),
-                ShapeType.Spline => new Spline(entityRaw.RawData, endian, version),
-                ShapeType.Unknown => new I3DPart(entityRaw.Entity.Type, entityRaw.RawData, endian, version),
+                ShapeType.Shape => new I3DShape(entityRaw.Data, endian, version),
+                ShapeType.Spline => new Spline(entityRaw.Data, endian, version),
+                ShapeType.Unknown => new I3DPart(entityRaw.Type, entityRaw.Data, endian, version),
                 _ => throw new ArgumentOutOfRangeException(),
             };
         }

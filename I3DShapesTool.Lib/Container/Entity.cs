@@ -13,60 +13,29 @@ namespace I3DShapesTool.Lib.Container
         /// <summary>
         /// Entity type.
         /// </summary>
-        public int Type { get; private set; }
+        public int Type { get; }
 
         /// <summary>
         /// Entity type.
         /// </summary>
-        public int Size { get; private set; }
+        public int Size { get; }
 
-        /// <summary>
-        /// Index Decrypt Block.
-        /// </summary>
-        public ulong DecryptIndexBlock { get; private set; }
+        public byte[] Data { get; }
 
-        /// <summary>
-        /// Offset by start entity.
-        /// </summary>
-        public long OffsetRawBlock { get; private set; }
-
-        /// <summary>
-        /// Read meta information <see cref="Entity"/>
-        /// </summary>
-        /// <param name="stream">Stream.</param>
-        /// <param name="decryptor">Decryptor.</param>
-        /// <param name="decryptIndexBlock">Index Decrypt Block.</param>
-        /// <param name="endian">File endian.</param>
-        /// <param name="version">File version.</param>
-        /// <returns></returns>
-        public static Entity Read(Stream stream, IDecryptor decryptor, ref ulong decryptIndexBlock, Endian endian)
+        public Entity(int type, int size, byte[] data)
         {
-            var cryptBlockCount = 0ul;
-            var nextDecrIndex = 0ul;
+            Type = type;
+            Size = size;
+            Data = data;
+        }
 
-            var type = decryptor.ReadInt32(stream, decryptIndexBlock + cryptBlockCount, ref nextDecrIndex, endian);
+        public static Entity Read(Stream stream, Endian endian)
+        {
+            var type = stream.ReadInt32(endian);
+            var size = stream.ReadInt32(endian);
+            var data = stream.ReadBytes(size);
 
-            var blockSize = (ulong)Marshal.SizeOf(type);
-            cryptBlockCount += (blockSize + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize;
-
-            var size = decryptor.ReadInt32(stream, decryptIndexBlock + cryptBlockCount, ref nextDecrIndex, endian);
-            blockSize = (ulong)Marshal.SizeOf(size);
-            cryptBlockCount += (blockSize + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize;
-            var startDecryptIndexBlock = decryptIndexBlock + cryptBlockCount;
-
-            var offset = stream.Position;
-
-            cryptBlockCount += (ulong)((size + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize);
-            stream.Seek(size, SeekOrigin.Current);
-
-            decryptIndexBlock += cryptBlockCount;
-            return new Entity
-            {
-                Type = type,
-                Size = size,
-                OffsetRawBlock = offset,
-                DecryptIndexBlock = startDecryptIndexBlock,
-            };
+            return new Entity(type, size, data);
         }
     }
 }
