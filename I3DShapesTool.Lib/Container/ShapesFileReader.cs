@@ -34,7 +34,7 @@ namespace I3DShapesTool.Lib.Container
                 Header = new FileHeader(Header.Version, (byte)forceSeed);
             }
 
-            cipherStream = new CipherStream(inputStream, new I3DCipherDecryptor(Header.Seed));
+            cipherStream = new CipherStream(inputStream, new I3DCipher(Header.Seed));
             binaryReader = new EndianBinaryReader(cipherStream, Endian);
         }
 

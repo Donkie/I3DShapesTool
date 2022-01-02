@@ -17,7 +17,7 @@ namespace I3DShapesTool.Lib.Container
 
             Endian = GetEndian(version);
 
-            cipherStream = new CipherStream(outputStream, new I3DCipherEncryptor(seed));
+            cipherStream = new CipherStream(outputStream, new I3DCipher(seed));
             binaryWriter = new EndianBinaryWriter(cipherStream, Endian);
         }
 

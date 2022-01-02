@@ -22,7 +22,7 @@ namespace I3DShapesTool.Lib.Container
 
         public override bool CanSeek => false;
 
-        public override bool CanWrite => false;
+        public override bool CanWrite => BaseStream.CanWrite;
 
         public override long Length => BaseStream.Length;
 
@@ -60,7 +60,12 @@ namespace I3DShapesTool.Lib.Container
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotSupportedException();
+            byte[] copyBuffer = new byte[count];
+            Array.Copy(buffer, offset, copyBuffer, 0, count);
+
+            BlockOffset = Cipher.Process(copyBuffer, BlockOffset);
+
+            BaseStream.Write(copyBuffer, 0, count);
         }
     }
 }
