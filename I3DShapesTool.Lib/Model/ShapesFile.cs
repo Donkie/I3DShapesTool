@@ -8,14 +8,36 @@ using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool.Lib.Model
 {
+    /// <summary>
+    /// Contains methods for loading and saving the contents of a .i3d.shapes file
+    /// </summary>
     public class ShapesFile
     {
         private readonly ILogger? _logger;
 
+        /// <summary>
+        /// Cipher seed
+        /// </summary>
         public byte? Seed { get; set; }
+
+        /// <summary>
+        /// File version
+        /// </summary>
         public short? Version { get; set; }
+
+        /// <summary>
+        /// Parts in file
+        /// </summary>
         public I3DPart[]? Parts { get; set; }
+
+        /// <summary>
+        /// Shapes in file
+        /// </summary>
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
+
+        /// <summary>
+        /// Splines in file
+        /// </summary>
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
         public ShapesFile(ILogger? logger = null)
@@ -23,6 +45,12 @@ namespace I3DShapesTool.Lib.Model
             _logger = logger;
         }
 
+        /// <summary>
+        /// Read the .i3d.shapes contents from the input stream. The contents will be populated in the Parts array.
+        /// </summary>
+        /// <param name="inputStream">Stream of shapes file data</param>
+        /// <param name="forceSeed">Force a specific seed instead of the one specified in the file header</param>
+        /// <param name="strict">Abort reading and propagate any exceptions that pop up when parsing part data. If false, parts that failed to read will be ignored.</param>
         public void Load(Stream inputStream, byte? forceSeed = null, bool strict = false)
         {
             using var _reader = new ShapesFileReader(inputStream, _logger, forceSeed);
@@ -70,10 +98,15 @@ namespace I3DShapesTool.Lib.Model
                         .ToArray();
         }
 
+        /// <summary>
+        /// Write Parts data to the output stream as a .i3d.shapes file.
+        /// </summary>
+        /// <param name="outputStream">Stream to write to</param>
+        /// <exception cref="ArgumentNullException">Thrown if Seed, Version or Parts is not set</exception>
         public void Write(Stream outputStream)
         {
-            if (Seed == null || Version == null)
-                throw new ArgumentNullException("Seed and Version must be set before saving.");
+            if (Seed == null || Version == null || Parts == null)
+                throw new ArgumentNullException("Seed, Version and Parts must be set before saving.");
 
             using var writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
             var entities = Parts.Select(part =>
@@ -114,17 +147,6 @@ namespace I3DShapesTool.Lib.Model
                 default:
                     return ShapeType.Unknown;
             }
-        }
-
-        /// <summary>
-        /// https://stackoverflow.com/a/7393722/2911165
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string CleanFileName(string fileName)
-        {
-            return Path.GetInvalidFileNameChars()
-                       .Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
         }
     }
 }

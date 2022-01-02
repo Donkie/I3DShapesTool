@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace I3DShapesTool.Lib.Container
 {
+    /// <summary>
+    /// Represents the cipher encryption used in the .i3d.shapes file
+    /// </summary>
     public class I3DCipher : ICipher
     {
         #region KeyConstant
@@ -525,8 +528,10 @@ namespace I3DShapesTool.Lib.Container
 
         #endregion
 
+        private const int CryptBlockSize = 64;
+
         /// <summary>
-        /// Key by seed
+        /// Key from the key database based on the supplied seed
         /// </summary>
         private readonly uint[] _key;
 
@@ -558,12 +563,12 @@ namespace I3DShapesTool.Lib.Container
             }
         }
 
-        protected static uint Rol(uint val, int bits)
+        private static uint Rol(uint val, int bits)
         {
             return (val << bits) | (val >> (32 - bits));
         }
 
-        protected static uint Ror(uint val, int bits)
+        private static uint Ror(uint val, int bits)
         {
             return (val >> bits) | (val << (32 - bits));
         }
@@ -572,8 +577,12 @@ namespace I3DShapesTool.Lib.Container
         {
             return val % toNearest != 0 ? val + (toNearest - val % toNearest) : val;
         }
-        public const int CryptBlockSize = 64;
 
+        /// <summary>
+        /// The actual cipher method. Performs the cipher on the data in buf using a key derived from the block index
+        /// </summary>
+        /// <param name="buf">Data buffer</param>
+        /// <param name="blockIndex">Block index to start from</param>
         private void ProcessBlocks(uint[] buf, ulong blockIndex)
         {
             var key = GetKeyByIndexBlock(_key, blockIndex);
@@ -596,7 +605,13 @@ namespace I3DShapesTool.Lib.Container
             key[idx2] ^= Ror(key[idx4] + key[idx1], 14);
         }
 
-        private void ProcessBlocks(uint[] key, uint[] buf)
+        /// <summary>
+        /// The actual cipher method. Performs the cipher on the data in buf using the key
+        /// </summary>
+        /// <param name="buf">Data buffer</param>
+        /// <param name="key">Key</param>
+        /// <exception cref="Exception">Thrown if buf is of a bad size</exception>
+        private void ProcessBlocks(uint[] buf, uint[] key)
         {
             if (buf.Length % 16 != 0)
             {
@@ -631,11 +646,11 @@ namespace I3DShapesTool.Lib.Container
         }
 
         /// <summary>
-        /// Get key by index block
+        /// Returns a key containing the block index
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="blockIndex"></param>
-        /// <returns></returns>
+        /// <param name="key">Original key</param>
+        /// <param name="blockIndex">Block index to input</param>
+        /// <returns>Indexed key</returns>
         private static uint[] GetKeyByIndexBlock(uint[] key, ulong blockIndex)
         {
             var tempKey = new uint[key.Length];
@@ -647,9 +662,9 @@ namespace I3DShapesTool.Lib.Container
         }
 
         /// <summary>
-        /// Encrypt/Decrypt the data in the buffer
+        /// Cipher the data in the buffer
         /// </summary>
-        /// <param name="buffer">Data to decrypt</param>
+        /// <param name="buffer">Data to cipher</param>
         /// <param name="blockIndex">Current block index</param>
         /// <returns>Next block index</returns>
         public ulong Process(byte[] buffer, ulong blockIndex)

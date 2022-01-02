@@ -3,6 +3,9 @@ using System.IO;
 
 namespace I3DShapesTool.Lib.Container
 {
+    /// <summary>
+    /// A stream that passes the read/written data through a cipher
+    /// </summary>
     public class CipherStream : Stream
     {
 
