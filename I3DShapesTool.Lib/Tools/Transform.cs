@@ -1,7 +1,5 @@
 ﻿using I3DShapesTool.Lib.Model;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace I3DShapesTool.Lib.Tools
 {
