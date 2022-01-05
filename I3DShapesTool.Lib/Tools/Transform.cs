@@ -17,7 +17,7 @@ namespace I3DShapesTool.Lib.Tools
 
         public Transform(double[,] data)
         {
-            if (data.GetLength(0) != 4 || data.GetLength(1) != 4)
+            if(data.GetLength(0) != 4 || data.GetLength(1) != 4)
                 throw new ArgumentException("Input matrix must be 4x4");
             v = data;
         }
@@ -39,7 +39,7 @@ namespace I3DShapesTool.Lib.Tools
         {
             double cosX = Math.Cos(rot.X);
             double sinX = Math.Sin(rot.X);
-            Transform Rx = new Transform(new double[,]
+            Transform rx = new Transform(new double[,]
             {
                 { 1, 0, 0, 0 },
                 { 0, cosX, -sinX, 0 },
@@ -49,7 +49,7 @@ namespace I3DShapesTool.Lib.Tools
 
             double cosY = Math.Cos(rot.Y);
             double sinY = Math.Sin(rot.Y);
-            Transform Ry = new Transform(new double[,]
+            Transform ry = new Transform(new double[,]
             {
                 { cosY, 0, sinY, 0 },
                 { 0, 1, 0, 0 },
@@ -59,7 +59,7 @@ namespace I3DShapesTool.Lib.Tools
 
             double cosZ = Math.Cos(rot.Z);
             double sinZ = Math.Sin(rot.Z);
-            Transform Rz = new Transform(new double[,]
+            Transform rz = new Transform(new double[,]
             {
                 { cosZ, -sinZ, 0, 0 },
                 { sinZ, cosZ, 0, 0 },
@@ -67,7 +67,7 @@ namespace I3DShapesTool.Lib.Tools
                 { 0, 0, 0, 1 }
             });
 
-            return Rx * (Ry * (Rz * this));
+            return rx * (ry * (rz * this));
         }
 
         public Transform Scale(I3DVector scale)
@@ -83,10 +83,7 @@ namespace I3DShapesTool.Lib.Tools
             return s * this;
         }
 
-        public double this[int i, int j]
-        {
-            get { return v[i, j]; }
-        }
+        public double this[int i, int j] => v[i, j];
 
         public static Transform operator *(Transform a, Transform b)
         {
@@ -108,9 +105,9 @@ namespace I3DShapesTool.Lib.Tools
 
         public static I3DVector operator *(Transform a, I3DVector b)
         {
-            double x = a[0, 0] * b.X + a[0, 1] * b.Y + a[0, 2] * b.Z + a[0, 3];
-            double y = a[1, 0] * b.X + a[1, 1] * b.Y + a[1, 2] * b.Z + a[1, 3];
-            double z = a[2, 0] * b.X + a[2, 1] * b.Y + a[2, 2] * b.Z + a[2, 3];
+            double x = (a[0, 0] * b.X) + (a[0, 1] * b.Y) + (a[0, 2] * b.Z) + a[0, 3];
+            double y = (a[1, 0] * b.X) + (a[1, 1] * b.Y) + (a[1, 2] * b.Z) + a[1, 3];
+            double z = (a[2, 0] * b.X) + (a[2, 1] * b.Y) + (a[2, 2] * b.Z) + a[2, 3];
             return new I3DVector(x, y, z);
         }
     }

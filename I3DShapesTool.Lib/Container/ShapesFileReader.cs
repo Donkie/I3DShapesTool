@@ -9,27 +9,24 @@ namespace I3DShapesTool.Lib.Container
 {
     public class ShapesFileReader : IDisposable
     {
-        private readonly ILogger? _logger;
         private readonly CipherStream cipherStream;
         private readonly BinaryReader binaryReader;
 
         public ShapesFileReader(Stream inputStream, ILogger? logger = null, byte? forceSeed = null)
         {
-            _logger = logger;
-
             Header = FileHeader.Read(inputStream);
-            _logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
-            _logger?.LogDebug("File version: {version}", Header.Version);
+            logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
+            logger?.LogDebug("File version: {version}", Header.Version);
 
-            if (Header.Version < 2 || Header.Version > 7)
+            if(Header.Version < 2 || Header.Version > 7)
             {
-                _logger?.LogCritical("Unsupported version: {version}", Header.Version);
+                logger?.LogCritical("Unsupported version: {version}", Header.Version);
                 throw new NotSupportedException("Unsupported version");
             }
 
             Endian = GetEndian(Header.Version);
 
-            if (forceSeed != null)
+            if(forceSeed != null)
             {
                 Header = new FileHeader(Header.Version, (byte)forceSeed);
             }
@@ -46,17 +43,17 @@ namespace I3DShapesTool.Lib.Container
         {
             try
             {
-                var countEntities = binaryReader.ReadInt32();
-                if (countEntities < 0 || countEntities > 1e6) // I don't think any i3d file would contain more than a million shapes..
+                int countEntities = binaryReader.ReadInt32();
+                if(countEntities < 0 || countEntities > 1e6) // I don't think any i3d file would contain more than a million shapes..
                     throw new DecryptFailureException();
 
                 return Enumerable.Range(0, countEntities)
                     .Select(v => Entity.Read(binaryReader))
                     .ToArray();
             }
-            catch (Exception e)
+            catch(Exception e)
             {
-                if (e is ArgumentOutOfRangeException || e is IOException || e is OutOfMemoryException)
+                if(e is ArgumentOutOfRangeException || e is IOException || e is OutOfMemoryException)
                     throw new DecryptFailureException();
                 throw;
             }

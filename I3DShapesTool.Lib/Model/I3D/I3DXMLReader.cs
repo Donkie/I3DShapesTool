@@ -16,10 +16,10 @@ namespace I3DShapesTool.Lib.Model.I3D
             IgnoreComments = true
         };
 
-        private static I3DVector parseVectorString(string vecStr)
+        private static I3DVector ParseVectorString(string vecStr)
         {
-            var components = vecStr.Split(' ');
-            if (components.Length != 3)
+            string[]? components = vecStr.Split(' ');
+            if(components.Length != 3)
             {
                 Logger?.LogWarning("Encountered invalid vector string when parsing xml: \"{str}\"", vecStr);
                 return I3DVector.Zero;
@@ -35,14 +35,14 @@ namespace I3DShapesTool.Lib.Model.I3D
         {
             while(reader.NodeType != XmlNodeType.EndElement)
             {
-                if (reader.NodeType == XmlNodeType.Element)
+                if(reader.NodeType == XmlNodeType.Element)
                 {
                     I3DSceneType type;
                     try
                     {
                         type = (I3DSceneType)Enum.Parse(typeof(I3DSceneType), reader.Name);
                     }
-                    catch (ArgumentException)
+                    catch(ArgumentException)
                     {
                         throw new ArgumentException($"Unknown element type \"{reader.Name}\" found in scene");
                     }
@@ -55,22 +55,22 @@ namespace I3DShapesTool.Lib.Model.I3D
                     I3DVector pos = I3DVector.Zero;
                     I3DVector rot = I3DVector.Zero;
                     I3DVector scl = I3DVector.One;
-                    if (reader.MoveToFirstAttribute())
+                    if(reader.MoveToFirstAttribute())
                     {
                         do
                         {
-                            if (reader.Name == "name")
+                            if(reader.Name == "name")
                                 name = reader.Value;
-                            else if (reader.Name == "nodeId")
+                            else if(reader.Name == "nodeId")
                                 id = int.Parse(reader.Value);
-                            else if (reader.Name == "shapeId")
+                            else if(reader.Name == "shapeId")
                                 shapeId = int.Parse(reader.Value);
-                            else if (reader.Name == "translation")
-                                pos = parseVectorString(reader.Value);
-                            else if (reader.Name == "rotation")
-                                rot = parseVectorString(reader.Value);
-                            else if (reader.Name == "scale")
-                                scl = parseVectorString(reader.Value);
+                            else if(reader.Name == "translation")
+                                pos = ParseVectorString(reader.Value);
+                            else if(reader.Name == "rotation")
+                                rot = ParseVectorString(reader.Value);
+                            else if(reader.Name == "scale")
+                                scl = ParseVectorString(reader.Value);
                         }
                         while(reader.MoveToNextAttribute());
                         reader.Read();
@@ -85,7 +85,7 @@ namespace I3DShapesTool.Lib.Model.I3D
                     };
                     child.SetParent(parent);
 
-                    if (!isEmpty)
+                    if(!isEmpty)
                     {
                         TraverseScene(reader, child);
                     }
@@ -96,14 +96,14 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public static I3D ParseXML(string filePath)
         {
-            using var fileStream = File.OpenText(filePath);
+            using StreamReader? fileStream = File.OpenText(filePath);
             using XmlReader reader = XmlReader.Create(fileStream, xmlSettings);
 
             I3D result = new I3D();
 
-            while (reader.Read())
+            while(reader.Read())
             {
-                switch (reader.NodeType)
+                switch(reader.NodeType)
                 {
                     case XmlNodeType.Element:
                         if(reader.Name == "i3D" && reader.HasAttributes)
@@ -111,9 +111,9 @@ namespace I3DShapesTool.Lib.Model.I3D
                             reader.MoveToFirstAttribute();
                             do
                             {
-                                if (reader.Name == "name")
+                                if(reader.Name == "name")
                                     result.Name = reader.Value;
-                                if (reader.Name == "version")
+                                if(reader.Name == "version")
                                     result.Version = reader.Value;
                             }
                             while(reader.MoveToNextAttribute());
@@ -124,10 +124,10 @@ namespace I3DShapesTool.Lib.Model.I3D
                             reader.MoveToFirstAttribute();
                             do
                             {
-                                if (reader.Name == "externalShapesFile")
+                                if(reader.Name == "externalShapesFile")
                                     result.ExternalShapesFile = Path.Combine(Path.GetDirectoryName(filePath), reader.Value);
                             }
-                            while (reader.MoveToNextAttribute());
+                            while(reader.MoveToNextAttribute());
                             break;
                         }
                         if(reader.Name == "Scene")

@@ -10,7 +10,7 @@ namespace I3DShapesTool.Lib.Container
     {
         #region KeyConstant
 
-        private readonly uint[] KeyConst =
+        private readonly uint[] keyConst =
         {
             0xE3E4E5E3, 0xE3E3E3E4, 0xE1E2E3E3, 0xE2E2E1E1, 0xE1E2E1E2, 0xE1E1E2E1, 0xE1E2E4E3, 0xE1E1E2E1,
             0xDEDFE2E2, 0xDEDFDFDE, 0xE0DFE0E0, 0xE1E1E0E1, 0xE0DCDDE1, 0xDEDFDDE0, 0xDFE0E0DF, 0xDEDFDFDF,
@@ -528,38 +528,38 @@ namespace I3DShapesTool.Lib.Container
 
         #endregion
 
-        private const int CryptBlockSize = 64;
+        private const int CRYPT_BLOCK_SIZE = 64;
 
         /// <summary>
         /// Key from the key database based on the supplied seed
         /// </summary>
-        private readonly uint[] _key;
+        private readonly uint[] key;
 
         public I3DCipher(byte seed)
         {
-            _key = new uint[0x10];
-            var startIdx = seed << 4;
-            for (var i = 0; i < _key.Length; i++)
-                _key[i] = KeyConst[startIdx + i];
+            key = new uint[0x10];
+            int startIdx = seed << 4;
+            for(int i = 0; i < key.Length; i++)
+                key[i] = keyConst[startIdx + i];
             //Block Counter
-            _key[0x8] = 0;
-            _key[0x9] = 0;
+            key[0x8] = 0;
+            key[0x9] = 0;
         }
 
         private static void CopyTo(IReadOnlyList<byte> src, int srcIdx, IList<uint> dest)
         {
-            for (int i = srcIdx, o = 0; o < dest.Count && i < src.Count; i += 4, o++)
-                dest[o] = (uint) ((src[i + 3] << 24) | (src[i + 2] << 16) | (src[i + 1] << 8) | src[i]);
+            for(int i = srcIdx, o = 0; o < dest.Count && i < src.Count; i += 4, o++)
+                dest[o] = (uint)((src[i + 3] << 24) | (src[i + 2] << 16) | (src[i + 1] << 8) | src[i]);
         }
 
         private static void CopyTo(IReadOnlyList<uint> src, int srcIdx, IList<byte> dest)
         {
-            for (int i = srcIdx, o = 0; o < dest.Count && i < src.Count; i++, o += 4)
+            for(int i = srcIdx, o = 0; o < dest.Count && i < src.Count; i++, o += 4)
             {
-                dest[o] = (byte) src[i];
-                dest[o + 1] = (byte) (src[i] >> 8);
-                dest[o + 2] = (byte) (src[i] >> 16);
-                dest[o + 3] = (byte) (src[i] >> 24);
+                dest[o] = (byte)src[i];
+                dest[o + 1] = (byte)(src[i] >> 8);
+                dest[o + 2] = (byte)(src[i] >> 16);
+                dest[o + 3] = (byte)(src[i] >> 24);
             }
         }
 
@@ -575,7 +575,7 @@ namespace I3DShapesTool.Lib.Container
 
         private static int RoundUpTo(int val, int toNearest)
         {
-            return val % toNearest != 0 ? val + (toNearest - val % toNearest) : val;
+            return val % toNearest != 0 ? val + (toNearest - (val % toNearest)) : val;
         }
 
         /// <summary>
@@ -585,7 +585,7 @@ namespace I3DShapesTool.Lib.Container
         /// <param name="blockIndex">Block index to start from</param>
         private void ProcessBlocks(uint[] buf, ulong blockIndex)
         {
-            var key = GetKeyByIndexBlock(_key, blockIndex);
+            uint[]? key = GetKeyByIndexBlock(this.key, blockIndex);
             ProcessBlocks(buf, key);
         }
 
@@ -613,18 +613,18 @@ namespace I3DShapesTool.Lib.Container
         /// <exception cref="Exception">Thrown if buf is of a bad size</exception>
         private void ProcessBlocks(uint[] buf, uint[] key)
         {
-            if (buf.Length % 16 != 0)
+            if(buf.Length % 16 != 0)
             {
                 throw new Exception("Expecting 16 byte blocks");
             }
 
-            var tempKey = new uint[key.Length];
-            var blockCounter = key[8] | ((ulong)key[9] << 32);
-            for (var i = 0; i < buf.Length; i += 16)
+            uint[]? tempKey = new uint[key.Length];
+            ulong blockCounter = key[8] | ((ulong)key[9] << 32);
+            for(int i = 0; i < buf.Length; i += 16)
             {
                 key.CopyTo(tempKey, 0);
 
-                for (var j = 0; j < 10; j++)
+                for(int j = 0; j < 10; j++)
                 {
                     Shuffle1(tempKey, 0x0, 0xC, 0x4, 0x8);
                     Shuffle1(tempKey, 0x5, 0x1, 0x9, 0xD);
@@ -636,7 +636,7 @@ namespace I3DShapesTool.Lib.Container
                     Shuffle2(tempKey, 0xE, 0xF, 0xC, 0xD);
                 }
 
-                for (var j = 0; j < key.Length; j++)
+                for(int j = 0; j < key.Length; j++)
                     buf[i + j] ^= key[j] + tempKey[j];
 
                 blockCounter++;
@@ -653,7 +653,7 @@ namespace I3DShapesTool.Lib.Container
         /// <returns>Indexed key</returns>
         private static uint[] GetKeyByIndexBlock(uint[] key, ulong blockIndex)
         {
-            var tempKey = new uint[key.Length];
+            uint[]? tempKey = new uint[key.Length];
             Array.Copy(key, tempKey, tempKey.Length);
 
             tempKey[8] = (uint)(blockIndex & 0xFFFFFFFF);
@@ -669,17 +669,17 @@ namespace I3DShapesTool.Lib.Container
         /// <returns>Next block index</returns>
         public ulong Process(byte[] buffer, ulong blockIndex)
         {
-            var copy = new byte[RoundUpTo(buffer.Length, CryptBlockSize)];
+            byte[]? copy = new byte[RoundUpTo(buffer.Length, CRYPT_BLOCK_SIZE)];
             buffer.CopyTo(copy, 0);
 
-            var blocks = new uint[copy.Length / 4];
+            uint[]? blocks = new uint[copy.Length / 4];
             CopyTo(copy, 0, blocks);
 
             ProcessBlocks(blocks, blockIndex);
 
             CopyTo(blocks, 0, copy);
             Array.Copy(copy, buffer, buffer.Length);
-            return blockIndex + (ulong)(RoundUpTo(buffer.Length, CryptBlockSize) / CryptBlockSize);
+            return blockIndex + (ulong)(RoundUpTo(buffer.Length, CRYPT_BLOCK_SIZE) / CRYPT_BLOCK_SIZE);
         }
     }
 }

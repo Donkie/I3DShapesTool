@@ -13,7 +13,7 @@ namespace I3DShapesTool.Lib.Model
     /// </summary>
     public class ShapesFile
     {
-        private readonly ILogger? _logger;
+        private readonly ILogger? logger;
 
         /// <summary>
         /// Cipher seed
@@ -42,7 +42,7 @@ namespace I3DShapesTool.Lib.Model
 
         public ShapesFile(ILogger? logger = null)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -53,39 +53,39 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="strict">Abort reading and propagate any exceptions that pop up when parsing part data. If false, parts that failed to read will be ignored.</param>
         public void Load(Stream inputStream, byte? forceSeed = null, bool strict = false)
         {
-            using var _reader = new ShapesFileReader(inputStream, _logger, forceSeed);
-            Seed = _reader.Header.Seed;
-            Version = _reader.Header.Version;
+            using ShapesFileReader? reader = new ShapesFileReader(inputStream, logger, forceSeed);
+            Seed = reader.Header.Seed;
+            Version = reader.Header.Version;
 
-            var entities = _reader.GetEntities();
+            ICollection<Entity>? entities = reader.GetEntities();
             Parts = entities
                         .Select(
                             (entityRaw, index) =>
                             {
                                 try
                                 {
-                                    var partType = GetPartType(entityRaw.Type);
-                                    var part = LoadPart(entityRaw, partType, _reader.Endian, _reader.Header.Version);
+                                    ShapeType partType = GetPartType(entityRaw.Type);
+                                    I3DPart? part = LoadPart(entityRaw, partType, reader.Endian, reader.Header.Version);
                                     if(part.Type == ShapeType.Unknown)
                                     {
-                                        _logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
+                                        logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
                                     }
                                     return part;
                                 }
-                                catch (Exception ex)
+                                catch(Exception ex)
                                 {
-                                    if (strict)
+                                    if(strict)
                                         throw;
 
                                     Console.WriteLine(ex);
-                                    _logger?.LogError("Failed to decode part {index}.", index);
+                                    logger?.LogError("Failed to decode part {index}.", index);
 
                                     // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
                                     try
                                     {
-                                        return LoadPart(entityRaw, ShapeType.Unknown, _reader.Endian, _reader.Header.Version);
+                                        return LoadPart(entityRaw, ShapeType.Unknown, reader.Endian, reader.Header.Version);
                                     }
-                                    catch (Exception)
+                                    catch(Exception)
                                     {
                                         // We even failed to decode it as a generic part, just return null then instead.
                                         return null;
@@ -105,19 +105,19 @@ namespace I3DShapesTool.Lib.Model
         /// <exception cref="ArgumentNullException">Thrown if Seed, Version or Parts is not set</exception>
         public void Write(Stream outputStream)
         {
-            if (Seed == null || Version == null || Parts == null)
+            if(Seed == null || Version == null || Parts == null)
                 throw new ArgumentNullException("Seed, Version and Parts must be set before saving.");
 
-            using var writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
-            var entities = Parts.Select(part =>
+            using ShapesFileWriter? writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
+            Entity[]? entities = Parts.Select(part =>
             {
-                using var ms = new MemoryStream();
-                using var bw = new EndianBinaryWriter(ms, writer.Endian);
+                using MemoryStream? ms = new MemoryStream();
+                using EndianBinaryWriter? bw = new EndianBinaryWriter(ms, writer.Endian);
 
                 part.Write(bw);
 
                 bw.Flush();
-                var data = ms.ToArray();
+                byte[]? data = ms.ToArray();
 
                 return new Entity(part.RawType, data.Length, data);
             }).ToArray();
@@ -138,15 +138,12 @@ namespace I3DShapesTool.Lib.Model
 
         private static ShapeType GetPartType(int rawType)
         {
-            switch (rawType)
+            return rawType switch
             {
-                case 1:
-                    return ShapeType.Shape;
-                case 2:
-                    return ShapeType.Spline;
-                default:
-                    return ShapeType.Unknown;
-            }
+                1 => ShapeType.Shape,
+                2 => ShapeType.Spline,
+                _ => ShapeType.Unknown,
+            };
         }
     }
 }

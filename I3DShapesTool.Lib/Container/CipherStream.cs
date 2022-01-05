@@ -12,14 +12,14 @@ namespace I3DShapesTool.Lib.Container
         public CipherStream(Stream baseStream, ICipher cipher)
         {
             BaseStream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
-            Cipher = cipher;
-            BlockOffset = 0;
+            this.cipher = cipher;
+            blockOffset = 0;
         }
 
         public Stream BaseStream { get; }
 
-        private readonly ICipher Cipher;
-        private ulong BlockOffset;
+        private readonly ICipher cipher;
+        private ulong blockOffset;
 
         public override bool CanRead => BaseStream.CanRead;
 
@@ -38,16 +38,16 @@ namespace I3DShapesTool.Lib.Container
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var i = 0;
-            while (i < count)
+            int i = 0;
+            while(i < count)
             {
-                var read = BaseStream.Read(buffer, offset + i, count - i);
-                if (read < 1)
+                int read = BaseStream.Read(buffer, offset + i, count - i);
+                if(read < 1)
                     return read;
                 i += read;
             }
-            
-            BlockOffset = Cipher.Process(buffer, BlockOffset);
+
+            blockOffset = cipher.Process(buffer, blockOffset);
             return i;
         }
 
@@ -66,7 +66,7 @@ namespace I3DShapesTool.Lib.Container
             byte[] copyBuffer = new byte[count];
             Array.Copy(buffer, offset, copyBuffer, 0, count);
 
-            BlockOffset = Cipher.Process(copyBuffer, BlockOffset);
+            blockOffset = cipher.Process(copyBuffer, blockOffset);
 
             BaseStream.Write(copyBuffer, 0, count);
         }

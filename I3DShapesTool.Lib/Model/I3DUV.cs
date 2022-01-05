@@ -9,7 +9,7 @@ namespace I3DShapesTool.Lib.Model
 
         public I3DUV(BinaryReader br, int fileVersion)
         {
-            if (fileVersion >= 4 && fileVersion <= 5) // Not sure about these numbers at all
+            if(fileVersion >= 4 && fileVersion <= 5) // Not sure about these numbers at all
             {
                 V = br.ReadSingle();
                 U = br.ReadSingle();

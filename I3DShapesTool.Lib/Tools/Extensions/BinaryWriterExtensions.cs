@@ -6,11 +6,11 @@ namespace I3DShapesTool.Lib.Tools.Extensions
     {
         public static void Align(this BinaryWriter writer, int countBytes)
         {
-            var mod = writer.BaseStream.Position % countBytes;
-            if (mod == 0)
+            long mod = writer.BaseStream.Position % countBytes;
+            if(mod == 0)
                 return;
 
-            var bytesToWrite = (int)(countBytes - mod);
+            int bytesToWrite = (int)(countBytes - mod);
             writer.Write(new byte[bytesToWrite]);
         }
     }

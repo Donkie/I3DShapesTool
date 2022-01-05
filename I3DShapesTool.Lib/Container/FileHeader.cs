@@ -19,20 +19,20 @@ namespace I3DShapesTool.Lib.Container
 
         public static FileHeader Read(Stream stream)
         {
-            var b1 = (byte)stream.ReadByte();
-            var b2 = (byte)stream.ReadByte();
-            var b3 = (byte)stream.ReadByte();
-            var b4 = (byte)stream.ReadByte();
+            byte b1 = (byte)stream.ReadByte();
+            byte b2 = (byte)stream.ReadByte();
+            byte b3 = (byte)stream.ReadByte();
+            byte b4 = (byte)stream.ReadByte();
 
             byte seed;
             short version;
 
-            if (b1 >= 4) // Might be 5 as well
+            if(b1 >= 4) // Might be 5 as well
             {
                 version = b1;
                 seed = b3;
             }
-            else if (b4 == 2 || b4 == 3)
+            else if(b4 == 2 || b4 == 3)
             {
                 version = b4;
                 seed = b2;
@@ -47,7 +47,7 @@ namespace I3DShapesTool.Lib.Container
 
         public void Write(Stream stream)
         {
-            if (Version >= 4) // Might be 5 as well
+            if(Version >= 4) // Might be 5 as well
             {
                 stream.WriteByte((byte)Version);
                 stream.WriteByte(0);

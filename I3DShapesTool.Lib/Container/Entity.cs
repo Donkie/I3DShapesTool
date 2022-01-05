@@ -28,9 +28,9 @@ namespace I3DShapesTool.Lib.Container
 
         public static Entity Read(BinaryReader stream)
         {
-            var type = stream.ReadInt32();
-            var size = stream.ReadInt32();
-            var data = stream.ReadBytes(size);
+            int type = stream.ReadInt32();
+            int size = stream.ReadInt32();
+            byte[]? data = stream.ReadBytes(size);
 
             return new Entity(type, size, data);
         }

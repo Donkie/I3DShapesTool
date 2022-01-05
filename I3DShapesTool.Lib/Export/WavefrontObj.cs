@@ -27,9 +27,9 @@ namespace I3DShapesTool.Lib.Export
         {
             Scale = 100;
 
-            var geomname = shape.Name;
-            if (geomname.EndsWith("Shape"))
-                geomname = geomname.Substring(0, geomname.Length - 5);
+            string? geomname = shape.Name;
+            if(geomname.EndsWith("Shape"))
+                geomname = geomname[0..^5];
 
             Name = name;
             GeometryName = geomname;
@@ -45,14 +45,14 @@ namespace I3DShapesTool.Lib.Export
 
         public WavefrontObj(Shape shape, string name, bool shouldTransform)
         {
-            var shapeData = shape.ShapeData;
-            if (shapeData == null)
+            I3DShape? shapeData = shape.ShapeData;
+            if(shapeData == null)
                 throw new ArgumentException("Input shape doesn't have any assigned shape data");
 
             Scale = 1;
 
-            var geomname = name;
-            if (geomname.EndsWith("Shape"))
+            string? geomname = name;
+            if(geomname.EndsWith("Shape"))
                 geomname = geomname[0..^5];
 
             Name = name;
@@ -67,10 +67,10 @@ namespace I3DShapesTool.Lib.Export
             }
             Triangles = shapeData.Triangles;
 
-            if (shapeData.Normals != null)
+            if(shapeData.Normals != null)
                 Normals = shapeData.Normals;
 
-            if (shapeData.UVSets.Length > 0)
+            if(shapeData.UVSets.Length > 0)
                 UVs = shapeData.UVSets[0];
         }
 
@@ -111,12 +111,12 @@ namespace I3DShapesTool.Lib.Export
         {
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0:F0}", idx);
 
-            if (hasUV)
+            if(hasUV)
                 sb.AppendFormat(CultureInfo.InvariantCulture, "/{0:F0}", idx);
-            else if (hasNormal)
+            else if(hasNormal)
                 sb.Append('/');
 
-            if (hasNormal)
+            if(hasNormal)
                 sb.AppendFormat(CultureInfo.InvariantCulture, "/{0:F0}", idx);
         }
 
@@ -133,37 +133,37 @@ namespace I3DShapesTool.Lib.Export
 
         public byte[] ExportToBlob()
         {
-            var sb = new StringBuilder();
+            StringBuilder? sb = new StringBuilder();
 
             WriteHeader(sb);
             sb.AppendLine();
             SetGroup(sb, "default");
             sb.AppendLine();
-            foreach (var t in Positions)
+            foreach(I3DVector? t in Positions)
             {
                 AddVertex(sb, t);
             }
             if(UVs != null)
             {
-                foreach (var t in UVs)
+                foreach(I3DUV? t in UVs)
                 {
                     AddUV(sb, t);
                 }
             }
-            if (Normals != null)
+            if(Normals != null)
             {
-                foreach (var t in Normals)
+                foreach(I3DVector? t in Normals)
                 {
                     AddNormal(sb, t);
                 }
             }
             SetSmoothing(sb, false);
             SetGroup(sb, GeometryName);
-            foreach (var t in Triangles)
+            foreach(I3DTri? t in Triangles)
             {
                 AddTriangle(sb, t, UVs != null, Normals != null);
             }
-            
+
             return Encoding.ASCII.GetBytes(sb.ToString());
         }
     }

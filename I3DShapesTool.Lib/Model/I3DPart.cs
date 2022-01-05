@@ -68,7 +68,7 @@ namespace I3DShapesTool.Lib.Model
 
         private void ReadHeader(BinaryReader reader)
         {
-            var nameLength = reader.ReadInt32();
+            int nameLength = reader.ReadInt32();
             Name = Encoding.ASCII.GetString(reader.ReadBytes(nameLength));
             reader.Align(4);
             Id = reader.ReadUInt32();
@@ -76,7 +76,7 @@ namespace I3DShapesTool.Lib.Model
 
         private void WriteHeader(BinaryWriter writer)
         {
-            var nameBytes = Encoding.ASCII.GetBytes(Name);
+            byte[]? nameBytes = Encoding.ASCII.GetBytes(Name);
             writer.Write(nameBytes.Length);
             writer.Write(nameBytes);
             writer.Align(4);
@@ -91,8 +91,8 @@ namespace I3DShapesTool.Lib.Model
 
         private void ReadFromRawData()
         {
-            using var stream = new MemoryStream(RawData);
-            using var reader = new EndianBinaryReader(stream, Endian);
+            using MemoryStream? stream = new MemoryStream(RawData);
+            using EndianBinaryReader? reader = new EndianBinaryReader(stream, Endian);
             Read(reader);
         }
 
