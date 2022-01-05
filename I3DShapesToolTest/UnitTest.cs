@@ -136,13 +136,24 @@ namespace I3DShapesToolTest
         {
             var gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
 
-            using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
-            var file = new ShapesFile();
-            file.Load(fileStream);
-            AssertShapesFile(file, 153, 7, 24);
-            AssertShape(file.Shapes.First(), "alphaShape", 20, 368, 260);
-            AssertShapeData(file);
-            TestRewrite(file);
+            {
+                using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
+                var file = new ShapesFile();
+                file.Load(fileStream);
+                AssertShapesFile(file, 153, 7, 24);
+                AssertShape(file.Shapes.First(), "alphaShape", 20, 368, 260);
+                AssertShapeData(file);
+                TestRewrite(file);
+            }
+            {
+                using var fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\newHolland\chSeries\chSeries.i3d.shapes"));
+                var file = new ShapesFile();
+                file.Load(fileStream);
+                AssertShapesFile(file, 142, 7, 192);
+                AssertShape(file.Shapes.First(), "airFilterCleanerShape", 116, 1381, 1020);
+                AssertShapeData(file);
+                TestRewrite(file);
+            }
         }
 
         [SkippableFact]

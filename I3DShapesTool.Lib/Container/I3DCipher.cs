@@ -586,7 +586,7 @@ namespace I3DShapesTool.Lib.Container
         private void ProcessBlocks(uint[] buf, ulong blockIndex)
         {
             var key = GetKeyByIndexBlock(_key, blockIndex);
-            ProcessBlocks(key, buf);
+            ProcessBlocks(buf, key);
         }
 
         private void Shuffle1(uint[] key, int idx1, int idx2, int idx3, int idx4)
