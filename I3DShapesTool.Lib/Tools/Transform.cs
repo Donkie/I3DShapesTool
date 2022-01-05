@@ -9,6 +9,8 @@ namespace I3DShapesTool.Lib.Tools
     {
         private readonly double[,] v;
 
+        private const double DEG2RAD = Math.PI / 180;
+
         public static Transform Identity = new Transform(new double[,]
             {
                 { 1, 0, 0, 0 },
@@ -39,8 +41,8 @@ namespace I3DShapesTool.Lib.Tools
 
         public Transform Rotate(I3DVector rot)
         {
-            double cosX = Math.Cos(rot.X);
-            double sinX = Math.Sin(rot.X);
+            double cosX = Math.Cos(rot.X * DEG2RAD);
+            double sinX = Math.Sin(rot.X * DEG2RAD);
             Transform Rx = new Transform(new double[,]
             {
                 { 1, 0, 0, 0 },
@@ -49,8 +51,8 @@ namespace I3DShapesTool.Lib.Tools
                 { 0, 0, 0, 1 }
             });
 
-            double cosY = Math.Cos(rot.Y);
-            double sinY = Math.Sin(rot.Y);
+            double cosY = Math.Cos(rot.Y * DEG2RAD);
+            double sinY = Math.Sin(rot.Y * DEG2RAD);
             Transform Ry = new Transform(new double[,]
             {
                 { cosY, 0, sinY, 0 },
@@ -59,8 +61,8 @@ namespace I3DShapesTool.Lib.Tools
                 { 0, 0, 0, 1 }
             });
 
-            double cosZ = Math.Cos(rot.Z);
-            double sinZ = Math.Sin(rot.Z);
+            double cosZ = Math.Cos(rot.Z * DEG2RAD);
+            double sinZ = Math.Sin(rot.Z * DEG2RAD);
             Transform Rz = new Transform(new double[,]
             {
                 { cosZ, -sinZ, 0, 0 },
@@ -69,7 +71,7 @@ namespace I3DShapesTool.Lib.Tools
                 { 0, 0, 0, 1 }
             });
 
-            return Rx * (Ry * (Rz * this));
+            return Rz * (Ry * (Rx * this));
         }
 
         public Transform Scale(I3DVector scale)
