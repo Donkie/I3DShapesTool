@@ -2,7 +2,7 @@
 
 namespace I3DShapesTool.Lib.Model
 {
-    public class I3DVector4
+    public struct I3DVector4
     {
         public float X { get; }
         public float Y { get; }

@@ -2,7 +2,7 @@
 
 namespace I3DShapesTool.Lib.Model
 {
-    public class I3DUV
+    public struct I3DUV
     {
         public float U { get; }
         public float V { get; }

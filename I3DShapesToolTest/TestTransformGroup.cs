@@ -2,6 +2,7 @@
 using I3DShapesTool.Lib.Model.I3D;
 using System;
 using Xunit;
+using System.Linq;
 
 namespace I3DShapesToolTest
 {
@@ -20,7 +21,7 @@ namespace I3DShapesToolTest
 
             Assert.Same(tg1, tg2.Parent);
             Assert.True(tg1.Children.Count == 1);
-            Assert.True(tg1.Children[0] == tg2);
+            Assert.True(tg1.Children.First() == tg2);
         }
 
         [Fact]

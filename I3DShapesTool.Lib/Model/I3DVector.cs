@@ -3,7 +3,7 @@ using System.IO;
 
 namespace I3DShapesTool.Lib.Model
 {
-    public class I3DVector
+    public struct I3DVector
     {
         public double X { get; }
         public double Y { get; }
