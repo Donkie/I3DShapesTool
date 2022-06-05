@@ -11,7 +11,7 @@ namespace I3DShapesTool.Lib.Model.I3D
         public Transform RelativeTransform { get; }
         public Transform AbsoluteTransform { get; private set; }
         public TransformGroup? Parent { get; private set; }
-        public IList<TransformGroup> Children { get; } = new List<TransformGroup>();
+        public ISet<TransformGroup> Children { get; } = new HashSet<TransformGroup>();
 
         public TransformGroup(string? name, int? id, I3DVector translation, I3DVector rotation, I3DVector scale)
         {
@@ -19,9 +19,9 @@ namespace I3DShapesTool.Lib.Model.I3D
             Id = id;
 
             RelativeTransform = Transform.Identity
-                .Rotate(rotation)
                 .Scale(scale)
-                .Translate(translation); // TODO: Figure out order of these
+                .Rotate(rotation)
+                .Translate(translation);
             AbsoluteTransform = RelativeTransform;
         }
 
@@ -30,7 +30,7 @@ namespace I3DShapesTool.Lib.Model.I3D
             if (Parent == null)
                 throw new InvalidOperationException();
 
-            AbsoluteTransform = RelativeTransform * Parent.AbsoluteTransform;
+            AbsoluteTransform = Parent.AbsoluteTransform * RelativeTransform;
         }
 
         public void SetParent(TransformGroup parent)
@@ -44,9 +44,9 @@ namespace I3DShapesTool.Lib.Model.I3D
             UpdateAbsoluteTransform();
 
             // Refresh the absolute transform of all children since we have updated ours
-            foreach (var child in Children)
+            foreach (TransformGroup child in Children)
             {
-                child.UpdateAbsoluteTransform();
+                child.SetParent(this);
             }
         }
 
