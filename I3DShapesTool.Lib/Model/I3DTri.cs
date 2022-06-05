@@ -24,6 +24,13 @@ namespace I3DShapesTool.Lib.Model
             }
         }
 
+        public I3DTri(uint p1, uint p2, uint p3)
+        {
+            P1Idx = p1;
+            P2Idx = p2;
+            P3Idx = p3;
+        }
+
         public void Write(BinaryWriter bw, bool zeroBasedIndicesInRawData, bool isInt)
         {
             int offset = zeroBasedIndicesInRawData ? -1 : 0;

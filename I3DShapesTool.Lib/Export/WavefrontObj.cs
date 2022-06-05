@@ -15,13 +15,13 @@ namespace I3DShapesTool.Lib.Export
 
         public float Scale { get; }
 
-        public I3DTri[] Triangles { get; }
+        public I3DTri[] Triangles { get; private set; }
 
-        public I3DVector[] Positions { get; }
+        public I3DVector[] Positions { get; private set; }
 
-        public I3DVector[]? Normals { get; }
+        public I3DVector[]? Normals { get; private set; }
 
-        public I3DUV[]? UVs { get; }
+        public I3DUV[]? UVs { get; private set; }
 
         public WavefrontObj(I3DShape shape, string name)
         {
@@ -72,6 +72,46 @@ namespace I3DShapesTool.Lib.Export
 
             if (shapeData.UVSets.Length > 0)
                 UVs = shapeData.UVSets[0];
+        }
+
+        /// <summary>
+        /// Merges the vertex data of another WavefrontObj into this
+        /// </summary>
+        /// <param name="newObj"></param>
+        public void Merge(WavefrontObj newObj)
+        {
+            uint oldVertCnt = (uint)Positions.Length;
+
+            I3DVector[] newPos = new I3DVector[Positions.Length + newObj.Positions.Length];
+            Positions.CopyTo(newPos, 0);
+            newObj.Positions.CopyTo(newPos, oldVertCnt);
+
+            if(Normals != null || newObj.Normals != null)
+            {
+                I3DVector[] newNorm = new I3DVector[(Normals?.Length ?? 0) + (newObj.Normals?.Length ?? 0)];
+                Normals?.CopyTo(newNorm, 0);
+                newObj.Normals?.CopyTo(newNorm, Normals?.Length ?? 0);
+                Normals = newNorm;
+            }
+
+            if(UVs != null || newObj.UVs != null)
+            {
+                I3DUV[] newUV = new I3DUV[(UVs?.Length ?? 0) + (newObj.UVs?.Length ?? 0)];
+                UVs?.CopyTo(newUV, 0);
+                newObj.UVs?.CopyTo(newUV, UVs?.Length ?? 0);
+                UVs = newUV;
+            }
+
+            I3DTri[] newTris = new I3DTri[Triangles.Length + newObj.Triangles.Length];
+            Triangles.CopyTo(newTris, 0);
+            for(int i = 0; i < newObj.Triangles.Length; i++)
+            {
+                I3DTri newObjTr = newObj.Triangles[i];
+                newTris[Triangles.Length + i] = new I3DTri(newObjTr.P1Idx + oldVertCnt, newObjTr.P2Idx + oldVertCnt, newObjTr.P3Idx + oldVertCnt);
+            }
+
+            Positions = newPos;
+            Triangles = newTris;
         }
 
         private void WriteHeader(StringBuilder sb)
