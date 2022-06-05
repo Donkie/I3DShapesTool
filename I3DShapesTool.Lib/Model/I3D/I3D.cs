@@ -13,45 +13,35 @@ namespace I3DShapesTool.Lib.Model.I3D
         public string? ExternalShapesFile { get; set; }
         public TransformGroup SceneRoot { get; } = new TransformGroup("root", 0, I3DVector.Zero, I3DVector.Zero, I3DVector.One);
 
-        private IDictionary<uint, Shape>? _shapesMap;
+        private readonly IList<Shape> _shapes = new List<Shape>();
 
         public void LinkShapeData(I3DShape shape)
         {
-            if (_shapesMap == null)
-                throw new InvalidOperationException("Shape map not generated yet.");
-
-            if (!_shapesMap.ContainsKey(shape.Id))
-                throw new ArgumentException($"No shape with ID \"{shape.Id}\" in scene.");
-
-            _shapesMap[shape.Id].ShapeData = shape;
+            foreach(Shape shp in _shapes)
+            {
+                if(shp.ShapeId == shape.Id)
+                {
+                    shp.ShapeData = shape;
+                }
+            }
         }
 
         public void LinkShapesFile(ShapesFile shapesFile)
         {
-            foreach (var shape in shapesFile.Shapes)
+            foreach (I3DShape? shape in shapesFile.Shapes)
             {
-                try
-                {
-                    LinkShapeData(shape);
-                }
-                catch(ArgumentException ex)
-                {
-                    logger.LogWarning(ex.Message);
-                }
+                LinkShapeData(shape);
             }
         }
 
         private void MapShapesRecurse(TransformGroup parent)
         {
-            if (_shapesMap == null)
-                throw new InvalidOperationException("Shape map not generated yet.");
-
-            if (parent is Shape shape && shape.ShapeId != null)
+            if (parent is Shape shape)
             {
-                _shapesMap.Add((uint)shape.ShapeId, shape);
+                _shapes.Add(shape);
             }
 
-            foreach (var child in parent.Children)
+            foreach (TransformGroup child in parent.Children)
             {
                 MapShapesRecurse(child);
             }
@@ -59,7 +49,6 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         private void MapShapes()
         {
-            _shapesMap = new Dictionary<uint, Shape>();
             MapShapesRecurse(SceneRoot);
         }
 
@@ -70,17 +59,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public IEnumerable<Shape> GetShapes()
         {
-            if (_shapesMap == null)
-                throw new InvalidOperationException("Shape map not generated yet.");
-
-            return _shapesMap.Values;
-        }
-
-        public Shape? GetShape(uint id)
-        {
-            if (_shapesMap == null || !_shapesMap.ContainsKey(id))
-                return null;
-            return _shapesMap[id];
+            return _shapes;
         }
     }
 }
