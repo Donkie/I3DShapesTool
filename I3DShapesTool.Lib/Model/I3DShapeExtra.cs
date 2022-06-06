@@ -20,15 +20,15 @@ namespace I3DShapesTool.Lib.Model
             Integer3 = br.ReadUInt32();
             Integer4 = br.ReadUInt32();
 
-            if (version >= 6)
+            if(version >= 6)
             {
-                if (options.HasFlag(I3DShapeOptions.HasUV1))
+                if(options.HasFlag(I3DShapeOptions.HasUV1))
                     FloatUV1 = br.ReadSingle();
-                if (options.HasFlag(I3DShapeOptions.HasUV2))
+                if(options.HasFlag(I3DShapeOptions.HasUV2))
                     FloatUV2 = br.ReadSingle();
-                if (options.HasFlag(I3DShapeOptions.HasUV3))
+                if(options.HasFlag(I3DShapeOptions.HasUV3))
                     FloatUV3 = br.ReadSingle();
-                if (options.HasFlag(I3DShapeOptions.HasUV4))
+                if(options.HasFlag(I3DShapeOptions.HasUV4))
                     FloatUV4 = br.ReadSingle();
             }
         }
@@ -42,13 +42,13 @@ namespace I3DShapesTool.Lib.Model
 
             if(version >= 6)
             {
-                if (options.HasFlag(I3DShapeOptions.HasUV1) && FloatUV1 != null)
+                if(options.HasFlag(I3DShapeOptions.HasUV1) && FloatUV1 != null)
                     bw.Write((float)FloatUV1);
-                if (options.HasFlag(I3DShapeOptions.HasUV2) && FloatUV2 != null)
+                if(options.HasFlag(I3DShapeOptions.HasUV2) && FloatUV2 != null)
                     bw.Write((float)FloatUV2);
-                if (options.HasFlag(I3DShapeOptions.HasUV3) && FloatUV3 != null)
+                if(options.HasFlag(I3DShapeOptions.HasUV3) && FloatUV3 != null)
                     bw.Write((float)FloatUV3);
-                if (options.HasFlag(I3DShapeOptions.HasUV4) && FloatUV4 != null)
+                if(options.HasFlag(I3DShapeOptions.HasUV4) && FloatUV4 != null)
                     bw.Write((float)FloatUV4);
             }
         }

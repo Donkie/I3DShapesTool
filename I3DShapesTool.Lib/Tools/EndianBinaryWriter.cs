@@ -26,63 +26,63 @@ namespace I3DShapesTool.Lib.Tools
 
         public override void Write(float value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(double value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(ushort value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(uint value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(ulong value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(short value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(int value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(long value)
         {
-            var data = BitConverter.GetBytes(value);
+            byte[]? data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         private void Swipe(byte[] data)
         {
-            if ((BitConverter.IsLittleEndian && Endian == Endian.Big)
+            if((BitConverter.IsLittleEndian && Endian == Endian.Big)
                 || (!BitConverter.IsLittleEndian && Endian == Endian.Little))
             {
                 Array.Reverse(data);

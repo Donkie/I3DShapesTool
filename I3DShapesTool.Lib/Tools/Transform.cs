@@ -19,7 +19,7 @@ namespace I3DShapesTool.Lib.Tools
 
         public Transform(double[,] data)
         {
-            if (data.GetLength(0) != 4 || data.GetLength(1) != 4)
+            if(data.GetLength(0) != 4 || data.GetLength(1) != 4)
                 throw new ArgumentException("Input matrix must be 4x4");
             v = data;
         }

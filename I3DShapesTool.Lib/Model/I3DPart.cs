@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text;
+using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
 
@@ -16,7 +17,7 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="rawData">Raw binary data</param>
         /// <param name="endian">Endian</param>
         /// <param name="version">File version</param>
-        protected I3DPart(ShapeType type, byte[] rawData, Endian endian, int version)
+        protected I3DPart(EntityType type, byte[] rawData, Endian endian, int version)
         {
             Type = type;
             RawData = rawData;
@@ -35,13 +36,13 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="rawData">Raw binary data</param>
         /// <param name="endian">Endian</param>
         /// <param name="version">File version</param>
-        public I3DPart(int rawType, byte[] rawData, Endian endian, int version) : this(ShapeType.Unknown, rawData, endian, version)
+        public I3DPart(int rawType, byte[] rawData, Endian endian, int version) : this(EntityType.Unknown, rawData, endian, version)
         {
             RawType = rawType;
         }
 #nullable restore
 
-        public ShapeType Type { get; }
+        public EntityType Type { get; }
 
         public int RawType { get; }
 
@@ -68,7 +69,7 @@ namespace I3DShapesTool.Lib.Model
 
         private void ReadHeader(BinaryReader reader)
         {
-            var nameLength = reader.ReadInt32();
+            int nameLength = reader.ReadInt32();
             Name = Encoding.ASCII.GetString(reader.ReadBytes(nameLength));
             reader.Align(4);
             Id = reader.ReadUInt32();
@@ -76,7 +77,7 @@ namespace I3DShapesTool.Lib.Model
 
         private void WriteHeader(BinaryWriter writer)
         {
-            var nameBytes = Encoding.ASCII.GetBytes(Name);
+            byte[] nameBytes = Encoding.ASCII.GetBytes(Name);
             writer.Write(nameBytes.Length);
             writer.Write(nameBytes);
             writer.Align(4);
@@ -91,8 +92,8 @@ namespace I3DShapesTool.Lib.Model
 
         private void ReadFromRawData()
         {
-            using var stream = new MemoryStream(RawData);
-            using var reader = new EndianBinaryReader(stream, Endian);
+            using MemoryStream stream = new MemoryStream(RawData);
+            using EndianBinaryReader reader = new EndianBinaryReader(stream, Endian);
             Read(reader);
         }
 

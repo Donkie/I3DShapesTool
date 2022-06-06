@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace I3DShapesTool.Lib.Model.I3D
+﻿namespace I3DShapesTool.Lib.Model.I3D
 {
     public class Camera : TransformGroup
     {

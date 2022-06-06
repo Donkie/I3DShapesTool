@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Tools;
 
 namespace I3DShapesTool.Lib.Model
@@ -12,8 +13,8 @@ namespace I3DShapesTool.Lib.Model
 
         public IList<I3DVector>? Points { get; set; }
 
-        public Spline(byte[] rawData, Endian endian, int version) 
-            : base(ShapeType.Spline, rawData, endian, version)
+        public Spline(byte[] rawData, Endian endian, int version)
+            : base(EntityType.Spline, rawData, endian, version)
         {
         }
 
@@ -21,12 +22,12 @@ namespace I3DShapesTool.Lib.Model
         {
             UnknownFlags = binaryReader.ReadUInt32();
 
-            var pointCount = binaryReader.ReadInt32();
+            int pointCount = binaryReader.ReadInt32();
             Points = Enumerable.Range(0, pointCount)
                 .Select(index => new I3DVector(binaryReader))
                 .ToArray();
 
-            if (binaryReader.BaseStream.Position != binaryReader.BaseStream.Length)
+            if(binaryReader.BaseStream.Position != binaryReader.BaseStream.Length)
             {
                 throw new DecodeException("Failed to read to all of spline data.");
             }
@@ -34,12 +35,12 @@ namespace I3DShapesTool.Lib.Model
 
         protected override void WriteContents(BinaryWriter writer)
         {
-            if (UnknownFlags == null || Points == null)
+            if(UnknownFlags == null || Points == null)
                 throw new InvalidOperationException("Data not set on class");
 
             writer.Write((uint)UnknownFlags);
             writer.Write(Points.Count);
-            foreach (var point in Points)
+            foreach(I3DVector point in Points)
                 point.Write(writer);
         }
     }

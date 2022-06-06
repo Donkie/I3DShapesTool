@@ -23,9 +23,9 @@ namespace I3DShapesTool.Lib.Model
                 };
             }
 
-            var numBytes = reader.ReadInt32();
+            int numBytes = reader.ReadInt32();
             Data = reader.ReadBytes(numBytes);
-            if (Data.Length != numBytes)
+            if(Data.Length != numBytes)
                 throw new DecodeException("Tried to read past end of file");
         }
 

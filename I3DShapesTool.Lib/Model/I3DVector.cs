@@ -35,12 +35,12 @@ namespace I3DShapesTool.Lib.Model
 
         public double Length()
         {
-            return Math.Sqrt(X * X + Y * Y + Z * Z);
+            return Math.Sqrt((X * X) + (Y * Y) + (Z * Z));
         }
 
         public bool IsUnitLength()
         {
-            return Math.Abs(X * X + Y * Y + Z * Z - 1.0) < 1e-3;
+            return Math.Abs((X * X) + (Y * Y) + (Z * Z) - 1.0) < 1e-3;
         }
 
         public bool IsZero()

@@ -7,7 +7,7 @@ namespace I3DShapesTool.Lib.Model.I3D
     public class TransformGroup
     {
         public string? Name { get; }
-        public int? Id { get;}
+        public int? Id { get; }
         public Transform RelativeTransform { get; }
         public Transform AbsoluteTransform { get; private set; }
         public TransformGroup? Parent { get; private set; }
@@ -27,7 +27,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         private void UpdateAbsoluteTransform()
         {
-            if (Parent == null)
+            if(Parent == null)
                 throw new InvalidOperationException();
 
             AbsoluteTransform = Parent.AbsoluteTransform * RelativeTransform;
@@ -35,7 +35,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public void SetParent(TransformGroup parent)
         {
-            if (Parent != null)
+            if(Parent != null)
                 Parent.Children.Remove(this);
 
             Parent = parent;
@@ -52,10 +52,10 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public void PrintTree(int depth = 0)
         {
-            var nameStr = Name != null ? $" {Name}" : "";
-            var spaces = new string('-', depth);
+            string? nameStr = Name != null ? $" {Name}" : "";
+            string? spaces = new string('-', depth);
             Console.WriteLine($"{spaces}<{GetType().Name}{nameStr}>");
-            foreach (var child in Children)
+            foreach(TransformGroup? child in Children)
             {
                 child.PrintTree(depth + 1);
             }

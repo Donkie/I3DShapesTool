@@ -6,7 +6,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 {
     public class I3D
     {
-        public static ILogger? logger { get; set; }
+        private static ILogger? Logger { get; set; }
 
         public string? Name { get; set; }
         public string? Version { get; set; }

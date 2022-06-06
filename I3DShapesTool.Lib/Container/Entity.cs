@@ -1,72 +1,60 @@
-﻿using System.IO;
-using System.Runtime.InteropServices;
-using I3DShapesTool.Lib.Tools;
-using I3DShapesTool.Lib.Tools.Extensions;
+﻿
+using System.IO;
 
 namespace I3DShapesTool.Lib.Container
 {
     /// <summary>
-    /// Entity.
+    /// Represents a raw Entity in a .i3d.shapes file.
+    /// The decrypted .i3d.shapes consists of a number of these Entities.
     /// </summary>
     public class Entity
     {
         /// <summary>
-        /// Entity type.
+        /// Entity type as an integer
         /// </summary>
-        public int Type { get; private set; }
+        public int Type { get; }
 
         /// <summary>
-        /// Entity type.
+        /// Entity type as en enum
         /// </summary>
-        public int Size { get; private set; }
-
-        /// <summary>
-        /// Index Decrypt Block.
-        /// </summary>
-        public ulong DecryptIndexBlock { get; private set; }
-
-        /// <summary>
-        /// Offset by start entity.
-        /// </summary>
-        public long OffsetRawBlock { get; private set; }
-
-        /// <summary>
-        /// Read meta information <see cref="Entity"/>
-        /// </summary>
-        /// <param name="stream">Stream.</param>
-        /// <param name="decryptor">Decryptor.</param>
-        /// <param name="decryptIndexBlock">Index Decrypt Block.</param>
-        /// <param name="endian">File endian.</param>
-        /// <param name="version">File version.</param>
-        /// <returns></returns>
-        public static Entity Read(Stream stream, IDecryptor decryptor, ref ulong decryptIndexBlock, Endian endian)
+        public EntityType EntityType => Type switch
         {
-            var cryptBlockCount = 0ul;
-            var nextDecrIndex = 0ul;
+            1 => EntityType.Shape,
+            2 => EntityType.Spline,
+            _ => EntityType.Unknown,
+        };
 
-            var type = decryptor.ReadInt32(stream, decryptIndexBlock + cryptBlockCount, ref nextDecrIndex, endian);
+        /// <summary>
+        /// Entity byte size
+        /// </summary>
+        public int Size { get; }
 
-            var blockSize = (ulong)Marshal.SizeOf(type);
-            cryptBlockCount += (blockSize + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize;
+        /// <summary>
+        /// Entity byte data
+        /// </summary>
+        public byte[] Data { get; }
 
-            var size = decryptor.ReadInt32(stream, decryptIndexBlock + cryptBlockCount, ref nextDecrIndex, endian);
-            blockSize = (ulong)Marshal.SizeOf(size);
-            cryptBlockCount += (blockSize + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize;
-            var startDecryptIndexBlock = decryptIndexBlock + cryptBlockCount;
+        public Entity(int type, int size, byte[] data)
+        {
+            Type = type;
+            Size = size;
+            Data = data;
+        }
 
-            var offset = stream.Position;
+        public static Entity Read(BinaryReader stream)
+        {
+            int type = stream.ReadInt32();
+            int size = stream.ReadInt32();
+            byte[]? data = stream.ReadBytes(size);
 
-            cryptBlockCount += (ulong)((size + Decryptor.CryptBlockSize - 1) / Decryptor.CryptBlockSize);
-            stream.Seek(size, SeekOrigin.Current);
+            return new Entity(type, size, data);
+        }
 
-            decryptIndexBlock += cryptBlockCount;
-            return new Entity
-            {
-                Type = type,
-                Size = size,
-                OffsetRawBlock = offset,
-                DecryptIndexBlock = startDecryptIndexBlock,
-            };
+        public void Write(BinaryWriter stream)
+        {
+            stream.Write(Type);
+            stream.Write(Data.Length);
+            stream.Write(Data);
         }
     }
 }

@@ -8,105 +8,131 @@ using Microsoft.Extensions.Logging;
 
 namespace I3DShapesTool.Lib.Model
 {
+    /// <summary>
+    /// Contains methods for loading and saving the contents of a .i3d.shapes file
+    /// </summary>
     public class ShapesFile
     {
-        private readonly ILogger? _logger;
+        private readonly ILogger? logger;
 
-        private FileContainer? _container;
+        /// <summary>
+        /// Cipher seed
+        /// </summary>
+        public byte? Seed { get; set; }
 
-        public string? FilePath { get; private set; }
+        /// <summary>
+        /// File version
+        /// </summary>
+        public short? Version { get; set; }
 
-        public int? Seed => _container?.Header.Seed;
-        public int? Version => _container?.Header.Version;
-        public I3DPart[]? Parts { get; private set; }
+        /// <summary>
+        /// Parts in file
+        /// </summary>
+        public I3DPart[]? Parts { get; set; }
+
+        /// <summary>
+        /// Shapes in file
+        /// </summary>
         public IEnumerable<I3DShape> Shapes => Parts.OfType<I3DShape>();
+
+        /// <summary>
+        /// Splines in file
+        /// </summary>
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
         public ShapesFile(ILogger? logger = null)
         {
-            _logger = logger;
-        }
-
-        public void Load(string path, byte? forceSeed = null, bool strict = false)
-        {
-            FilePath = path;
-            _container = new FileContainer(path, _logger, forceSeed);
-
-            var entities = _container.GetEntities();
-            Parts = _container
-                        .ReadRawData(entities)
-                        .Select(
-                            (entityRaw, index) =>
-                            {
-                                try
-                                {
-                                    var partType = GetPartType(entityRaw.Entity.Type);
-                                    var part = LoadPart(entityRaw, partType, _container.Endian, _container.Header.Version);
-                                    if(part.Type == ShapeType.Unknown)
-                                    {
-                                        _logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
-                                    }
-                                    return part;
-                                }
-                                catch (Exception ex)
-                                {
-                                    if (strict)
-                                        throw;
-
-                                    Console.WriteLine(ex);
-                                    _logger?.LogError("Failed to decode part {index}.", index);
-
-                                    // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
-                                    try
-                                    {
-                                        return LoadPart(entityRaw, ShapeType.Unknown, _container.Endian, _container.Header.Version);
-                                    }
-                                    catch (Exception)
-                                    {
-                                        // We even failed to decode it as a generic part, just return null then instead.
-                                        return null;
-                                    }
-                                }
-                            }
-                        )
-                        .Where(part => part != null)
-                        .Cast<I3DPart>()
-                        .ToArray();
-        }
-
-        private static I3DPart LoadPart((Entity Entity, byte[] RawData) entityRaw, ShapeType partType, Endian endian, int version)
-        {
-            return partType switch
-            {
-                ShapeType.Shape => new I3DShape(entityRaw.RawData, endian, version),
-                ShapeType.Spline => new Spline(entityRaw.RawData, endian, version),
-                ShapeType.Unknown => new I3DPart(entityRaw.Entity.Type, entityRaw.RawData, endian, version),
-                _ => throw new ArgumentOutOfRangeException(),
-            };
-        }
-
-        private static ShapeType GetPartType(int rawType)
-        {
-            switch (rawType)
-            {
-                case 1:
-                    return ShapeType.Shape;
-                case 2:
-                    return ShapeType.Spline;
-                default:
-                    return ShapeType.Unknown;
-            }
+            this.logger = logger;
         }
 
         /// <summary>
-        /// https://stackoverflow.com/a/7393722/2911165
+        /// Read the .i3d.shapes contents from the input stream. The contents will be populated in the Parts array.
         /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        public static string CleanFileName(string fileName)
+        /// <param name="inputStream">Stream of shapes file data</param>
+        /// <param name="forceSeed">Force a specific seed instead of the one specified in the file header</param>
+        /// <param name="strict">Abort reading and propagate any exceptions that pop up when parsing part data. If false, parts that failed to read will be ignored.</param>
+        public void Load(Stream inputStream, byte? forceSeed = null, bool strict = false)
         {
-            return Path.GetInvalidFileNameChars()
-                       .Aggregate(fileName, (current, c) => current.Replace(c.ToString(), string.Empty));
+            using ShapesFileReader reader = new ShapesFileReader(inputStream, logger, forceSeed);
+            Seed = reader.Header.Seed;
+            Version = reader.Header.Version;
+
+            ICollection<Entity>? entities = reader.GetEntities();
+            Parts = entities
+                .Select(
+                    (entityRaw, index) =>
+                    {
+                        try
+                        {
+                            I3DPart part = LoadPart(entityRaw, entityRaw.EntityType, reader.Endian, reader.Header.Version);
+                            if(part.Type == EntityType.Unknown)
+                            {
+                                logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
+                            }
+                            return part;
+                        }
+                        catch(Exception ex)
+                        {
+                            if(strict)
+                                throw;
+
+                            Console.WriteLine(ex);
+                            logger?.LogError("Failed to decode part {index}.", index);
+
+                            // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
+                            try
+                            {
+                                return LoadPart(entityRaw, EntityType.Unknown, reader.Endian, reader.Header.Version);
+                            }
+                            catch(Exception)
+                            {
+                                // We even failed to decode it as a generic part, just return null then instead.
+                                return null;
+                            }
+                        }
+                    }
+                )
+                .Where(part => part != null)
+                .Cast<I3DPart>()
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Write Parts data to the output stream as a .i3d.shapes file.
+        /// </summary>
+        /// <param name="outputStream">Stream to write to</param>
+        /// <exception cref="ArgumentNullException">Thrown if Seed, Version or Parts is not set</exception>
+        public void Write(Stream outputStream)
+        {
+            if(Seed == null || Version == null || Parts == null)
+                throw new ArgumentNullException("Seed, Version and Parts must be set before saving.");
+
+            using ShapesFileWriter writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
+            Entity[] entities = Parts.Select(part =>
+            {
+                using MemoryStream ms = new MemoryStream();
+                using EndianBinaryWriter bw = new EndianBinaryWriter(ms, writer.Endian);
+
+                part.Write(bw);
+
+                bw.Flush();
+                byte[] data = ms.ToArray();
+
+                return new Entity(part.RawType, data.Length, data);
+            }).ToArray();
+
+            writer.SaveEntities(entities);
+        }
+
+        private static I3DPart LoadPart(Entity entityRaw, EntityType partType, Endian endian, int version)
+        {
+            return partType switch
+            {
+                EntityType.Shape => new I3DShape(entityRaw.Data, endian, version),
+                EntityType.Spline => new Spline(entityRaw.Data, endian, version),
+                EntityType.Unknown => new I3DPart(entityRaw.Type, entityRaw.Data, endian, version),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
     }
 }

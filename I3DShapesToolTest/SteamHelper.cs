@@ -13,8 +13,8 @@ namespace I3DShapesToolTest
     /// </summary>
     public static class SteamHelper
     {
-        private static ICollection<string> RegistryKeys = new[] { "SOFTWARE\\Wow6432Node\\Valve\\", "SOFTWARE\\VALVE\\" };
-        private static ICollection<string> _steamGameDirs = new List<string>();
+        private static readonly ICollection<string> registryKeys = new[] { "SOFTWARE\\Wow6432Node\\Valve\\", "SOFTWARE\\VALVE\\" };
+        private static ICollection<string> steamGameDirs = new List<string>();
 
         static SteamHelper()
         {
@@ -23,59 +23,58 @@ namespace I3DShapesToolTest
 
         private static void UpdateSteamGameDirectories()
         {
-            _steamGameDirs = new List<string>();
-            RegistryKeys.Select(v => Registry.LocalMachine.OpenSubKey(v))
+            steamGameDirs = new List<string>();
+            registryKeys.Select(v => Registry.LocalMachine.OpenSubKey(v))
                 .Where(registryKey => registryKey != null)
                 .SelectMany(registryKey =>
                 {
-                    using (registryKey)
+                    using(registryKey)
                     {
                         return GetDirectories(registryKey).ToArray();
                     }
                 })
                 .ToList()
-                .ForEach(directoryName => _steamGameDirs.Add(directoryName));
+                .ForEach(directoryName => steamGameDirs.Add(directoryName));
         }
 
         private static IEnumerable<string> GetDirectories(RegistryKey registryKey)
         {
-            foreach (var subKeyName in registryKey.GetSubKeyNames())
+            foreach(string subKeyName in registryKey.GetSubKeyNames())
             {
-                using (var subKey = registryKey.OpenSubKey(subKeyName))
+                using RegistryKey subKey = registryKey.OpenSubKey(subKeyName);
+                string steamPath = subKey?.GetValue("InstallPath")?.ToString();
+                if(steamPath == null)
+                    continue;
+                string configPath = $"{steamPath}/steamapps/libraryfolders.vdf";
+                string driveRegex = @"[A-Z]:\\";
+                if(!File.Exists(configPath))
+                    continue;
+                string[] configLines = File.ReadAllLines(configPath);
+                foreach(string item in configLines)
                 {
-                    var steamPath = subKey?.GetValue("InstallPath")?.ToString();
-                    if (steamPath == null)
+                    Match match = Regex.Match(item, driveRegex);
+                    if(item == string.Empty || !match.Success)
                         continue;
-                    var configPath = $"{steamPath}/steamapps/libraryfolders.vdf";
-                    const string driveRegex = @"[A-Z]:\\";
-                    if (!File.Exists(configPath))
-                        continue;
-                    var configLines = File.ReadAllLines(configPath);
-                    foreach (var item in configLines)
-                    {
-                        var match = Regex.Match(item, driveRegex);
-                        if (item == string.Empty || !match.Success) continue;
-                        var matched = match.ToString();
-                        var item2 = item.Substring(item.IndexOf(matched, StringComparison.Ordinal));
-                        item2 = item2.Replace("\\\\", "\\");
-                        item2 = item2.Replace("\"", "\\steamapps\\common\\");
-                        yield return item2;
-                    }
-                    yield return $"{steamPath}\\steamapps\\common\\";
+                    string matched = match.ToString();
+                    string item2 = item[item.IndexOf(matched, StringComparison.Ordinal)..];
+                    item2 = item2.Replace("\\\\", "\\");
+                    item2 = item2.Replace("\"", "\\steamapps\\common\\");
+                    yield return item2;
                 }
+                yield return $"{steamPath}\\steamapps\\common\\";
             }
         }
 
         public static string GetGameDirectory(string gameFolderName)
         {
-            return _steamGameDirs
+            return steamGameDirs
                 .Select(v => Path.Combine(v, gameFolderName))
                 .FirstOrDefault(v => Directory.Exists(v));
         }
 
         public static string GetGameDirectoryOrSkip(string gameFolderName)
         {
-            var gameDir = GetGameDirectory(gameFolderName);
+            string gameDir = GetGameDirectory(gameFolderName);
             Skip.If(gameDir == null);
             return gameDir;
         }

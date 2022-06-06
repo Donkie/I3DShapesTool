@@ -10,7 +10,7 @@ namespace I3DShapesTool.Lib.Model
 
         public I3DTri(BinaryReader br, bool isInt)
         {
-            if (isInt)
+            if(isInt)
             {
                 P1Idx = br.ReadUInt32();
                 P2Idx = br.ReadUInt32();
@@ -35,7 +35,7 @@ namespace I3DShapesTool.Lib.Model
         {
             int offset = zeroBasedIndicesInRawData ? -1 : 0;
 
-            if (isInt)
+            if(isInt)
             {
                 bw.Write((uint)(P1Idx + offset));
                 bw.Write((uint)(P2Idx + offset));
