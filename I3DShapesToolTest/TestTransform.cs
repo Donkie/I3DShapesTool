@@ -1,6 +1,5 @@
 ﻿using I3DShapesTool.Lib.Model;
 using I3DShapesTool.Lib.Tools;
-using System;
 using Xunit;
 
 namespace I3DShapesToolTest

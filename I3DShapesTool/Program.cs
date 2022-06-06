@@ -163,7 +163,14 @@ namespace I3DShapesTool
             {
                 string mdlFileName = Path.Combine(outFolder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
 
-                WavefrontObj objfile = new WavefrontObj(shape, i3dFile.Name, options.Transform);
+                I3DShape shapeData = shape.ShapeData;
+                if(shapeData == null)
+                    throw new ArgumentException("Shape doesn't have any assigned shape data");
+
+                WavefrontObj objfile = new WavefrontObj(shapeData, i3dFile.Name, 1);
+                if(options.Transform)
+                    objfile.Transform(shape.AbsoluteTransform);
+
                 byte[] dataBlob = objfile.ExportToBlob();
 
                 if(File.Exists(mdlFileName))

@@ -1,31 +1,31 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Linq;
 using I3DShapesTool.Lib.Model;
-using I3DShapesTool.Lib.Model.I3D;
+using I3DShapesTool.Lib.Tools;
+using System.IO;
 
 namespace I3DShapesTool.Lib.Export
 {
-    public class WavefrontObj
+    public class WavefrontObj : IExporter
     {
-        public string Name { get; }
+        private string Name { get; }
 
-        public string GeometryName { get; }
+        private string GeometryName { get; }
 
-        public float Scale { get; }
+        private float Scale { get; }
 
-        public I3DTri[] Triangles { get; private set; }
+        private I3DTri[] Triangles { get; set; }
 
-        public I3DVector[] Positions { get; private set; }
+        private I3DVector[] Positions { get; set; }
 
-        public I3DVector[]? Normals { get; private set; }
+        private I3DVector[]? Normals { get; set; }
 
-        public I3DUV[]? UVs { get; private set; }
+        private I3DUV[]? UVs { get; set; }
 
-        public WavefrontObj(I3DShape shape, string name)
+        public WavefrontObj(I3DShape shape, string name, float scale = 100)
         {
-            Scale = 100;
+            Scale = scale;
 
             string? geomname = shape.Name;
             if(geomname.EndsWith("Shape"))
@@ -43,35 +43,13 @@ namespace I3DShapesTool.Lib.Export
                 UVs = shape.UVSets[0];
         }
 
-        public WavefrontObj(Shape shape, string name, bool shouldTransform)
+        /// <summary>
+        /// Transforms the vertices of this obj using the transformation matrix
+        /// </summary>
+        /// <param name="t">Transformation matrix</param>
+        public void Transform(Transform t)
         {
-            I3DShape? shapeData = shape.ShapeData;
-            if(shapeData == null)
-                throw new ArgumentException("Input shape doesn't have any assigned shape data");
-
-            Scale = 1;
-
-            string? geomname = name;
-            if(geomname.EndsWith("Shape"))
-                geomname = geomname[0..^5];
-
-            Name = name;
-            GeometryName = geomname;
-            if (shouldTransform)
-            {
-                Positions = shapeData.Positions.Select(v => shape.AbsoluteTransform * v).ToArray();
-            }
-            else
-            {
-                Positions = shapeData.Positions;
-            }
-            Triangles = shapeData.Triangles;
-
-            if(shapeData.Normals != null)
-                Normals = shapeData.Normals;
-
-            if(shapeData.UVSets.Length > 0)
-                UVs = shapeData.UVSets[0];
+            Positions = Positions.Select(v => t * v).ToArray();
         }
 
         /// <summary>
@@ -205,6 +183,11 @@ namespace I3DShapesTool.Lib.Export
             }
 
             return Encoding.ASCII.GetBytes(sb.ToString());
+        }
+
+        public void Export(Stream stream)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
