@@ -74,7 +74,7 @@ namespace I3DShapesTool.Lib.Model
             // Convert to 1-based indices if it's detected that it is a zero-based index
             if(ZeroBasedIndicesInRawData)
             {
-                foreach(I3DTri? t in Triangles)
+                foreach(I3DTri t in Triangles)
                 {
                     t.P1Idx += 1;
                     t.P2Idx += 1;
@@ -115,7 +115,7 @@ namespace I3DShapesTool.Lib.Model
             {
                 if(Options.HasFlag((I3DShapeOptions)((uint)I3DShapeOptions.HasUV1 << uvSet)))
                 {
-                    I3DUV[]? uvs = new I3DUV[VertexCount];
+                    I3DUV[] uvs = new I3DUV[VertexCount];
                     for(int i = 0; i < VertexCount; i++)
                     {
                         uvs[i] = new I3DUV(reader, Version);
@@ -212,13 +212,13 @@ namespace I3DShapesTool.Lib.Model
             writer.Write((uint)ExtraStuff.Length);
             writer.Write(VertexCount);
             writer.Write((uint)Options);
-            foreach(I3DShapeExtra? extra in ExtraStuff)
+            foreach(I3DShapeExtra extra in ExtraStuff)
                 extra.Write(writer, Version, Options);
 
             if(Triangles.Length != CornerCount / 3)
                 throw new InvalidOperationException("Triangles array must be of size CornerCount / 3");
 
-            foreach(I3DTri? tri in Triangles)
+            foreach(I3DTri tri in Triangles)
                 tri.Write(writer, ZeroBasedIndicesInRawData, VertexCount > (ushort.MaxValue + 1));
 
             writer.Align(4);
@@ -226,7 +226,7 @@ namespace I3DShapesTool.Lib.Model
             if(Positions.Length != VertexCount)
                 throw new InvalidOperationException("Positions array must be of size VertexCount");
 
-            foreach(I3DVector? pos in Positions)
+            foreach(I3DVector pos in Positions)
                 pos.Write(writer);
 
             if(Options.HasFlag(I3DShapeOptions.HasNormals))
@@ -237,7 +237,7 @@ namespace I3DShapesTool.Lib.Model
                 if(Normals.Length != VertexCount)
                     throw new InvalidOperationException("Normals array must be of size VertexCount");
 
-                foreach(I3DVector? norm in Normals)
+                foreach(I3DVector norm in Normals)
                     norm.Write(writer);
             }
 
@@ -249,7 +249,7 @@ namespace I3DShapesTool.Lib.Model
                 if(Some4DData.Length != VertexCount)
                     throw new InvalidOperationException("Some4DData array must be of size VertexCount");
 
-                foreach(I3DVector4? vec in Some4DData)
+                foreach(I3DVector4 vec in Some4DData)
                     vec.Write(writer);
             }
 
@@ -263,7 +263,7 @@ namespace I3DShapesTool.Lib.Model
                     if(UVSets[uvSet].Length != VertexCount)
                         throw new InvalidOperationException($"UVSets[{uvSet}] array must be of size VertexCount");
 
-                    foreach(I3DUV? uv in UVSets[uvSet])
+                    foreach(I3DUV uv in UVSets[uvSet])
                         uv.Write(writer, Version);
                 }
             }
@@ -276,7 +276,7 @@ namespace I3DShapesTool.Lib.Model
                 if(VertexColor.Length != VertexCount)
                     throw new InvalidOperationException("VertexColor array must be of size VertexCount");
 
-                foreach(I3DVector4? vec in VertexColor)
+                foreach(I3DVector4 vec in VertexColor)
                     vec.Write(writer);
             }
 
@@ -336,7 +336,7 @@ namespace I3DShapesTool.Lib.Model
             }
 
             writer.Write((uint)UnknownData3.Length);
-            foreach(I3DShapeExtra2? data in UnknownData3)
+            foreach(I3DShapeExtra2 data in UnknownData3)
                 data.Write(writer);
         }
 

@@ -40,7 +40,7 @@ namespace I3DShapesTool.Lib.Model
 
             writer.Write((uint)UnknownFlags);
             writer.Write(Points.Count);
-            foreach(I3DVector? point in Points)
+            foreach(I3DVector point in Points)
                 point.Write(writer);
         }
     }

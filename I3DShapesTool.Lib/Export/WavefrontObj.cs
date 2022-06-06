@@ -139,27 +139,27 @@ namespace I3DShapesTool.Lib.Export
             sb.AppendLine();
             SetGroup(sb, "default");
             sb.AppendLine();
-            foreach(I3DVector? t in Positions)
+            foreach(I3DVector t in Positions)
             {
                 AddVertex(sb, t);
             }
             if(UVs != null)
             {
-                foreach(I3DUV? t in UVs)
+                foreach(I3DUV t in UVs)
                 {
                     AddUV(sb, t);
                 }
             }
             if(Normals != null)
             {
-                foreach(I3DVector? t in Normals)
+                foreach(I3DVector t in Normals)
                 {
                     AddNormal(sb, t);
                 }
             }
             SetSmoothing(sb, false);
             SetGroup(sb, GeometryName);
-            foreach(I3DTri? t in Triangles)
+            foreach(I3DTri t in Triangles)
             {
                 AddTriangle(sb, t, UVs != null, Normals != null);
             }

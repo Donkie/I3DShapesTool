@@ -53,48 +53,48 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="strict">Abort reading and propagate any exceptions that pop up when parsing part data. If false, parts that failed to read will be ignored.</param>
         public void Load(Stream inputStream, byte? forceSeed = null, bool strict = false)
         {
-            using ShapesFileReader? reader = new ShapesFileReader(inputStream, logger, forceSeed);
+            using ShapesFileReader reader = new ShapesFileReader(inputStream, logger, forceSeed);
             Seed = reader.Header.Seed;
             Version = reader.Header.Version;
 
             ICollection<Entity>? entities = reader.GetEntities();
             Parts = entities
-                        .Select(
-                            (entityRaw, index) =>
+                .Select(
+                    (entityRaw, index) =>
+                    {
+                        try
+                        {
+                            I3DPart part = LoadPart(entityRaw, entityRaw.EntityType, reader.Endian, reader.Header.Version);
+                            if(part.Type == EntityType.Unknown)
                             {
-                                try
-                                {
-                                    I3DPart? part = LoadPart(entityRaw, entityRaw.EntityType, reader.Endian, reader.Header.Version);
-                                    if(part.Type == EntityType.Unknown)
-                                    {
-                                        logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
-                                    }
-                                    return part;
-                                }
-                                catch(Exception ex)
-                                {
-                                    if(strict)
-                                        throw;
-
-                                    Console.WriteLine(ex);
-                                    logger?.LogError("Failed to decode part {index}.", index);
-
-                                    // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
-                                    try
-                                    {
-                                        return LoadPart(entityRaw, EntityType.Unknown, reader.Endian, reader.Header.Version);
-                                    }
-                                    catch(Exception)
-                                    {
-                                        // We even failed to decode it as a generic part, just return null then instead.
-                                        return null;
-                                    }
-                                }
+                                logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
                             }
-                        )
-                        .Where(part => part != null)
-                        .Cast<I3DPart>()
-                        .ToArray();
+                            return part;
+                        }
+                        catch(Exception ex)
+                        {
+                            if(strict)
+                                throw;
+
+                            Console.WriteLine(ex);
+                            logger?.LogError("Failed to decode part {index}.", index);
+
+                            // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
+                            try
+                            {
+                                return LoadPart(entityRaw, EntityType.Unknown, reader.Endian, reader.Header.Version);
+                            }
+                            catch(Exception)
+                            {
+                                // We even failed to decode it as a generic part, just return null then instead.
+                                return null;
+                            }
+                        }
+                    }
+                )
+                .Where(part => part != null)
+                .Cast<I3DPart>()
+                .ToArray();
         }
 
         /// <summary>
@@ -107,16 +107,16 @@ namespace I3DShapesTool.Lib.Model
             if(Seed == null || Version == null || Parts == null)
                 throw new ArgumentNullException("Seed, Version and Parts must be set before saving.");
 
-            using ShapesFileWriter? writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
-            Entity[]? entities = Parts.Select(part =>
+            using ShapesFileWriter writer = new ShapesFileWriter(outputStream, (byte)Seed, (short)Version);
+            Entity[] entities = Parts.Select(part =>
             {
-                using MemoryStream? ms = new MemoryStream();
-                using EndianBinaryWriter? bw = new EndianBinaryWriter(ms, writer.Endian);
+                using MemoryStream ms = new MemoryStream();
+                using EndianBinaryWriter bw = new EndianBinaryWriter(ms, writer.Endian);
 
                 part.Write(bw);
 
                 bw.Flush();
-                byte[]? data = ms.ToArray();
+                byte[] data = ms.ToArray();
 
                 return new Entity(part.RawType, data.Length, data);
             }).ToArray();

@@ -4,7 +4,8 @@ using System.IO;
 namespace I3DShapesTool.Lib.Container
 {
     /// <summary>
-    /// Entity.
+    /// Represents a raw Entity in a .i3d.shapes file.
+    /// The decrypted .i3d.shapes consists of a number of these Entities.
     /// </summary>
     public class Entity
     {
