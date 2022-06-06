@@ -57,7 +57,11 @@ namespace I3DShapesToolTest
             }
         }
 
-        private static void TestRewrite(ShapesFile file)
+        /// <summary>
+        /// Tests rewriting the part data into bytes and comparing with original (doesn't test decryption/encryption)
+        /// </summary>
+        /// <param name="file"></param>
+        private static void TestDataRewrite(ShapesFile file)
         {
             foreach(I3DPart part in file.Parts)
             {
@@ -70,7 +74,7 @@ namespace I3DShapesToolTest
 
                 byte[] newRaw = ms.ToArray();
                 /*
-                //Useful for debugging but a bit slow so leaving uncommented
+                //Useful for debugging but a bit slow so leaving commented
                 for(var i = 0; i < originalRaw.Length; i++)
                 {
                     Assert.Equal(originalRaw[i], newRaw[i]);
@@ -97,24 +101,30 @@ namespace I3DShapesToolTest
             }
         }
 
-        [SkippableFact]
-        public void TestFS22WriteShapes()
+        /// <summary>
+        /// Decrypts and parses a .i3d.shapes file and then encrypts it back and compares the binaries
+        /// </summary>
+        /// <param name="filePath"></param>
+        private void TestFullRewriteShapes(string filePath)
         {
-            string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
-            string filePath = Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes");
-
+            // Read, decrypt and parse the .i3d.shapes data
             using FileStream fileStream = File.OpenRead(filePath);
             ShapesFile file = new ShapesFile();
             file.Load(fileStream);
 
+            // Write and encrypt the shape data into a memory buffer
             using MemoryStream ms = new MemoryStream();
             file.Write(ms);
             byte[] rewrittenData = ms.ToArray();
 
+            // Compare the raw data
             byte[] originalData = File.ReadAllBytes(filePath);
             Assert.Equal(originalData.Length, rewrittenData.Length);
             Assert.Equal(originalData, rewrittenData);
 
+            // Re-decrypt the data and compare the contents.
+            // This is a redundant step since we've already confirmed the binaries match perfectly
+            // But nice anyway
             ms.Seek(0, SeekOrigin.Begin);
 
             ShapesFile file2 = new ShapesFile();
@@ -124,6 +134,16 @@ namespace I3DShapesToolTest
             Assert.Equal(file.Version, file2.Version);
             Assert.Equal(file.Parts.Length, file2.Parts.Length);
             Assert.Equal(file.Parts[0].RawData, file2.Parts[0].RawData);
+        }
+
+        [SkippableFact]
+        public void TestFS22WriteShapes()
+        {
+            string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 22");
+
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\newHolland\chSeries\chSeries.i3d.shapes"));
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\hardi\deltaForceBoom\deltaForceBoom.i3d.shapes"));
         }
 
         [SkippableFact]
@@ -138,7 +158,7 @@ namespace I3DShapesToolTest
                 AssertShapesFile(file, 153, 7, 24);
                 AssertShape(file.Shapes.First(), "alphaShape", 20, 368, 260);
                 AssertShapeData(file);
-                TestRewrite(file);
+                TestDataRewrite(file);
             }
             {
                 using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\newHolland\chSeries\chSeries.i3d.shapes"));
@@ -147,7 +167,7 @@ namespace I3DShapesToolTest
                 AssertShapesFile(file, 142, 7, 192);
                 AssertShape(file.Shapes.First(), "airFilterCleanerShape", 116, 1381, 1020);
                 AssertShapeData(file);
-                TestRewrite(file);
+                TestDataRewrite(file);
             }
         }
 
@@ -169,6 +189,14 @@ namespace I3DShapesToolTest
         }
 
         [SkippableFact]
+        public void TestFS19WriteShapes()
+        {
+            string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 19");
+
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
+        }
+
+        [SkippableFact]
         public void TestFS19()
         {
             string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 19");
@@ -179,7 +207,7 @@ namespace I3DShapesToolTest
             AssertShapesFile(file, 201, 5, 9);
             AssertShape(file.Shapes.First(), "colPartBackShape1", 4, 24, 12);
             AssertShapeData(file);
-            TestRewrite(file);
+            TestDataRewrite(file);
         }
 
         [SkippableFact]
@@ -200,6 +228,14 @@ namespace I3DShapesToolTest
         }
 
         [SkippableFact]
+        public void TestFS17WriteShapes()
+        {
+            string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 17");
+
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
+        }
+
+        [SkippableFact]
         public void TestFS17()
         {
             string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 17");
@@ -210,7 +246,7 @@ namespace I3DShapesToolTest
             AssertShapesFile(file, 49, 5, 12);
             AssertShape(file.Shapes.First(), "wheelLoaderLogForkShape", 1, 24, 12);
             AssertShapeData(file);
-            TestRewrite(file);
+            TestDataRewrite(file);
         }
 
         [SkippableFact]
@@ -231,6 +267,14 @@ namespace I3DShapesToolTest
         }
 
         [SkippableFact]
+        public void TestFS15WriteShapes()
+        {
+            string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 15");
+
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
+        }
+
+        [SkippableFact]
         public void TestFS15()
         {
             string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 15");
@@ -241,7 +285,7 @@ namespace I3DShapesToolTest
             AssertShapesFile(file, 188, 3, 16);
             AssertShape(file.Shapes.First(), "grimmeFTShape300", 1, 40, 20);
             AssertShapeData(file);
-            TestRewrite(file);
+            TestDataRewrite(file);
         }
 
         [SkippableFact]
@@ -262,6 +306,14 @@ namespace I3DShapesToolTest
         }
 
         [SkippableFact]
+        public void TestFS13WriteShapes()
+        {
+            string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 2013");
+
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
+        }
+
+        [SkippableFact]
         public void TestFS13()
         {
             string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 2013");
@@ -272,7 +324,7 @@ namespace I3DShapesToolTest
             AssertShapesFile(file, 68, 2, 32);
             AssertShape(file.Shapes.First(), "blanketBarShape2", 26, 68, 44);
             AssertShapeData(file);
-            TestRewrite(file);
+            TestDataRewrite(file);
         }
 
         [SkippableFact]
