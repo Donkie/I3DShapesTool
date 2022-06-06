@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
 
@@ -39,7 +40,7 @@ namespace I3DShapesTool.Lib.Model
 
 #nullable disable
         public I3DShape(byte[] rawData, Endian endian, int version)
-            : base(ShapeType.Shape, rawData, endian, version)
+            : base(EntityType.Shape, rawData, endian, version)
         {
         }
 #nullable restore

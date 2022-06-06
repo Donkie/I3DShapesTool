@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Tools;
 
 namespace I3DShapesTool.Lib.Model
@@ -13,7 +14,7 @@ namespace I3DShapesTool.Lib.Model
         public IList<I3DVector>? Points { get; set; }
 
         public Spline(byte[] rawData, Endian endian, int version)
-            : base(ShapeType.Spline, rawData, endian, version)
+            : base(EntityType.Spline, rawData, endian, version)
         {
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text;
+using I3DShapesTool.Lib.Container;
 using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
 
@@ -16,7 +17,7 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="rawData">Raw binary data</param>
         /// <param name="endian">Endian</param>
         /// <param name="version">File version</param>
-        protected I3DPart(ShapeType type, byte[] rawData, Endian endian, int version)
+        protected I3DPart(EntityType type, byte[] rawData, Endian endian, int version)
         {
             Type = type;
             RawData = rawData;
@@ -35,13 +36,13 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="rawData">Raw binary data</param>
         /// <param name="endian">Endian</param>
         /// <param name="version">File version</param>
-        public I3DPart(int rawType, byte[] rawData, Endian endian, int version) : this(ShapeType.Unknown, rawData, endian, version)
+        public I3DPart(int rawType, byte[] rawData, Endian endian, int version) : this(EntityType.Unknown, rawData, endian, version)
         {
             RawType = rawType;
         }
 #nullable restore
 
-        public ShapeType Type { get; }
+        public EntityType Type { get; }
 
         public int RawType { get; }
 

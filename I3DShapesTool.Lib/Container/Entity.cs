@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿
+using System.IO;
 
 namespace I3DShapesTool.Lib.Container
 {
@@ -8,15 +9,28 @@ namespace I3DShapesTool.Lib.Container
     public class Entity
     {
         /// <summary>
-        /// Entity type.
+        /// Entity type as an integer
         /// </summary>
         public int Type { get; }
 
         /// <summary>
-        /// Entity type.
+        /// Entity type as en enum
+        /// </summary>
+        public EntityType EntityType => Type switch
+        {
+            1 => EntityType.Shape,
+            2 => EntityType.Spline,
+            _ => EntityType.Unknown,
+        };
+
+        /// <summary>
+        /// Entity byte size
         /// </summary>
         public int Size { get; }
 
+        /// <summary>
+        /// Entity byte data
+        /// </summary>
         public byte[] Data { get; }
 
         public Entity(int type, int size, byte[] data)

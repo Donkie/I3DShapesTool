@@ -250,8 +250,8 @@ namespace I3DShapesTool
         {
             return part.Type switch
             {
-                ShapeType.Shape => "shape",
-                ShapeType.Spline => "spline",
+                EntityType.Shape => "shape",
+                EntityType.Spline => "spline",
                 _ => $"part_type{part.RawType}",
             };
         }

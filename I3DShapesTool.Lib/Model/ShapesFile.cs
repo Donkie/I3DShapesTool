@@ -64,9 +64,8 @@ namespace I3DShapesTool.Lib.Model
                             {
                                 try
                                 {
-                                    ShapeType partType = GetPartType(entityRaw.Type);
-                                    I3DPart? part = LoadPart(entityRaw, partType, reader.Endian, reader.Header.Version);
-                                    if(part.Type == ShapeType.Unknown)
+                                    I3DPart? part = LoadPart(entityRaw, entityRaw.EntityType, reader.Endian, reader.Header.Version);
+                                    if(part.Type == EntityType.Unknown)
                                     {
                                         logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
                                     }
@@ -83,7 +82,7 @@ namespace I3DShapesTool.Lib.Model
                                     // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
                                     try
                                     {
-                                        return LoadPart(entityRaw, ShapeType.Unknown, reader.Endian, reader.Header.Version);
+                                        return LoadPart(entityRaw, EntityType.Unknown, reader.Endian, reader.Header.Version);
                                     }
                                     catch(Exception)
                                     {
@@ -125,24 +124,14 @@ namespace I3DShapesTool.Lib.Model
             writer.SaveEntities(entities);
         }
 
-        private static I3DPart LoadPart(Entity entityRaw, ShapeType partType, Endian endian, int version)
+        private static I3DPart LoadPart(Entity entityRaw, EntityType partType, Endian endian, int version)
         {
             return partType switch
             {
-                ShapeType.Shape => new I3DShape(entityRaw.Data, endian, version),
-                ShapeType.Spline => new Spline(entityRaw.Data, endian, version),
-                ShapeType.Unknown => new I3DPart(entityRaw.Type, entityRaw.Data, endian, version),
+                EntityType.Shape => new I3DShape(entityRaw.Data, endian, version),
+                EntityType.Spline => new Spline(entityRaw.Data, endian, version),
+                EntityType.Unknown => new I3DPart(entityRaw.Type, entityRaw.Data, endian, version),
                 _ => throw new ArgumentOutOfRangeException(),
-            };
-        }
-
-        private static ShapeType GetPartType(int rawType)
-        {
-            return rawType switch
-            {
-                1 => ShapeType.Shape,
-                2 => ShapeType.Spline,
-                _ => ShapeType.Unknown,
             };
         }
     }

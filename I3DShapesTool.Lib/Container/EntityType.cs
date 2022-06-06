@@ -1,6 +1,6 @@
-﻿namespace I3DShapesTool.Lib.Model
+﻿namespace I3DShapesTool.Lib.Container
 {
-    public enum ShapeType
+    public enum EntityType
     {
         Unknown = 0,
         Shape = 1,
