@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Text;
-using System.Linq;
+﻿using System.Linq;
 using I3DShapesTool.Lib.Model;
 using I3DShapesTool.Lib.Tools;
 using System.IO;
@@ -92,102 +90,98 @@ namespace I3DShapesTool.Lib.Export
             Triangles = newTris;
         }
 
-        private void WriteHeader(StringBuilder sb)
+        private void WriteHeader(StreamWriter s)
         {
-            sb.AppendLine("# Wavefront OBJ file");
-            sb.AppendLine("# Creator: I3DShapesTool by Donkie");
-            sb.AppendFormat(CultureInfo.InvariantCulture, "# Name: {0:G}\n", Name);
-            sb.AppendFormat(CultureInfo.InvariantCulture, "# Scale: {0:F}\n", Scale);
+            s.WriteLine("# Wavefront OBJ file");
+            s.WriteLine("# Creator: I3DShapesTool by Donkie");
+            s.WriteLine("# Name: {0:G}", Name);
+            s.WriteLine("# Scale: {0:F}", Scale);
         }
 
-        private static void SetGroup(StringBuilder sb, string groupName)
+        private static void WriteGroup(StreamWriter s, string groupName)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "g {0:G}\n", groupName);
+            s.WriteLine("g {0:G}", groupName);
         }
 
-        private static void SetSmoothing(StringBuilder sb, bool smoothOn)
+        private static void WriteSmoothing(StreamWriter s, bool smoothOn)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "s {0:G}\n", smoothOn ? "on" : "off");
+            s.WriteLine("s {0:G}", smoothOn ? "on" : "off");
         }
 
-        private void AddVertex(StringBuilder sb, I3DVector vec)
+        private void WriteVertex(StreamWriter s, I3DVector vec)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "v {0:F4} {1:F4} {2:F4}\n", vec.X * Scale, vec.Y * Scale, vec.Z * Scale);
+            s.WriteLine("v {0:F4} {1:F4} {2:F4}", vec.X * Scale, vec.Y * Scale, vec.Z * Scale);
+        }
+        private static void WriteUV(StreamWriter s, I3DUV uv)
+        {
+            s.WriteLine("vt {0:F6} {1:F6}", uv.U, uv.V);
         }
 
-        private static void AddUV(StringBuilder sb, I3DUV uv)
+        private static void WriteNormal(StreamWriter s, I3DVector vec)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "vt {0:F6} {1:F6}\n", uv.U, uv.V);
+            s.WriteLine("vn {0:F6} {1:F6} {2:F6}", vec.X, vec.Y, vec.Z);
         }
 
-        private static void AddNormal(StringBuilder sb, I3DVector vec)
+        private void WriteTriangleFace(StreamWriter s, uint idx)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "vn {0:F6} {1:F6} {2:F6}\n", vec.X, vec.Y, vec.Z);
+            s.Write("{0:F0}", idx);
+
+            if(UVs != null)
+                s.Write("/{0:F0}", idx);
+            else if(Normals != null)
+                s.Write('/');
+
+            if(Normals != null)
+                s.Write("/{0:F0}", idx);
         }
 
-        private static void AddTriangleFace(StringBuilder sb, uint idx, bool hasUV, bool hasNormal)
+        private void WriteTriangle(StreamWriter s, I3DTri tri)
         {
-            sb.AppendFormat(CultureInfo.InvariantCulture, "{0:F0}", idx);
-
-            if(hasUV)
-                sb.AppendFormat(CultureInfo.InvariantCulture, "/{0:F0}", idx);
-            else if(hasNormal)
-                sb.Append('/');
-
-            if(hasNormal)
-                sb.AppendFormat(CultureInfo.InvariantCulture, "/{0:F0}", idx);
+            s.Write("f ");
+            WriteTriangleFace(s, tri.P1Idx);
+            s.Write(" ");
+            WriteTriangleFace(s, tri.P2Idx);
+            s.Write(" ");
+            WriteTriangleFace(s, tri.P3Idx);
+            s.WriteLine();
         }
 
-        private static void AddTriangle(StringBuilder sb, I3DTri tri, bool hasUV, bool hasNormal)
+        /// <summary>
+        /// Writes the .obj data to a stream
+        /// </summary>
+        /// <param name="stream">The stream</param>
+        public void Export(Stream stream)
         {
-            sb.Append("f ");
-            AddTriangleFace(sb, tri.P1Idx, hasUV, hasNormal);
-            sb.Append(" ");
-            AddTriangleFace(sb, tri.P2Idx, hasUV, hasNormal);
-            sb.Append(" ");
-            AddTriangleFace(sb, tri.P3Idx, hasUV, hasNormal);
-            sb.Append("\n");
-        }
+            using StreamWriter s = new InvariantStreamWriter(stream);
 
-        public byte[] ExportToBlob()
-        {
-            StringBuilder? sb = new StringBuilder();
-
-            WriteHeader(sb);
-            sb.AppendLine();
-            SetGroup(sb, "default");
-            sb.AppendLine();
+            WriteHeader(s);
+            s.WriteLine();
+            WriteGroup(s, "default");
+            s.WriteLine();
             foreach(I3DVector t in Positions)
             {
-                AddVertex(sb, t);
+                WriteVertex(s, t);
             }
             if(UVs != null)
             {
                 foreach(I3DUV t in UVs)
                 {
-                    AddUV(sb, t);
+                    WriteUV(s, t);
                 }
             }
             if(Normals != null)
             {
                 foreach(I3DVector t in Normals)
                 {
-                    AddNormal(sb, t);
+                    WriteNormal(s, t);
                 }
             }
-            SetSmoothing(sb, false);
-            SetGroup(sb, GeometryName);
+            WriteSmoothing(s, false);
+            WriteGroup(s, GeometryName);
             foreach(I3DTri t in Triangles)
             {
-                AddTriangle(sb, t, UVs != null, Normals != null);
+                WriteTriangle(s, t);
             }
-
-            return Encoding.ASCII.GetBytes(sb.ToString());
-        }
-
-        public void Export(Stream stream)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

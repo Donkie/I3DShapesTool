@@ -167,16 +167,12 @@ namespace I3DShapesTool
                 if(shapeData == null)
                     throw new ArgumentException("Shape doesn't have any assigned shape data");
 
+                using FileStream fs = new FileStream(mdlFileName, FileMode.OpenOrCreate, FileAccess.Write);
+
                 WavefrontObj objfile = new WavefrontObj(shapeData, i3dFile.Name, 1);
                 if(options.Transform)
                     objfile.Transform(shape.AbsoluteTransform);
-
-                byte[] dataBlob = objfile.ExportToBlob();
-
-                if(File.Exists(mdlFileName))
-                    File.Delete(mdlFileName);
-
-                File.WriteAllBytes(mdlFileName, dataBlob);
+                objfile.Export(fs);
             }
         }
 
@@ -185,14 +181,10 @@ namespace I3DShapesTool
             foreach(I3DShape shape in file.Shapes)
             {
                 string mdlFileName = Path.Combine(outFolder, CleanFileName($"{shape.Name}_{shape.Id}.obj"));
+                using FileStream fs = new FileStream(mdlFileName, FileMode.OpenOrCreate, FileAccess.Write);
 
-                WavefrontObj objfile = new WavefrontObj(shape, shapesFileName);
-                byte[] dataBlob = objfile.ExportToBlob();
-
-                if(File.Exists(mdlFileName))
-                    File.Delete(mdlFileName);
-
-                File.WriteAllBytes(mdlFileName, dataBlob);
+                new WavefrontObj(shape, shapesFileName)
+                    .Export(fs);
             }
         }
 
