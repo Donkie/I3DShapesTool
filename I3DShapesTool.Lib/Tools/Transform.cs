@@ -37,6 +37,13 @@ namespace I3DShapesTool.Lib.Tools
             return t * this;
         }
 
+        /// <summary>
+        /// Perform a 3D Euler angle rotation (in degrees)
+        /// X component of the vector rotates around the X axis, and so on
+        /// XYZ rotation convention
+        /// </summary>
+        /// <param name="rot"></param>
+        /// <returns></returns>
         public Transform Rotate(I3DVector rot)
         {
             double cosX = Math.Cos(rot.X * DEG2RAD);

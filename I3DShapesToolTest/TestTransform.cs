@@ -23,7 +23,7 @@ namespace I3DShapesToolTest
         public void TestRotateX()
         {
             Transform t = Transform.Identity
-                .Rotate(new I3DVector(Math.PI / 2, 0, 0));
+                .Rotate(new I3DVector(90, 0, 0));
 
             I3DVector v = t * new I3DVector(0, 1, 0);
             Assert.Equal(0, v.X, 6);
@@ -35,7 +35,7 @@ namespace I3DShapesToolTest
         public void TestRotateY()
         {
             Transform t = Transform.Identity
-                .Rotate(new I3DVector(0, Math.PI / 2, 0));
+                .Rotate(new I3DVector(0, 90, 0));
 
             I3DVector v = t * new I3DVector(1, 0, 0);
             Assert.Equal(0, v.X, 6);
@@ -47,7 +47,7 @@ namespace I3DShapesToolTest
         public void TestRotateZ()
         {
             Transform t = Transform.Identity
-                .Rotate(new I3DVector(0, 0, Math.PI / 2));
+                .Rotate(new I3DVector(0, 0, 90));
 
             I3DVector v = t * new I3DVector(1, 0, 0);
             Assert.Equal(0, v.X, 6);
@@ -56,15 +56,15 @@ namespace I3DShapesToolTest
         }
 
         [Fact]
-        public void TestRotateXY()
+        public void TestRotateXYZ()
         {
             Transform t = Transform.Identity
-                .Rotate(new I3DVector(Math.PI / 2, Math.PI / 2, 0));
+                .Rotate(new I3DVector(90, 90, 90));
 
-            I3DVector v = t * new I3DVector(1, 0, 0);
+            I3DVector v = t * new I3DVector(1, 1, 0);
             Assert.Equal(0, v.X, 6);
             Assert.Equal(1, v.Y, 6);
-            Assert.Equal(0, v.Z, 6);
+            Assert.Equal(-1, v.Z, 6);
         }
 
         [Fact]
@@ -98,7 +98,7 @@ namespace I3DShapesToolTest
             Transform t = Transform.Identity
                 .Scale(new I3DVector(0.5, 0.5, 0.5))
                 .Translate(new I3DVector(6, 0, 0))
-                .Rotate(new I3DVector(0, Math.PI / 2, 0));
+                .Rotate(new I3DVector(0, 90, 0));
 
             I3DVector v = t * new I3DVector(2, 0, 0);
             Assert.Equal(0, v.X, 6);

@@ -35,11 +35,14 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public void SetParent(TransformGroup parent)
         {
-            if(Parent != null)
-                Parent.Children.Remove(this);
+            if(parent != Parent)
+            {
+                if(Parent != null)
+                    Parent.Children.Remove(this);
 
-            Parent = parent;
-            Parent.Children.Add(this);
+                Parent = parent;
+                Parent.Children.Add(this);
+            }
 
             UpdateAbsoluteTransform();
 
