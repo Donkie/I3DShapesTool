@@ -18,13 +18,11 @@ namespace I3DShapesTool.Lib.Model
         /// <summary>
         /// Number of triangle corners
         /// </summary>
-        public uint CornerCount { get; private set; }
-        public uint NumExtraStuff { get; private set; }
+        public uint CornerCount => (uint)(Triangles.Length * 3);
         /// <summary>
         /// Number of unique vertices
         /// </summary>
-        public uint VertexCount { get; private set; }
-        public I3DShapeOptions Options { get; private set; }
+        public uint VertexCount => (uint)Positions.Length;
         public I3DShapeExtra[] ExtraStuff { get; private set; }
         public bool ZeroBasedIndicesInRawData { get; private set; }
         public I3DTri[] Triangles { get; private set; }
@@ -37,6 +35,49 @@ namespace I3DShapesTool.Lib.Model
         public byte[,]? BlendIndices { get; private set; }
         public float[]? UnknownData2 { get; private set; }
         public I3DShapeExtra2[] UnknownData3 { get; private set; }
+
+        /// <summary>
+        /// Contains options flags higher than we have enum data for
+        /// This is so we can store and these unknown options on load and then save them again
+        /// </summary>
+        public uint OptionsHighBits { get; private set; }
+
+        /// <summary>
+        /// Dynamically generated options bitflag
+        /// </summary>
+        public I3DShapeOptions Options { 
+            get {
+                I3DShapeOptions opts = I3DShapeOptions.None;
+
+                if(Normals != null)
+                    opts |= I3DShapeOptions.HasNormals;
+
+                for(int uvSet = 0; uvSet < 4; uvSet++)
+                {
+                    if(UVSets[uvSet] != null)
+                        opts |= (I3DShapeOptions)((uint)I3DShapeOptions.HasUV1 << uvSet);
+                }
+
+                if(VertexColor != null)
+                    opts |= I3DShapeOptions.HasVertexColor;
+
+                if(BlendIndices != null)
+                    opts |= I3DShapeOptions.HasSkinningInfo;
+
+                if(BlendIndices != null && BlendWeights == null)
+                    opts |= I3DShapeOptions.NoBlendWeights;
+
+                if(UnknownData2 != null)
+                    opts |= I3DShapeOptions.HasUnknownData2;
+
+                if(Some4DData != null)
+                    opts |= I3DShapeOptions.HasPrecomputed4DVectorData;
+
+                opts |= (I3DShapeOptions)OptionsHighBits;
+
+                return opts;
+            } 
+        }
 
 #nullable disable
         public I3DShape(byte[] rawData, Endian endian, int version)
@@ -51,21 +92,25 @@ namespace I3DShapesTool.Lib.Model
             BoundingVolumeY = reader.ReadSingle();
             BoundingVolumeZ = reader.ReadSingle();
             BoundingVolumeR = reader.ReadSingle();
-            CornerCount = reader.ReadUInt32();
-            NumExtraStuff = reader.ReadUInt32();
-            VertexCount = reader.ReadUInt32();
-            Options = (I3DShapeOptions)reader.ReadUInt32();
-            ExtraStuff = new I3DShapeExtra[NumExtraStuff];
-            for(int i = 0; i < NumExtraStuff; i++)
+            uint cornerCount = reader.ReadUInt32();
+            uint numExtraStuff = reader.ReadUInt32();
+            uint vertexCount = reader.ReadUInt32();
+
+            uint options_num = reader.ReadUInt32();
+            I3DShapeOptions options = (I3DShapeOptions)options_num;
+            OptionsHighBits = options_num & ~(uint)I3DShapeOptions.All;
+
+            ExtraStuff = new I3DShapeExtra[numExtraStuff];
+            for(int i = 0; i < numExtraStuff; i++)
             {
-                ExtraStuff[i] = new I3DShapeExtra(reader, Version, Options);
+                ExtraStuff[i] = new I3DShapeExtra(reader, Version, options);
             }
 
             ZeroBasedIndicesInRawData = false;
-            Triangles = new I3DTri[CornerCount / 3];
-            for(int i = 0; i < CornerCount / 3; i++)
+            Triangles = new I3DTri[cornerCount / 3];
+            for(int i = 0; i < cornerCount / 3; i++)
             {
-                Triangles[i] = new I3DTri(reader, VertexCount > (ushort.MaxValue + 1));
+                Triangles[i] = new I3DTri(reader, vertexCount > (ushort.MaxValue + 1));
 
                 if(Triangles[i].P1Idx == 0 || Triangles[i].P2Idx == 0 || Triangles[i].P3Idx == 0)
                     ZeroBasedIndicesInRawData = true;
@@ -86,37 +131,47 @@ namespace I3DShapesTool.Lib.Model
             //if (Version < 4) // Could be 5 as well
             reader.BaseStream.Align(4);
 
-            Positions = new I3DVector[VertexCount];
-            for(int i = 0; i < VertexCount; i++)
+            Positions = new I3DVector[vertexCount];
+            for(int i = 0; i < vertexCount; i++)
             {
                 Positions[i] = new I3DVector(reader);
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasNormals))
+            if(options.HasFlag(I3DShapeOptions.HasNormals))
             {
-                Normals = new I3DVector[VertexCount];
-                for(int i = 0; i < VertexCount; i++)
+                Normals = new I3DVector[vertexCount];
+                for(int i = 0; i < vertexCount; i++)
                 {
                     Normals[i] = new I3DVector(reader);
                 }
             }
 
-            if(Version >= VERSION_PRECOMPUTED4DDATA && Options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData))
+            if(options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData))
             {
-                Some4DData = new I3DVector4[VertexCount];
-                for(int i = 0; i < VertexCount; i++)
+                if(Version >= VERSION_PRECOMPUTED4DDATA)
                 {
-                    Some4DData[i] = new I3DVector4(reader);
+                    Some4DData = new I3DVector4[vertexCount];
+                    for(int i = 0; i < vertexCount; i++)
+                    {
+                        Some4DData[i] = new I3DVector4(reader);
+                    }
+                }
+                else
+                {
+                    // Stupid fix for this flag carrying some other meaning for older file versions
+                    // We don't want to treat this file has having precomputed 4d vector data, but
+                    // we still need to keep the flag for if we're saving later.
+                    OptionsHighBits |= (uint)I3DShapeOptions.HasPrecomputed4DVectorData;
                 }
             }
 
             UVSets = new I3DUV[4][];
             for(int uvSet = 0; uvSet < 4; uvSet++)
             {
-                if(Options.HasFlag((I3DShapeOptions)((uint)I3DShapeOptions.HasUV1 << uvSet)))
+                if(options.HasFlag((I3DShapeOptions)((uint)I3DShapeOptions.HasUV1 << uvSet)))
                 {
-                    I3DUV[] uvs = new I3DUV[VertexCount];
-                    for(int i = 0; i < VertexCount; i++)
+                    I3DUV[] uvs = new I3DUV[vertexCount];
+                    for(int i = 0; i < vertexCount; i++)
                     {
                         uvs[i] = new I3DUV(reader, Version);
                     }
@@ -124,24 +179,24 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasVertexColor))
+            if(options.HasFlag(I3DShapeOptions.HasVertexColor))
             {
-                VertexColor = new I3DVector4[VertexCount];
-                for(int i = 0; i < VertexCount; i++)
+                VertexColor = new I3DVector4[vertexCount];
+                for(int i = 0; i < vertexCount; i++)
                 {
                     VertexColor[i] = new I3DVector4(reader);
                 }
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasSkinningInfo))
+            if(options.HasFlag(I3DShapeOptions.HasSkinningInfo))
             {
-                bool noBlendWeights = Options.HasFlag(I3DShapeOptions.NoBlendWeights);
+                bool noBlendWeights = options.HasFlag(I3DShapeOptions.NoBlendWeights);
                 bool blendWeights = !noBlendWeights;
 
                 // Load blend weights first
                 if(blendWeights)
                 {
-                    BlendWeights = new float[VertexCount, 4];
+                    BlendWeights = new float[vertexCount, 4];
                     for(int i = 0; i < BlendWeights.GetLength(0); i++)
                     {
                         for(int j = 0; j < BlendWeights.GetLength(1); j++)
@@ -153,7 +208,7 @@ namespace I3DShapesTool.Lib.Model
 
                 // Load blend indices
                 // If weights exist, we will have 4 index slots per vertex, otherwise just 1.
-                BlendIndices = new byte[VertexCount, blendWeights ? 4 : 1];
+                BlendIndices = new byte[vertexCount, blendWeights ? 4 : 1];
                 for(int i = 0; i < BlendIndices.GetLength(0); i++)
                 {
                     for(int j = 0; j < BlendIndices.GetLength(1); j++)
@@ -163,10 +218,10 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasUnknownData2))
+            if(options.HasFlag(I3DShapeOptions.HasUnknownData2))
             {
-                UnknownData2 = new float[VertexCount];
-                for(int i = 0; i < VertexCount; i++)
+                UnknownData2 = new float[vertexCount];
+                for(int i = 0; i < vertexCount; i++)
                 {
                     UnknownData2[i] = reader.ReadSingle();
                 }
@@ -215,25 +270,16 @@ namespace I3DShapesTool.Lib.Model
             foreach(I3DShapeExtra extra in ExtraStuff)
                 extra.Write(writer, Version, Options);
 
-            if(Triangles.Length != CornerCount / 3)
-                throw new InvalidOperationException("Triangles array must be of size CornerCount / 3");
-
             foreach(I3DTri tri in Triangles)
                 tri.Write(writer, ZeroBasedIndicesInRawData, VertexCount > (ushort.MaxValue + 1));
 
             writer.Align(4);
 
-            if(Positions.Length != VertexCount)
-                throw new InvalidOperationException("Positions array must be of size VertexCount");
-
             foreach(I3DVector pos in Positions)
                 pos.Write(writer);
 
-            if(Options.HasFlag(I3DShapeOptions.HasNormals))
+            if(Normals != null)
             {
-                if(Normals == null)
-                    throw new InvalidOperationException("Options say we have normals but Normals field is null");
-
                 if(Normals.Length != VertexCount)
                     throw new InvalidOperationException("Normals array must be of size VertexCount");
 
@@ -241,11 +287,11 @@ namespace I3DShapesTool.Lib.Model
                     norm.Write(writer);
             }
 
-            if(Version >= VERSION_PRECOMPUTED4DDATA && Options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData))
-            {
-                if(Some4DData == null)
-                    throw new InvalidOperationException("Options say we have 4d data but Some4DData field is null");
+            if(Version < VERSION_PRECOMPUTED4DDATA && Some4DData != null)
+                throw new InvalidOperationException($"I3D Entity version < {VERSION_PRECOMPUTED4DDATA} doesn't support \"Some4DData\"");
 
+            if(Some4DData != null)
+            {
                 if(Some4DData.Length != VertexCount)
                     throw new InvalidOperationException("Some4DData array must be of size VertexCount");
 
@@ -255,11 +301,8 @@ namespace I3DShapesTool.Lib.Model
 
             for(int uvSet = 0; uvSet < 4; uvSet++)
             {
-                if(Options.HasFlag((I3DShapeOptions)((uint)I3DShapeOptions.HasUV1 << uvSet)))
+                if(UVSets[uvSet] != null)
                 {
-                    if(UVSets[uvSet] == null)
-                        throw new InvalidOperationException($"Options say we have UV set {uvSet + 1} but UVSets[{uvSet}] is null");
-
                     if(UVSets[uvSet].Length != VertexCount)
                         throw new InvalidOperationException($"UVSets[{uvSet}] array must be of size VertexCount");
 
@@ -268,11 +311,8 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasVertexColor))
+            if(VertexColor != null)
             {
-                if(VertexColor == null)
-                    throw new InvalidOperationException("Options say we have vertex colors but VertexColor field is null");
-
                 if(VertexColor.Length != VertexCount)
                     throw new InvalidOperationException("VertexColor array must be of size VertexCount");
 
@@ -285,12 +325,9 @@ namespace I3DShapesTool.Lib.Model
                 if(BlendIndices == null)
                     throw new InvalidOperationException("Options say we have skinning info but BlendIndices is null");
 
-                bool noBlendWeights = Options.HasFlag(I3DShapeOptions.NoBlendWeights);
-                if(!noBlendWeights)
+                bool noBlendWeights = BlendWeights == null;
+                if(BlendWeights != null)
                 {
-                    if(BlendWeights == null)
-                        throw new InvalidOperationException("Options say we have blend weights but BlendWeights field is null");
-
                     if(BlendWeights.GetLength(0) != VertexCount)
                         throw new InvalidOperationException("First dimension of BlendWeights array must be of size VertexCount");
 
@@ -323,11 +360,8 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasUnknownData2))
+            if(UnknownData2 != null)
             {
-                if(UnknownData2 == null)
-                    throw new InvalidOperationException("Options say we have UnknownData2 but UnknownData2 field is null");
-
                 if(UnknownData2.Length != VertexCount)
                     throw new InvalidOperationException("UnknownData2 array must be of size VertexCount");
 
