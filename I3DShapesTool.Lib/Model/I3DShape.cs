@@ -10,10 +10,7 @@ namespace I3DShapesTool.Lib.Model
     {
         private const int VERSION_PRECOMPUTED4DDATA = 4; // Not sure of exact version here
 
-        public float BoundingVolumeX { get; private set; }
-        public float BoundingVolumeY { get; private set; }
-        public float BoundingVolumeZ { get; private set; }
-        public float BoundingVolumeR { get; private set; }
+        public I3DVector4 BoundingVolume { get; private set; }
 
         /// <summary>
         /// Number of triangle corners
@@ -88,10 +85,7 @@ namespace I3DShapesTool.Lib.Model
 
         protected override void ReadContents(BinaryReader reader)
         {
-            BoundingVolumeX = reader.ReadSingle();
-            BoundingVolumeY = reader.ReadSingle();
-            BoundingVolumeZ = reader.ReadSingle();
-            BoundingVolumeR = reader.ReadSingle();
+            BoundingVolume = new I3DVector4(reader);
             uint cornerCount = reader.ReadUInt32();
             uint numExtraStuff = reader.ReadUInt32();
             uint vertexCount = reader.ReadUInt32();
@@ -259,10 +253,7 @@ namespace I3DShapesTool.Lib.Model
 
         protected override void WriteContents(BinaryWriter writer)
         {
-            writer.Write(BoundingVolumeX);
-            writer.Write(BoundingVolumeY);
-            writer.Write(BoundingVolumeZ);
-            writer.Write(BoundingVolumeR);
+            BoundingVolume.Write(writer);
             writer.Write(CornerCount);
             writer.Write((uint)ExtraStuff.Length);
             writer.Write(VertexCount);

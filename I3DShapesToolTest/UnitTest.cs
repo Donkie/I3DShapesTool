@@ -144,7 +144,6 @@ namespace I3DShapesToolTest
 
             TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
             TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\newHolland\chSeries\chSeries.i3d.shapes"));
-            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\hardi\deltaForceBoom\deltaForceBoom.i3d.shapes"));
         }
 
         [SkippableFact]
