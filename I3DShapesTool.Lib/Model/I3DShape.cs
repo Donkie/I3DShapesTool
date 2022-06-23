@@ -168,7 +168,7 @@ namespace I3DShapesTool.Lib.Model
                 }
 
                 // Load blend indices
-                BlendIndices = new byte[VertexCount, 4];
+                BlendIndices = new byte[VertexCount, numIndices];
 
                 for(int i = 0; i < VertexCount; i++)
                 {
