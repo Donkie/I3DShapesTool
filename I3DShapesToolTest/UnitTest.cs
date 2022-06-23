@@ -45,7 +45,8 @@ namespace I3DShapesToolTest
         {
             foreach(I3DShape shape in file.Shapes)
             {
-                Assert.True(shape.Triangles.All(tri => tri.P1Idx <= shape.CornerCount && tri.P2Idx <= shape.CornerCount && tri.P3Idx <= shape.CornerCount));
+                uint maxIndex = shape.VertexCount;
+                Assert.True(shape.Triangles.All(tri => tri.P1Idx <= maxIndex && tri.P2Idx <= maxIndex && tri.P3Idx <= maxIndex));
                 if(shape.Normals != null)
                 {
                     double numUnitLengths = shape.Normals.Sum(v => v.IsValidNormal() ? 1 : 0);
@@ -110,7 +111,7 @@ namespace I3DShapesToolTest
             // Read, decrypt and parse the .i3d.shapes data
             using FileStream fileStream = File.OpenRead(filePath);
             ShapesFile file = new ShapesFile();
-            file.Load(fileStream);
+            file.Load(fileStream, null, true);
 
             // Write and encrypt the shape data into a memory buffer
             using MemoryStream ms = new MemoryStream();
@@ -128,7 +129,7 @@ namespace I3DShapesToolTest
             ms.Seek(0, SeekOrigin.Begin);
 
             ShapesFile file2 = new ShapesFile();
-            file2.Load(ms);
+            file2.Load(ms, null, true);
 
             Assert.Equal(file.Seed, file2.Seed);
             Assert.Equal(file.Version, file2.Version);
@@ -143,7 +144,7 @@ namespace I3DShapesToolTest
 
             TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
             TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\newHolland\chSeries\chSeries.i3d.shapes"));
-            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\hardi\deltaForceBoom\deltaForceBoom.i3d.shapes"));
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\hardi\mega1200L\mega1200L.i3d.shapes"));
         }
 
         [SkippableFact]
@@ -154,7 +155,7 @@ namespace I3DShapesToolTest
             {
                 using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\boeckmann\bigMasterWesternWCF\bigMasterWesternWCF.i3d.shapes"));
                 ShapesFile file = new ShapesFile();
-                file.Load(fileStream);
+                file.Load(fileStream, null, true);
                 AssertShapesFile(file, 153, 7, 24);
                 AssertShape(file.Shapes.First(), "alphaShape", 20, 368, 260);
                 AssertShapeData(file);
@@ -163,9 +164,9 @@ namespace I3DShapesToolTest
             {
                 using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\newHolland\chSeries\chSeries.i3d.shapes"));
                 ShapesFile file = new ShapesFile();
-                file.Load(fileStream);
-                AssertShapesFile(file, 142, 7, 192);
-                AssertShape(file.Shapes.First(), "airFilterCleanerShape", 116, 1381, 1020);
+                file.Load(fileStream, null, true);
+                AssertShapesFile(file, 117, 7, 113);
+                AssertShape(file.Shapes.First(), "alpha1Shape", 15, 52, 40);
                 AssertShapeData(file);
                 TestDataRewrite(file);
             }
@@ -203,7 +204,7 @@ namespace I3DShapesToolTest
 
             using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\magsi\telehandlerBaleFork\telehandlerBaleFork.i3d.shapes"));
             ShapesFile file = new ShapesFile();
-            file.Load(fileStream);
+            file.Load(fileStream, null, true);
             AssertShapesFile(file, 201, 5, 9);
             AssertShape(file.Shapes.First(), "colPartBackShape1", 4, 24, 12);
             AssertShapeData(file);
@@ -242,7 +243,7 @@ namespace I3DShapesToolTest
 
             using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
             ShapesFile file = new ShapesFile();
-            file.Load(fileStream);
+            file.Load(fileStream, null, true);
             AssertShapesFile(file, 49, 5, 12);
             AssertShape(file.Shapes.First(), "wheelLoaderLogForkShape", 1, 24, 12);
             AssertShapeData(file);
@@ -281,7 +282,7 @@ namespace I3DShapesToolTest
 
             using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\tools\grimme\grimmeFT300.i3d.shapes"));
             ShapesFile file = new ShapesFile();
-            file.Load(fileStream);
+            file.Load(fileStream, null, true);
             AssertShapesFile(file, 188, 3, 16);
             AssertShape(file.Shapes.First(), "grimmeFTShape300", 1, 40, 20);
             AssertShapeData(file);
@@ -320,7 +321,7 @@ namespace I3DShapesToolTest
 
             using FileStream fileStream = File.OpenRead(Path.Combine(gameFolder, @"data\vehicles\tools\kuhn\kuhnGA4521GM.i3d.shapes"));
             ShapesFile file = new ShapesFile();
-            file.Load(fileStream);
+            file.Load(fileStream, null, true);
             AssertShapesFile(file, 68, 2, 32);
             AssertShape(file.Shapes.First(), "blanketBarShape2", 26, 68, 44);
             AssertShapeData(file);
