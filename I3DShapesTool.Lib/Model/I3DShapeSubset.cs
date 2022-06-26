@@ -34,6 +34,18 @@ namespace I3DShapesTool.Lib.Model
             }
         }
 
+        public I3DShapeSubset(uint firstVertex, uint numVertices, uint firstIndex, uint numIndices, float? uVDensity1 = null, float? uVDensity2 = null, float? uVDensity3 = null, float? uVDensity4 = null)
+        {
+            FirstVertex = firstVertex;
+            NumVertices = numVertices;
+            FirstIndex = firstIndex;
+            NumIndices = numIndices;
+            UVDensity1 = uVDensity1;
+            UVDensity2 = uVDensity2;
+            UVDensity3 = uVDensity3;
+            UVDensity4 = uVDensity4;
+        }
+
         public void Write(BinaryWriter bw, int version, I3DShapeOptions options)
         {
             bw.Write(FirstVertex);
