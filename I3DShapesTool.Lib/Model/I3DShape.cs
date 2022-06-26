@@ -76,13 +76,12 @@ namespace I3DShapesTool.Lib.Model
         }
 
 #nullable disable
-        public I3DShape(int version)
-            : base(EntityType.Shape, version)
+        public I3DShape() : base(EntityType.Shape)
         {
         }
 #nullable restore
 
-        protected override void ReadContents(BinaryReader reader)
+        protected override void ReadContents(BinaryReader reader, short fileVersion)
         {
             BoundingVolume = new I3DVector4(reader);
             uint cornerCount = reader.ReadUInt32();
@@ -96,7 +95,7 @@ namespace I3DShapesTool.Lib.Model
             Subsets = new I3DShapeSubset[numSubsets];
             for(int i = 0; i < numSubsets; i++)
             {
-                Subsets[i] = new I3DShapeSubset(reader, Version, options);
+                Subsets[i] = new I3DShapeSubset(reader, fileVersion, options);
             }
 
             Triangles = new I3DTri[cornerCount / 3];
@@ -126,7 +125,7 @@ namespace I3DShapesTool.Lib.Model
 
             if(options.HasFlag(I3DShapeOptions.HasTangents))
             {
-                if(Version >= VERSION_WITH_TANGENTS)
+                if(fileVersion >= VERSION_WITH_TANGENTS)
                 {
                     Tangents = new I3DVector4[vertexCount];
                     for(int i = 0; i < vertexCount; i++)
@@ -151,7 +150,7 @@ namespace I3DShapesTool.Lib.Model
                     I3DUV[] uvs = new I3DUV[vertexCount];
                     for(int i = 0; i < vertexCount; i++)
                     {
-                        uvs[i] = new I3DUV(reader, Version);
+                        uvs[i] = new I3DUV(reader, fileVersion);
                     }
                     UVSets[uvSet] = uvs;
                 }
@@ -239,7 +238,7 @@ namespace I3DShapesTool.Lib.Model
                 throw new DecodeException("Failed to read the entire shape data");
         }
 
-        protected override void WriteContents(BinaryWriter writer)
+        protected override void WriteContents(BinaryWriter writer, short fileVersion)
         {
             BoundingVolume.Write(writer);
             writer.Write(CornerCount);
@@ -247,7 +246,7 @@ namespace I3DShapesTool.Lib.Model
             writer.Write(VertexCount);
             writer.Write((uint)Options);
             foreach(I3DShapeSubset subset in Subsets)
-                subset.Write(writer, Version, Options);
+                subset.Write(writer, fileVersion, Options);
 
             foreach(I3DTri tri in Triangles)
                 tri.Write(writer, VertexCount > (ushort.MaxValue + 1));
@@ -266,7 +265,7 @@ namespace I3DShapesTool.Lib.Model
                     norm.Write(writer);
             }
 
-            if(Version < VERSION_WITH_TANGENTS && Tangents != null)
+            if(fileVersion < VERSION_WITH_TANGENTS && Tangents != null)
                 throw new InvalidOperationException($"I3D Entity version < {VERSION_WITH_TANGENTS} doesn't support saving tangents.");
 
             if(Tangents != null)
@@ -286,7 +285,7 @@ namespace I3DShapesTool.Lib.Model
                         throw new InvalidOperationException($"UVSets[{uvSet}] array must be of size VertexCount");
 
                     foreach(I3DUV uv in UVSets[uvSet])
-                        uv.Write(writer, Version);
+                        uv.Write(writer, fileVersion);
                 }
             }
 
@@ -352,7 +351,7 @@ namespace I3DShapesTool.Lib.Model
 
         public override string ToString()
         {
-            return $"I3DShape #{Id} V{Version} {Name}";
+            return $"I3DShape #{Id} {Name}";
         }
     }
 }

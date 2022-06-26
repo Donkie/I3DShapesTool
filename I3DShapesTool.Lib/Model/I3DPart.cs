@@ -14,13 +14,9 @@ namespace I3DShapesTool.Lib.Model
         /// Should only be used by child classes, since if you know of a type you should have a child class for it.
         /// </summary>
         /// <param name="type">Type</param>
-        /// <param name="rawData">Raw binary data</param>
-        /// <param name="endian">Endian</param>
-        /// <param name="version">File version</param>
-        protected I3DPart(EntityType type, int version)
+        protected I3DPart(EntityType type)
         {
             Type = type;
-            Version = version;
             RawType = (int)type;
         }
 
@@ -29,10 +25,7 @@ namespace I3DShapesTool.Lib.Model
         /// Type will get set to ShapeType.Unknown
         /// </summary>
         /// <param name="rawType">Raw type number</param>
-        /// <param name="rawData">Raw binary data</param>
-        /// <param name="endian">Endian</param>
-        /// <param name="version">File version</param>
-        public I3DPart(int rawType, int version) : this(EntityType.Unknown, version)
+        public I3DPart(int rawType) : this(EntityType.Unknown)
         {
             RawType = rawType;
         }
@@ -51,8 +44,6 @@ namespace I3DShapesTool.Lib.Model
         /// Shape ID
         /// </summary>
         public uint Id { get; private set; }
-
-        public int Version { get; }
 
         private byte[] contents;
 
@@ -73,31 +64,31 @@ namespace I3DShapesTool.Lib.Model
             writer.Write(Id);
         }
 
-        public void Read(BinaryReader reader)
+        public void Read(BinaryReader reader, short fileVersion)
         {
             ReadHeader(reader);
-            ReadContents(reader);
+            ReadContents(reader, fileVersion);
         }
 
-        public void Write(BinaryWriter writer)
+        public void Write(BinaryWriter writer, short fileVersion)
         {
             WriteHeader(writer);
-            WriteContents(writer);
+            WriteContents(writer, fileVersion);
         }
 
-        protected virtual void ReadContents(BinaryReader reader)
+        protected virtual void ReadContents(BinaryReader reader, short fileVersion)
         {
             contents = reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
         }
 
-        protected virtual void WriteContents(BinaryWriter writer)
+        protected virtual void WriteContents(BinaryWriter writer, short fileVersion)
         {
             writer.Write(contents);
         }
 
         public override string ToString()
         {
-            return $"I3DPart #{Id} V{Version} {Name}";
+            return $"I3DPart #{Id} {Name}";
         }
     }
 }

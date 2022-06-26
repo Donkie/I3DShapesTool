@@ -65,13 +65,16 @@ namespace I3DShapesToolTest
         /// <param name="file"></param>
         private static void TestDataRewrite(ShapesFile file)
         {
-            foreach(Entity part in file.Entities)
+            for(int i = 0; i < file.Entities.Length; i++)
             {
-                byte[] originalRaw = part.Data;
+                Entity entity = file.Entities[i];
+                I3DPart part = file.Parts[i];
+
+                byte[] originalRaw = entity.Data;
 
                 using MemoryStream ms = new MemoryStream();
                 using EndianBinaryWriter bw = new EndianBinaryWriter(ms, file.Endian ?? Endian.Big);
-                part.Write(bw);
+                part.Write(bw, (short)file.Version);
                 bw.Flush();
 
                 byte[] newRaw = ms.ToArray();

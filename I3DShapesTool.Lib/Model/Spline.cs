@@ -13,12 +13,11 @@ namespace I3DShapesTool.Lib.Model
 
         public IList<I3DVector>? Points { get; set; }
 
-        public Spline(int version)
-            : base(EntityType.Spline, version)
+        public Spline() : base(EntityType.Spline)
         {
         }
 
-        protected override void ReadContents(BinaryReader binaryReader)
+        protected override void ReadContents(BinaryReader binaryReader, short fileVersion)
         {
             UnknownFlags = binaryReader.ReadUInt32();
 
@@ -33,7 +32,7 @@ namespace I3DShapesTool.Lib.Model
             }
         }
 
-        protected override void WriteContents(BinaryWriter writer)
+        protected override void WriteContents(BinaryWriter writer, short fileVersion)
         {
             if(UnknownFlags == null || Points == null)
                 throw new InvalidOperationException("Data not set on class");

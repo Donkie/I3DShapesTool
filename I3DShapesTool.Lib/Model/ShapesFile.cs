@@ -124,7 +124,7 @@ namespace I3DShapesTool.Lib.Model
                 using MemoryStream ms = new MemoryStream();
                 using EndianBinaryWriter bw = new EndianBinaryWriter(ms, writer.Endian);
 
-                part.Write(bw);
+                part.Write(bw, (short)Version);
 
                 bw.Flush();
                 byte[] data = ms.ToArray();
@@ -135,19 +135,19 @@ namespace I3DShapesTool.Lib.Model
             writer.SaveEntities(entities);
         }
 
-        private static I3DPart LoadPart(Entity entityRaw, EntityType partType, Endian endian, int version)
+        private static I3DPart LoadPart(Entity entityRaw, EntityType partType, Endian endian, short version)
         {
             I3DPart part = partType switch
             {
-                EntityType.Shape => new I3DShape(version),
-                EntityType.Spline => new Spline(version),
-                EntityType.Unknown => new I3DPart(entityRaw.Type, version),
+                EntityType.Shape => new I3DShape(),
+                EntityType.Spline => new Spline(),
+                EntityType.Unknown => new I3DPart(entityRaw.Type),
                 _ => throw new ArgumentOutOfRangeException(),
             };
 
             using MemoryStream stream = new MemoryStream(entityRaw.Data);
             using EndianBinaryReader reader = new EndianBinaryReader(stream, endian);
-            part.Read(reader);
+            part.Read(reader, version);
 
             return part;
         }

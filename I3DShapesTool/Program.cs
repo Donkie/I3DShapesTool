@@ -157,7 +157,7 @@ namespace I3DShapesTool
 
                 using FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
                 using BinaryWriter binaryWriter = new BinaryWriter(fileStream);
-                part.Write(binaryWriter);
+                part.Write(binaryWriter, (short)file.Version);
             }
         }
 
