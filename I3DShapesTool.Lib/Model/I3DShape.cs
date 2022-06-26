@@ -20,18 +20,18 @@ namespace I3DShapesTool.Lib.Model
         /// Number of unique vertices
         /// </summary>
         public uint VertexCount => (uint)Positions.Length;
-        public I3DShapeSubset[] Subsets { get; private set; }
+        public I3DShapeSubset[] Subsets { get; set; }
         public bool ZeroBasedIndicesInRawData { get; private set; }
-        public I3DTri[] Triangles { get; private set; }
-        public I3DVector[] Positions { get; private set; }
-        public I3DVector[]? Normals { get; private set; }
-        public I3DVector4[]? Tangents { get; private set; }
-        public I3DUV[][] UVSets { get; private set; }
-        public I3DVector4[]? VertexColor { get; private set; }
-        public float[,]? BlendWeights { get; private set; }
-        public byte[,]? BlendIndices { get; private set; }
-        public float[]? GenericData { get; private set; }
-        public I3DShapeAttachment[] Attachments { get; private set; }
+        public I3DTri[] Triangles { get; set; }
+        public I3DVector[] Positions { get; set; }
+        public I3DVector[]? Normals { get; set; }
+        public I3DVector4[]? Tangents { get; set; }
+        public I3DUV[][] UVSets { get; set; }
+        public I3DVector4[]? VertexColor { get; set; }
+        public float[,]? BlendWeights { get; set; }
+        public byte[,]? BlendIndices { get; set; }
+        public float[]? GenericData { get; set; }
+        public I3DShapeAttachment[] Attachments { get; set; }
 
         /// <summary>
         /// Contains options flags higher than we have enum data for
