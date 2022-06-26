@@ -4,6 +4,7 @@ using I3DShapesTool.Lib.Model;
 using System.Linq;
 using I3DShapesTool.Lib.Tools;
 using System.Collections.Generic;
+using I3DShapesTool.Lib.Container;
 
 namespace I3DShapesToolTest
 {
@@ -64,12 +65,12 @@ namespace I3DShapesToolTest
         /// <param name="file"></param>
         private static void TestDataRewrite(ShapesFile file)
         {
-            foreach(I3DPart part in file.Parts)
+            foreach(Entity part in file.Entities)
             {
-                byte[] originalRaw = part.RawData;
+                byte[] originalRaw = part.Data;
 
                 using MemoryStream ms = new MemoryStream();
-                using EndianBinaryWriter bw = new EndianBinaryWriter(ms, part.Endian);
+                using EndianBinaryWriter bw = new EndianBinaryWriter(ms, file.Endian ?? Endian.Big);
                 part.Write(bw);
                 bw.Flush();
 
@@ -122,19 +123,6 @@ namespace I3DShapesToolTest
             byte[] originalData = File.ReadAllBytes(filePath);
             Assert.Equal(originalData.Length, rewrittenData.Length);
             Assert.Equal(originalData, rewrittenData);
-
-            // Re-decrypt the data and compare the contents.
-            // This is a redundant step since we've already confirmed the binaries match perfectly
-            // But nice anyway
-            ms.Seek(0, SeekOrigin.Begin);
-
-            ShapesFile file2 = new ShapesFile();
-            file2.Load(ms, null, true);
-
-            Assert.Equal(file.Seed, file2.Seed);
-            Assert.Equal(file.Version, file2.Version);
-            Assert.Equal(file.Parts.Length, file2.Parts.Length);
-            Assert.Equal(file.Parts[0].RawData, file2.Parts[0].RawData);
         }
 
         [SkippableFact]

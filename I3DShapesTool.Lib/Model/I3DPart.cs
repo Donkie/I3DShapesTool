@@ -17,15 +17,11 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="rawData">Raw binary data</param>
         /// <param name="endian">Endian</param>
         /// <param name="version">File version</param>
-        protected I3DPart(EntityType type, byte[] rawData, Endian endian, int version)
+        protected I3DPart(EntityType type, int version)
         {
             Type = type;
-            RawData = rawData;
-            Endian = endian;
             Version = version;
             RawType = (int)type;
-
-            ReadFromRawData();
         }
 
         /// <summary>
@@ -36,7 +32,7 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="rawData">Raw binary data</param>
         /// <param name="endian">Endian</param>
         /// <param name="version">File version</param>
-        public I3DPart(int rawType, byte[] rawData, Endian endian, int version) : this(EntityType.Unknown, rawData, endian, version)
+        public I3DPart(int rawType, int version) : this(EntityType.Unknown, version)
         {
             RawType = rawType;
         }
@@ -55,13 +51,6 @@ namespace I3DShapesTool.Lib.Model
         /// Shape ID
         /// </summary>
         public uint Id { get; private set; }
-
-        /// <summary>
-        /// Shape Raw Data 
-        /// </summary>
-        public byte[] RawData { get; }
-
-        public Endian Endian { get; }
 
         public int Version { get; }
 
@@ -84,17 +73,10 @@ namespace I3DShapesTool.Lib.Model
             writer.Write(Id);
         }
 
-        private void Read(BinaryReader reader)
+        public void Read(BinaryReader reader)
         {
             ReadHeader(reader);
             ReadContents(reader);
-        }
-
-        private void ReadFromRawData()
-        {
-            using MemoryStream stream = new MemoryStream(RawData);
-            using EndianBinaryReader reader = new EndianBinaryReader(stream, Endian);
-            Read(reader);
         }
 
         public void Write(BinaryWriter writer)

@@ -76,8 +76,8 @@ namespace I3DShapesTool.Lib.Model
         }
 
 #nullable disable
-        public I3DShape(byte[] rawData, Endian endian, int version)
-            : base(EntityType.Shape, rawData, endian, version)
+        public I3DShape(int version)
+            : base(EntityType.Shape, version)
         {
         }
 #nullable restore

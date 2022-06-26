@@ -153,7 +153,11 @@ namespace I3DShapesTool
             foreach(I3DPart part in file.Parts)
             {
                 string binFileName = $"{PartBinaryFilePrefix(part)}_{part.Name}_{part.Id}.bin";
-                File.WriteAllBytes(Path.Combine(outFolder, CleanFileName(binFileName)), part.RawData);
+                string filePath = Path.Combine(outFolder, CleanFileName(binFileName));
+
+                using FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+                using BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+                part.Write(binaryWriter);
             }
         }
 

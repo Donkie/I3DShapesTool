@@ -26,6 +26,16 @@ namespace I3DShapesTool.Lib.Model
         public short? Version { get; set; }
 
         /// <summary>
+        /// File endian
+        /// </summary>
+        public Endian? Endian { get; set; }
+
+        /// <summary>
+        /// Entities in file
+        /// </summary>
+        public Entity[]? Entities { get; set; }
+
+        /// <summary>
         /// Parts in file
         /// </summary>
         public I3DPart[]? Parts { get; set; }
@@ -56,9 +66,10 @@ namespace I3DShapesTool.Lib.Model
             using ShapesFileReader reader = new ShapesFileReader(inputStream, logger, forceSeed);
             Seed = reader.Header.Seed;
             Version = reader.Header.Version;
+            Endian = reader.Endian;
 
-            ICollection<Entity>? entities = reader.GetEntities();
-            Parts = entities
+            Entities = reader.GetEntities().ToArray();
+            Parts = Entities
                 .Select(
                     (entityRaw, index) =>
                     {
@@ -126,13 +137,19 @@ namespace I3DShapesTool.Lib.Model
 
         private static I3DPart LoadPart(Entity entityRaw, EntityType partType, Endian endian, int version)
         {
-            return partType switch
+            I3DPart part = partType switch
             {
-                EntityType.Shape => new I3DShape(entityRaw.Data, endian, version),
-                EntityType.Spline => new Spline(entityRaw.Data, endian, version),
-                EntityType.Unknown => new I3DPart(entityRaw.Type, entityRaw.Data, endian, version),
+                EntityType.Shape => new I3DShape(version),
+                EntityType.Spline => new Spline(version),
+                EntityType.Unknown => new I3DPart(entityRaw.Type, version),
                 _ => throw new ArgumentOutOfRangeException(),
             };
+
+            using MemoryStream stream = new MemoryStream(entityRaw.Data);
+            using EndianBinaryReader reader = new EndianBinaryReader(stream, endian);
+            part.Read(reader);
+
+            return part;
         }
     }
 }

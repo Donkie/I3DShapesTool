@@ -13,8 +13,8 @@ namespace I3DShapesTool.Lib.Model
 
         public IList<I3DVector>? Points { get; set; }
 
-        public Spline(byte[] rawData, Endian endian, int version)
-            : base(EntityType.Spline, rawData, endian, version)
+        public Spline(int version)
+            : base(EntityType.Spline, version)
         {
         }
 
