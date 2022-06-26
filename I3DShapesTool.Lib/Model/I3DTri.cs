@@ -12,15 +12,15 @@ namespace I3DShapesTool.Lib.Model
         {
             if(isInt)
             {
-                P1Idx = br.ReadUInt32();
-                P2Idx = br.ReadUInt32();
-                P3Idx = br.ReadUInt32();
+                P1Idx = br.ReadUInt32() + 1u;
+                P2Idx = br.ReadUInt32() + 1u;
+                P3Idx = br.ReadUInt32() + 1u;
             }
             else
             {
-                P1Idx = br.ReadUInt16();
-                P2Idx = br.ReadUInt16();
-                P3Idx = br.ReadUInt16();
+                P1Idx = br.ReadUInt16() + 1u;
+                P2Idx = br.ReadUInt16() + 1u;
+                P3Idx = br.ReadUInt16() + 1u;
             }
         }
 
@@ -31,21 +31,19 @@ namespace I3DShapesTool.Lib.Model
             P3Idx = p3;
         }
 
-        public void Write(BinaryWriter bw, bool zeroBasedIndicesInRawData, bool isInt)
+        public void Write(BinaryWriter bw, bool isInt)
         {
-            int offset = zeroBasedIndicesInRawData ? -1 : 0;
-
             if(isInt)
             {
-                bw.Write((uint)(P1Idx + offset));
-                bw.Write((uint)(P2Idx + offset));
-                bw.Write((uint)(P3Idx + offset));
+                bw.Write(P1Idx - 1);
+                bw.Write(P2Idx - 1);
+                bw.Write(P3Idx - 1);
             }
             else
             {
-                bw.Write((ushort)(P1Idx + offset));
-                bw.Write((ushort)(P2Idx + offset));
-                bw.Write((ushort)(P3Idx + offset));
+                bw.Write((ushort)(P1Idx - 1));
+                bw.Write((ushort)(P2Idx - 1));
+                bw.Write((ushort)(P3Idx - 1));
             }
         }
 

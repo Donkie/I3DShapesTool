@@ -21,7 +21,6 @@ namespace I3DShapesTool.Lib.Model
         /// </summary>
         public uint VertexCount => (uint)Positions.Length;
         public I3DShapeSubset[] Subsets { get; set; }
-        public bool ZeroBasedIndicesInRawData { get; private set; }
         public I3DTri[] Triangles { get; set; }
         public I3DVector[] Positions { get; set; }
         public I3DVector[]? Normals { get; set; }
@@ -100,25 +99,10 @@ namespace I3DShapesTool.Lib.Model
                 Subsets[i] = new I3DShapeSubset(reader, Version, options);
             }
 
-            ZeroBasedIndicesInRawData = false;
             Triangles = new I3DTri[cornerCount / 3];
             for(int i = 0; i < cornerCount / 3; i++)
             {
                 Triangles[i] = new I3DTri(reader, vertexCount > (ushort.MaxValue + 1));
-
-                if(Triangles[i].P1Idx == 0 || Triangles[i].P2Idx == 0 || Triangles[i].P3Idx == 0)
-                    ZeroBasedIndicesInRawData = true;
-            }
-
-            // Convert to 1-based indices if it's detected that it is a zero-based index
-            if(ZeroBasedIndicesInRawData)
-            {
-                foreach(I3DTri t in Triangles)
-                {
-                    t.P1Idx += 1;
-                    t.P2Idx += 1;
-                    t.P3Idx += 1;
-                }
             }
 
             // TODO: figure out the exact logic for this
@@ -266,7 +250,7 @@ namespace I3DShapesTool.Lib.Model
                 subset.Write(writer, Version, Options);
 
             foreach(I3DTri tri in Triangles)
-                tri.Write(writer, ZeroBasedIndicesInRawData, VertexCount > (ushort.MaxValue + 1));
+                tri.Write(writer, VertexCount > (ushort.MaxValue + 1));
 
             writer.Align(4);
 
