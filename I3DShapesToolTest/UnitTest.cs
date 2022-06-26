@@ -234,6 +234,7 @@ namespace I3DShapesToolTest
             string gameFolder = SteamHelper.GetGameDirectoryOrSkip("Farming Simulator 17");
 
             TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\tools\magsi\wheelLoaderLogFork.i3d.shapes"));
+            TestFullRewriteShapes(Path.Combine(gameFolder, @"data\vehicles\wheels\lizard\lizardUnsized2.i3d.shapes"));
         }
 
         [SkippableFact]

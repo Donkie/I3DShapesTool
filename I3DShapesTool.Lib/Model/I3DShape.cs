@@ -8,7 +8,7 @@ namespace I3DShapesTool.Lib.Model
 {
     public class I3DShape : I3DPart
     {
-        private const int VERSION_WITH_TANGENTS = 4; // Not sure of exact version here
+        private const int VERSION_WITH_TANGENTS = 5;
 
         public float BoundingVolumeX { get; private set; }
         public float BoundingVolumeY { get; private set; }
