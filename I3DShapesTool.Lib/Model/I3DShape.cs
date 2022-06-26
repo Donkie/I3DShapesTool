@@ -215,7 +215,7 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasGeneric))
+            if(options.HasFlag(I3DShapeOptions.HasGeneric))
             {
                 GenericData = new float[vertexCount];
                 for(int i = 0; i < vertexCount; i++)
