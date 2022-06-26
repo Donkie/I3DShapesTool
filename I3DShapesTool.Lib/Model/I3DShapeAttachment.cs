@@ -2,13 +2,20 @@
 
 namespace I3DShapesTool.Lib.Model
 {
-    public class I3DShapeExtra2
+    public class I3DShapeAttachment
     {
         public uint Flags { get; }
         public float[]? Floats { get; }
         public byte[] Data { get; }
 
-        public I3DShapeExtra2(BinaryReader reader)
+        public uint FaceIndex;
+        public I3DVector? Translation;
+        public I3DVector? Rotation;
+        public I3DVector? Scale;
+        public I3DVector? BoundingVolumeCenter;
+        public float? BoundingVolumeRadius;
+
+        public I3DShapeAttachment(BinaryReader reader)
         {
             Flags = reader.ReadUInt32();
 

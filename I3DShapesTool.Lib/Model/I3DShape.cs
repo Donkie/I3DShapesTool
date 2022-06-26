@@ -8,7 +8,7 @@ namespace I3DShapesTool.Lib.Model
 {
     public class I3DShape : I3DPart
     {
-        private const int VERSION_PRECOMPUTED4DDATA = 4; // Not sure of exact version here
+        private const int VERSION_WITH_TANGENTS = 5;
 
         public I3DVector4 BoundingVolume { get; private set; }
 
@@ -20,18 +20,18 @@ namespace I3DShapesTool.Lib.Model
         /// Number of unique vertices
         /// </summary>
         public uint VertexCount => (uint)Positions.Length;
-        public I3DShapeExtra[] ExtraStuff { get; private set; }
+        public I3DShapeSubset[] Subsets { get; private set; }
         public bool ZeroBasedIndicesInRawData { get; private set; }
         public I3DTri[] Triangles { get; private set; }
         public I3DVector[] Positions { get; private set; }
         public I3DVector[]? Normals { get; private set; }
-        public I3DVector4[]? Some4DData { get; private set; }
+        public I3DVector4[]? Tangents { get; private set; }
         public I3DUV[][] UVSets { get; private set; }
         public I3DVector4[]? VertexColor { get; private set; }
         public float[,]? BlendWeights { get; private set; }
         public byte[,]? BlendIndices { get; private set; }
-        public float[]? UnknownData2 { get; private set; }
-        public I3DShapeExtra2[] UnknownData3 { get; private set; }
+        public float[]? GenericData { get; private set; }
+        public I3DShapeAttachment[] Attachments { get; private set; }
 
         /// <summary>
         /// Contains options flags higher than we have enum data for
@@ -87,17 +87,17 @@ namespace I3DShapesTool.Lib.Model
         {
             BoundingVolume = new I3DVector4(reader);
             uint cornerCount = reader.ReadUInt32();
-            uint numExtraStuff = reader.ReadUInt32();
+            uint numSubsets = reader.ReadUInt32();
             uint vertexCount = reader.ReadUInt32();
 
             uint options_num = reader.ReadUInt32();
             I3DShapeOptions options = (I3DShapeOptions)options_num;
             OptionsHighBits = options_num & ~(uint)I3DShapeOptions.All;
 
-            ExtraStuff = new I3DShapeExtra[numExtraStuff];
-            for(int i = 0; i < numExtraStuff; i++)
+            Subsets = new I3DShapeSubset[numSubsets];
+            for(int i = 0; i < numSubsets; i++)
             {
-                ExtraStuff[i] = new I3DShapeExtra(reader, Version, options);
+                Subsets[i] = new I3DShapeSubset(reader, Version, options);
             }
 
             ZeroBasedIndicesInRawData = false;
@@ -140,22 +140,22 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData))
+            if(options.HasFlag(I3DShapeOptions.HasTangents))
             {
-                if(Version >= VERSION_PRECOMPUTED4DDATA)
+                if(Version >= VERSION_WITH_TANGENTS)
                 {
-                    Some4DData = new I3DVector4[vertexCount];
+                    Tangents = new I3DVector4[vertexCount];
                     for(int i = 0; i < vertexCount; i++)
                     {
-                        Some4DData[i] = new I3DVector4(reader);
+                        Tangents[i] = new I3DVector4(reader);
                     }
                 }
                 else
                 {
                     // Stupid fix for this flag carrying some other meaning for older file versions
-                    // We don't want to treat this file has having precomputed 4d vector data, but
+                    // We don't want to treat this file has having tangents, but
                     // we still need to keep the flag for if we're saving later.
-                    OptionsHighBits |= (uint)I3DShapeOptions.HasPrecomputed4DVectorData;
+                    OptionsHighBits |= (uint)I3DShapeOptions.HasTangents;
                 }
             }
 
@@ -184,16 +184,32 @@ namespace I3DShapesTool.Lib.Model
 
             if(options.HasFlag(I3DShapeOptions.HasSkinningInfo))
             {
-                bool noBlendWeights = options.HasFlag(I3DShapeOptions.NoBlendWeights);
-                bool blendWeights = !noBlendWeights;
+                bool singleBlendWeights = options.HasFlag(I3DShapeOptions.SingleBlendWeights);
 
-                // Load blend weights first
-                if(blendWeights)
+                // based on how 3D engines usually do skeletal/skinned meshes, you always have 4 weights and 4 indices per vertex
+
+                BlendWeights = new float[numSubsets, 4];
+
+                int numIndices;
+
+                // Load blend weights first, if necessary
+                // usually all weights per vertex sum up to 1.0, which means, if you only have one index per vertex, the first weight would always have to be 1
+                if (singleBlendWeights)
                 {
-                    BlendWeights = new float[vertexCount, 4];
-                    for(int i = 0; i < BlendWeights.GetLength(0); i++)
+                    numIndices = 1;
+
+                    for(int i = 0; i < vertexCount; i++)
                     {
-                        for(int j = 0; j < BlendWeights.GetLength(1); j++)
+                        BlendWeights[i, 0] = 1.0f;
+                    }
+                }
+                else
+                {
+                    numIndices = 4;
+
+                    for(int i = 0; i < numSubsets; i++)
+                    {
+                        for(int j = 0; j < 4; j++)
                         {
                             BlendWeights[i, j] = reader.ReadSingle();
                         }
@@ -201,31 +217,32 @@ namespace I3DShapesTool.Lib.Model
                 }
 
                 // Load blend indices
-                // If weights exist, we will have 4 index slots per vertex, otherwise just 1.
-                BlendIndices = new byte[vertexCount, blendWeights ? 4 : 1];
-                for(int i = 0; i < BlendIndices.GetLength(0); i++)
+                BlendIndices = new byte[vertexCount, numIndices];
+
+                for(int i = 0; i < vertexCount; i++)
                 {
-                    for(int j = 0; j < BlendIndices.GetLength(1); j++)
+                    for(int j = 0; j < numIndices; j++)
                     {
                         BlendIndices[i, j] = reader.ReadByte();
                     }
                 }
             }
 
-            if(options.HasFlag(I3DShapeOptions.HasUnknownData2))
+            if(Options.HasFlag(I3DShapeOptions.HasGeneric))
             {
-                UnknownData2 = new float[vertexCount];
+                GenericData = new float[vertexCount];
                 for(int i = 0; i < vertexCount; i++)
                 {
-                    UnknownData2[i] = reader.ReadSingle();
+                    GenericData[i] = reader.ReadSingle();
                 }
             }
 
             /*
             TODO: Implement this if necessary
-            if (Version < 5 && !Options.HasFlag(I3DShapeOptions.HasPrecomputed4DVectorData))
+            if (Version < 5 && !Options.HasFlag(I3DShapeOptions.HasTangents))
             {
-                Some4DData = Compute4DData(Vertices, Normals, FirstNonNullUVMap);
+                Tangents = ComputeTangents(Vertices, Normals, FirstNonNullUVMap);
+                // algorithm is the same as https://github.com/mrdoob/three.js/blob/master/src/core/BufferGeometry.js#L472
             }
             */
 
@@ -233,18 +250,18 @@ namespace I3DShapesTool.Lib.Model
             TODO: Implement this if necessary
             if (Version < 6)
             {
-                foreach(var extra in ExtraStuff)
+                foreach(var extra in SubSets)
                 {
                     // Loop over the 4 UV floats in extra and set them based on some math done on the vertex and UV set data
                 }
             }
             */
 
-            uint numUnknownData3 = reader.ReadUInt32();
-            UnknownData3 = new I3DShapeExtra2[numUnknownData3];
-            for(int i = 0; i < numUnknownData3; i++)
+            uint numAttachments = reader.ReadUInt32();
+            Attachments = new I3DShapeAttachment[numAttachments];
+            for(int i = 0; i < numAttachments; i++)
             {
-                UnknownData3[i] = new I3DShapeExtra2(reader);
+                Attachments[i] = new I3DShapeAttachment(reader);
             }
 
             if(reader.BaseStream.Position != reader.BaseStream.Length)
@@ -255,11 +272,11 @@ namespace I3DShapesTool.Lib.Model
         {
             BoundingVolume.Write(writer);
             writer.Write(CornerCount);
-            writer.Write((uint)ExtraStuff.Length);
+            writer.Write((uint)Subsets.Length);
             writer.Write(VertexCount);
             writer.Write((uint)Options);
-            foreach(I3DShapeExtra extra in ExtraStuff)
-                extra.Write(writer, Version, Options);
+            foreach(I3DShapeSubset subset in Subsets)
+                subset.Write(writer, Version, Options);
 
             foreach(I3DTri tri in Triangles)
                 tri.Write(writer, ZeroBasedIndicesInRawData, VertexCount > (ushort.MaxValue + 1));
@@ -278,15 +295,15 @@ namespace I3DShapesTool.Lib.Model
                     norm.Write(writer);
             }
 
-            if(Version < VERSION_PRECOMPUTED4DDATA && Some4DData != null)
-                throw new InvalidOperationException($"I3D Entity version < {VERSION_PRECOMPUTED4DDATA} doesn't support \"Some4DData\"");
+            if(Version < VERSION_WITH_TANGENTS && Tangents != null)
+                throw new InvalidOperationException($"I3D Entity version < {VERSION_WITH_TANGENTS} doesn't support saving tangents.");
 
-            if(Some4DData != null)
+            if(Tangents != null)
             {
-                if(Some4DData.Length != VertexCount)
-                    throw new InvalidOperationException("Some4DData array must be of size VertexCount");
+                if(Tangents.Length != VertexCount)
+                    throw new InvalidOperationException("Tangents array must be of size VertexCount");
 
-                foreach(I3DVector4 vec in Some4DData)
+                foreach(I3DVector4 vec in Tangents)
                     vec.Write(writer);
             }
 
@@ -315,9 +332,12 @@ namespace I3DShapesTool.Lib.Model
             {
                 if(BlendIndices == null)
                     throw new InvalidOperationException("Options say we have skinning info but BlendIndices is null");
+                
+                if(BlendIndices.GetLength(1) != 1 && BlendIndices.GetLength(1) != 4)
+                    throw new InvalidOperationException("Second dimension of BlendIndices must either be 1 (single index blend weights) or 4.");
 
-                bool noBlendWeights = BlendWeights == null;
-                if(BlendWeights != null)
+                bool singleBlendWeights = BlendIndices.GetLength(1) == 1;
+                if(!singleBlendWeights)
                 {
                     if(BlendWeights.GetLength(0) != VertexCount)
                         throw new InvalidOperationException("First dimension of BlendWeights array must be of size VertexCount");
@@ -337,11 +357,6 @@ namespace I3DShapesTool.Lib.Model
                 if(BlendIndices.GetLength(0) != VertexCount)
                     throw new InvalidOperationException("First dimension of BlendIndices array must be of size VertexCount");
 
-                if(noBlendWeights && BlendIndices.GetLength(1) != 1)
-                    throw new InvalidOperationException("Second dimension of BlendIndices array must be of size 1 if there are no blend weights");
-                else if(!noBlendWeights && BlendIndices.GetLength(1) != 4)
-                    throw new InvalidOperationException("Second dimension of BlendIndices array must be of size 4 if there are blend weights");
-
                 for(int i = 0; i < BlendIndices.GetLength(0); i++)
                 {
                     for(int j = 0; j < BlendIndices.GetLength(1); j++)
@@ -351,17 +366,17 @@ namespace I3DShapesTool.Lib.Model
                 }
             }
 
-            if(UnknownData2 != null)
+            if(GenericData != null)
             {
-                if(UnknownData2.Length != VertexCount)
-                    throw new InvalidOperationException("UnknownData2 array must be of size VertexCount");
+                if(GenericData.Length != VertexCount)
+                    throw new InvalidOperationException("GenericData array must be of size VertexCount");
 
-                foreach(float v in UnknownData2)
+                foreach(float v in GenericData)
                     writer.Write(v);
             }
 
-            writer.Write((uint)UnknownData3.Length);
-            foreach(I3DShapeExtra2 data in UnknownData3)
+            writer.Write((uint)Attachments.Length);
+            foreach(I3DShapeAttachment data in Attachments)
                 data.Write(writer);
         }
 
