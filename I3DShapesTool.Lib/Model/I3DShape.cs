@@ -62,13 +62,13 @@ namespace I3DShapesTool.Lib.Model
                     opts |= I3DShapeOptions.HasSkinningInfo;
 
                 if(BlendIndices != null && BlendWeights == null)
-                    opts |= I3DShapeOptions.NoBlendWeights;
+                    opts |= I3DShapeOptions.SingleBlendWeights;
 
-                if(UnknownData2 != null)
-                    opts |= I3DShapeOptions.HasUnknownData2;
+                if(GenericData != null)
+                    opts |= I3DShapeOptions.HasGeneric;
 
-                if(Some4DData != null)
-                    opts |= I3DShapeOptions.HasPrecomputed4DVectorData;
+                if(Tangents != null)
+                    opts |= I3DShapeOptions.HasTangents;
 
                 opts |= (I3DShapeOptions)OptionsHighBits;
 
@@ -186,28 +186,15 @@ namespace I3DShapesTool.Lib.Model
             {
                 bool singleBlendWeights = options.HasFlag(I3DShapeOptions.SingleBlendWeights);
 
-                // based on how 3D engines usually do skeletal/skinned meshes, you always have 4 weights and 4 indices per vertex
+                int numIndices = singleBlendWeights ? 1 : 4;
 
-                BlendWeights = new float[numSubsets, 4];
-
-                int numIndices;
-
-                // Load blend weights first, if necessary
-                // usually all weights per vertex sum up to 1.0, which means, if you only have one index per vertex, the first weight would always have to be 1
-                if (singleBlendWeights)
+                // Load blend weights first, if necessary.
+                // All weights per vertex should sum up to 1. Thus if you only have 1 index per vertex, this weight is always 1 and we don't need to save the weight information.
+                if(!singleBlendWeights)
                 {
-                    numIndices = 1;
-
+                    // based on how 3D engines usually do skeletal/skinned meshes, you always have 4 weights and 4 indices per vertex
+                    BlendWeights = new float[vertexCount, 4];
                     for(int i = 0; i < vertexCount; i++)
-                    {
-                        BlendWeights[i, 0] = 1.0f;
-                    }
-                }
-                else
-                {
-                    numIndices = 4;
-
-                    for(int i = 0; i < numSubsets; i++)
                     {
                         for(int j = 0; j < 4; j++)
                         {
@@ -328,16 +315,15 @@ namespace I3DShapesTool.Lib.Model
                     vec.Write(writer);
             }
 
-            if(Options.HasFlag(I3DShapeOptions.HasSkinningInfo))
+            if(BlendIndices != null)
             {
-                if(BlendIndices == null)
-                    throw new InvalidOperationException("Options say we have skinning info but BlendIndices is null");
-                
-                if(BlendIndices.GetLength(1) != 1 && BlendIndices.GetLength(1) != 4)
-                    throw new InvalidOperationException("Second dimension of BlendIndices must either be 1 (single index blend weights) or 4.");
+                if(BlendWeights == null && BlendIndices.GetLength(1) != 1)
+                    throw new InvalidOperationException("Second dimension of BlendIndices must be 1 if blend weights haven't been specified (single index blend weight mode).");
 
-                bool singleBlendWeights = BlendIndices.GetLength(1) == 1;
-                if(!singleBlendWeights)
+                if(BlendWeights != null && BlendIndices.GetLength(1) != 4)
+                    throw new InvalidOperationException("Second dimension of BlendIndices must be 4 if blend weights have been specified.");
+
+                if(BlendWeights != null)
                 {
                     if(BlendWeights.GetLength(0) != VertexCount)
                         throw new InvalidOperationException("First dimension of BlendWeights array must be of size VertexCount");
