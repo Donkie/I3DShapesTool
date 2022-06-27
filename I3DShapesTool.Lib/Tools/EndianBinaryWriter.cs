@@ -12,70 +12,72 @@ namespace I3DShapesTool.Lib.Tools
             Endian = endian;
         }
 
-        public EndianBinaryWriter(Stream input, Encoding encoding)
+        public EndianBinaryWriter(Stream input, Encoding encoding, Endian endian = Endian.Big)
             : base(input, encoding)
         {
+            Endian = endian;
         }
 
-        public EndianBinaryWriter(Stream input, Encoding encoding, bool leaveOpen)
+        public EndianBinaryWriter(Stream input, Encoding encoding, bool leaveOpen, Endian endian = Endian.Big)
             : base(input, encoding, leaveOpen)
         {
+            Endian = endian;
         }
 
         public Endian Endian { get; }
 
         public override void Write(float value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(double value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(ushort value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(uint value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(ulong value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(short value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(int value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
 
         public override void Write(long value)
         {
-            byte[]? data = BitConverter.GetBytes(value);
+            byte[] data = BitConverter.GetBytes(value);
             Swipe(data);
             Write(data);
         }
