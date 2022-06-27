@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using I3DShapesTool.Lib.Container;
 using System.IO;
 using System.Linq;
-using I3DShapesTool.Lib.Container;
-using I3DShapesTool.Lib.Tools;
 
 namespace I3DShapesTool.Lib.Model
 {
     public class Spline : I3DPart
     {
-        public uint? UnknownFlags { get; set; }
+        public uint UnknownFlags { get; set; } = 0;
 
-        public IList<I3DVector>? Points { get; set; }
+        public I3DVector[] Points { get; set; } = new I3DVector[0];
 
         public override EntityType Type => EntityType.Spline;
 
@@ -36,11 +33,8 @@ namespace I3DShapesTool.Lib.Model
 
         protected override void WriteContents(BinaryWriter writer, short fileVersion)
         {
-            if(UnknownFlags == null || Points == null)
-                throw new InvalidOperationException("Data not set on class");
-
-            writer.Write((uint)UnknownFlags);
-            writer.Write(Points.Count);
+            writer.Write(UnknownFlags);
+            writer.Write(Points.Length);
             foreach(I3DVector point in Points)
                 point.Write(writer);
         }

@@ -15,14 +15,14 @@ namespace I3DShapesTool.Lib.Model
         /// <summary>
         /// Shape name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; private set; } = "N/A";
 
         /// <summary>
         /// Shape ID
         /// </summary>
-        public uint Id { get; private set; }
+        public uint Id { get; private set; } = 0;
 
-        private byte[] contents;
+        private byte[]? contents;
 
         private void ReadHeader(BinaryReader reader)
         {
@@ -60,7 +60,8 @@ namespace I3DShapesTool.Lib.Model
 
         protected virtual void WriteContents(BinaryWriter writer, short fileVersion)
         {
-            writer.Write(contents);
+            if(contents != null)
+                writer.Write(contents);
         }
 
         public override string ToString()

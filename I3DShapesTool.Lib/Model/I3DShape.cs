@@ -16,21 +16,23 @@ namespace I3DShapesTool.Lib.Model
         /// Number of triangle corners
         /// </summary>
         public uint CornerCount => (uint)(Triangles.Length * 3);
+
         /// <summary>
         /// Number of unique vertices
         /// </summary>
         public uint VertexCount => (uint)Positions.Length;
-        public I3DShapeSubset[] Subsets { get; set; }
-        public I3DTri[] Triangles { get; set; }
-        public I3DVector[] Positions { get; set; }
+
+        public I3DShapeSubset[] Subsets { get; set; } = new I3DShapeSubset[0];
+        public I3DTri[] Triangles { get; set; } = new I3DTri[0];
+        public I3DVector[] Positions { get; set; } = new I3DVector[0];
         public I3DVector[]? Normals { get; set; }
         public I3DVector4[]? Tangents { get; set; }
-        public I3DUV[][] UVSets { get; set; }
+        public I3DUV[][] UVSets { get; set; } = new I3DUV[4][];
         public I3DVector4[]? VertexColor { get; set; }
         public float[,]? BlendWeights { get; set; }
         public byte[,]? BlendIndices { get; set; }
         public float[]? GenericData { get; set; }
-        public I3DShapeAttachment[] Attachments { get; set; }
+        public I3DShapeAttachment[] Attachments { get; set; } = new I3DShapeAttachment[0];
 
         /// <summary>
         /// Contains options flags higher than we have enum data for
@@ -42,7 +44,8 @@ namespace I3DShapesTool.Lib.Model
         /// Dynamically generated options bitflag
         /// </summary>
         public I3DShapeOptions Options { 
-            get {
+            get
+            {
                 I3DShapeOptions opts = I3DShapeOptions.None;
 
                 if(Normals != null)
