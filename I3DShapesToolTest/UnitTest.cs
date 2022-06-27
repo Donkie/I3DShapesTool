@@ -67,6 +67,7 @@ namespace I3DShapesToolTest
         {
             for(int i = 0; i < file.Entities.Length; i++)
             {
+                // That entity and part are on the same index is only true for shapefiles loaded with "strict" mode.
                 Entity entity = file.Entities[i];
                 I3DPart part = file.Parts[i];
 

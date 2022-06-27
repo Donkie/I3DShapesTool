@@ -255,7 +255,7 @@ namespace I3DShapesTool
             {
                 EntityType.Shape => "shape",
                 EntityType.Spline => "spline",
-                _ => $"part_type{part.RawType}",
+                _ => $"part",
             };
         }
 

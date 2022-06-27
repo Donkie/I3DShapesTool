@@ -1,39 +1,16 @@
 ﻿using System.IO;
 using System.Text;
 using I3DShapesTool.Lib.Container;
-using I3DShapesTool.Lib.Tools;
 using I3DShapesTool.Lib.Tools.Extensions;
 
 namespace I3DShapesTool.Lib.Model
 {
     public class I3DPart
     {
-#nullable disable
         /// <summary>
-        /// Construct I3DPart with a known part type.
-        /// Should only be used by child classes, since if you know of a type you should have a child class for it.
+        /// The EntityType that 
         /// </summary>
-        /// <param name="type">Type</param>
-        protected I3DPart(EntityType type)
-        {
-            Type = type;
-            RawType = (int)type;
-        }
-
-        /// <summary>
-        /// Construct I3DPart with unknown part type.
-        /// Type will get set to ShapeType.Unknown
-        /// </summary>
-        /// <param name="rawType">Raw type number</param>
-        public I3DPart(int rawType) : this(EntityType.Unknown)
-        {
-            RawType = rawType;
-        }
-#nullable restore
-
-        public EntityType Type { get; }
-
-        public int RawType { get; }
+        public virtual EntityType Type => EntityType.Unknown;
 
         /// <summary>
         /// Shape name

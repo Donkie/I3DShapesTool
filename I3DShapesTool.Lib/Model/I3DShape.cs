@@ -75,11 +75,7 @@ namespace I3DShapesTool.Lib.Model
             } 
         }
 
-#nullable disable
-        public I3DShape() : base(EntityType.Shape)
-        {
-        }
-#nullable restore
+        public override EntityType Type => EntityType.Shape;
 
         protected override void ReadContents(BinaryReader reader, short fileVersion)
         {

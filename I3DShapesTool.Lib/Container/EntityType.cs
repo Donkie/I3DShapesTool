@@ -5,5 +5,7 @@
         Unknown = 0,
         Shape = 1,
         Spline = 2,
+        
+        Last = 2
     }
 }

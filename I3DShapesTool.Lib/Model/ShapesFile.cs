@@ -76,10 +76,10 @@ namespace I3DShapesTool.Lib.Model
                         try
                         {
                             I3DPart part = LoadPart(entityRaw, entityRaw.EntityType, reader.Endian, reader.Header.Version);
-                            if(part.Type == EntityType.Unknown)
-                            {
-                                logger?.LogInformation("Found part named {name} with unknown type {type}.", part.Name, part.RawType);
-                            }
+
+                            if(entityRaw.Type == 0 || entityRaw.Type > (int)EntityType.Last)
+                                logger?.LogInformation("Loaded part {name} with unknown type {type}.", part.Name, entityRaw.Type);
+
                             return part;
                         }
                         catch(Exception ex)
@@ -129,7 +129,7 @@ namespace I3DShapesTool.Lib.Model
                 bw.Flush();
                 byte[] data = ms.ToArray();
 
-                return new Entity(part.RawType, data.Length, data);
+                return new Entity((int)part.Type, data.Length, data);
             }).ToArray();
 
             writer.SaveEntities(entities);
@@ -141,7 +141,7 @@ namespace I3DShapesTool.Lib.Model
             {
                 EntityType.Shape => new I3DShape(),
                 EntityType.Spline => new Spline(),
-                EntityType.Unknown => new I3DPart(entityRaw.Type),
+                EntityType.Unknown => new I3DPart(),
                 _ => throw new ArgumentOutOfRangeException(),
             };
 

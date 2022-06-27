@@ -13,7 +13,9 @@ namespace I3DShapesTool.Lib.Model
 
         public IList<I3DVector>? Points { get; set; }
 
-        public Spline() : base(EntityType.Spline)
+        public override EntityType Type => EntityType.Spline;
+
+        public Spline()
         {
         }
 
