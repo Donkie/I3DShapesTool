@@ -12,7 +12,7 @@ namespace I3DShapesTool.Lib.Container
 
         public ShapesFileWriter(Stream outputStream, byte seed, short version)
         {
-            FileHeader? header = new FileHeader(version, seed);
+            FileHeader header = new FileHeader(version, seed);
             header.Write(outputStream);
 
             Endian = GetEndian(version);
@@ -26,7 +26,7 @@ namespace I3DShapesTool.Lib.Container
         public void SaveEntities(ICollection<Entity> entities)
         {
             binaryWriter.Write(entities.Count);
-            foreach(Entity? entity in entities)
+            foreach(Entity entity in entities)
             {
                 entity.Write(binaryWriter);
             }

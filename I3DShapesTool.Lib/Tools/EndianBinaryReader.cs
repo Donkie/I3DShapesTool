@@ -6,19 +6,19 @@ namespace I3DShapesTool.Lib.Tools
 {
     public class EndianBinaryReader : BinaryReader
     {
-        public EndianBinaryReader(Stream input, Endian endian = Endian.Big)
+        public EndianBinaryReader(Stream input, Endian endian)
             : base(input)
         {
             Endian = endian;
         }
 
-        public EndianBinaryReader(Stream input, Encoding encoding, Endian endian = Endian.Big)
+        public EndianBinaryReader(Stream input, Encoding encoding, Endian endian)
             : base(input, encoding)
         {
             Endian = endian;
         }
 
-        public EndianBinaryReader(Stream input, Encoding encoding, bool leaveOpen, Endian endian = Endian.Big)
+        public EndianBinaryReader(Stream input, Encoding encoding, bool leaveOpen, Endian endian)
             : base(input, encoding, leaveOpen)
         {
             Endian = endian;
