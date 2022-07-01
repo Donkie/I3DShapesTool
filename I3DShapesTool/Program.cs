@@ -178,6 +178,8 @@ namespace I3DShapesTool
                     objfile.Transform(shape.AbsoluteTransform);
                 objfile.Export(fs);
             }
+
+            GLTFExporter.Test(i3dFile, outFolder);
         }
 
         private static void ExtractFile(ShapesFile file, string shapesFileName, string outFolder)
