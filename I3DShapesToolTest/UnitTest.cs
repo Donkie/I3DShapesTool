@@ -174,10 +174,7 @@ namespace I3DShapesToolTest
 
             foreach(string filePath in shapeFiles)
             {
-                using FileStream fileStream = File.OpenRead(filePath);
-                ShapesFile file = new ShapesFile();
-                file.Load(fileStream, null, true);
-                AssertShapeData(file);
+                TestFullRewriteShapes(filePath);
             }
         }
 
@@ -213,10 +210,7 @@ namespace I3DShapesToolTest
 
             foreach(string filePath in shapeFiles)
             {
-                using FileStream fileStream = File.OpenRead(filePath);
-                ShapesFile file = new ShapesFile();
-                file.Load(fileStream, null, true);
-                AssertShapeData(file);
+                TestFullRewriteShapes(filePath);
             }
         }
 
@@ -253,10 +247,7 @@ namespace I3DShapesToolTest
 
             foreach(string filePath in shapeFiles)
             {
-                using FileStream fileStream = File.OpenRead(filePath);
-                ShapesFile file = new ShapesFile();
-                file.Load(fileStream, null, true);
-                AssertShapeData(file);
+                TestFullRewriteShapes(filePath);
             }
         }
 
@@ -292,10 +283,7 @@ namespace I3DShapesToolTest
 
             foreach(string filePath in shapeFiles)
             {
-                using FileStream fileStream = File.OpenRead(filePath);
-                ShapesFile file = new ShapesFile();
-                file.Load(fileStream, null, true);
-                AssertShapeData(file);
+                TestFullRewriteShapes(filePath);
             }
         }
 
@@ -331,10 +319,7 @@ namespace I3DShapesToolTest
 
             foreach(string filePath in shapeFiles)
             {
-                using FileStream fileStream = File.OpenRead(filePath);
-                ShapesFile file = new ShapesFile();
-                file.Load(fileStream, null, true);
-                AssertShapeData(file);
+                TestFullRewriteShapes(filePath);
             }
         }
     }
