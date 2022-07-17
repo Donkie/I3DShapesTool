@@ -19,4 +19,10 @@
     <ProjectReference Include="..\I3DShapesTool\I3DShapesTool.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\TestObject.i3d">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace I3DShapesTool.Lib.Model
@@ -56,6 +57,20 @@ namespace I3DShapesTool.Lib.Model
         public override string ToString()
         {
             return $"3D ({X}, {Y}, {Z}), L={Length()}";
+        }
+    }
+
+    public class I3DVectorComparer : EqualityComparer<I3DVector>
+    {
+        public override bool Equals(I3DVector x, I3DVector y)
+        {
+            return Math.Abs(x.X - x.X) < 1e-5 && Math.Abs(x.Y - x.Y) < 1e-5 && Math.Abs(x.Z - x.Z) < 1e-5;
+        }
+
+        public override int GetHashCode(I3DVector obj)
+        {
+            int hCode = obj.X.GetHashCode() ^ obj.Y.GetHashCode() ^ obj.Z.GetHashCode();
+            return hCode.GetHashCode();
         }
     }
 }
