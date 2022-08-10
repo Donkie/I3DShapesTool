@@ -17,7 +17,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         private static I3DVector ParseVectorString(string vecStr)
         {
-            string[]? components = vecStr.Split(' ');
+            string[] components = vecStr.Split(' ');
             if(components.Length != 3)
             {
                 Logger.Instance.LogWarning("Encountered invalid vector string when parsing xml: \"{str}\"", vecStr);
@@ -48,7 +48,7 @@ namespace I3DShapesTool.Lib.Model.I3D
 
                     bool isEmpty = reader.IsEmptyElement;
 
-                    string? name = null;
+                    string name = null;
                     int? id = null;
                     int? shapeId = null;
                     I3DVector pos = I3DVector.Zero;
@@ -95,12 +95,12 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public static I3D ParseXML(string filePath)
         {
-            using StreamReader? fileStream = File.OpenText(filePath);
             using XmlReader reader = XmlReader.Create(fileStream, xmlSettings);
 
             I3D result = new I3D();
 
             while(reader.Read())
+            using StreamReader fileStream = File.OpenText(filePath);
             {
                 switch(reader.NodeType)
                 {

@@ -25,13 +25,13 @@ namespace I3DShapesTool.Lib.Model
         public I3DShapeSubset[] Subsets { get; set; } = new I3DShapeSubset[0];
         public I3DTri[] Triangles { get; set; } = new I3DTri[0];
         public I3DVector[] Positions { get; set; } = new I3DVector[0];
-        public I3DVector[]? Normals { get; set; }
-        public I3DVector4[]? Tangents { get; set; }
+        public I3DVector[] Normals { get; set; }
+        public I3DVector4[] Tangents { get; set; }
         public I3DUV[][] UVSets { get; set; } = new I3DUV[4][];
-        public I3DVector4[]? VertexColor { get; set; }
-        public float[,]? BlendWeights { get; set; }
-        public byte[,]? BlendIndices { get; set; }
-        public float[]? GenericData { get; set; }
+        public I3DVector4[] VertexColor { get; set; }
+        public float[,] BlendWeights { get; set; }
+        public byte[,] BlendIndices { get; set; }
+        public float[] GenericData { get; set; }
         public I3DShapeAttachment[] Attachments { get; set; } = new I3DShapeAttachment[0];
 
         /// <summary>

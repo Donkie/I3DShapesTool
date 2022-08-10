@@ -5,7 +5,7 @@ namespace I3DShapesTool.Lib.Model
     public class I3DShapeAttachment
     {
         public uint Flags { get; }
-        public float[]? Floats { get; }
+        public float[] Floats { get; }
         public byte[] Data { get; }
 
         public uint FaceIndex;

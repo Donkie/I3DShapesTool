@@ -31,12 +31,12 @@ namespace I3DShapesTool.Lib.Model
         /// <summary>
         /// Entities in file
         /// </summary>
-        public Entity[]? Entities { get; set; }
+        public Entity[] Entities { get; set; }
 
         /// <summary>
         /// Parts in file
         /// </summary>
-        public I3DPart[]? Parts { get; set; }
+        public I3DPart[] Parts { get; set; }
 
         /// <summary>
         /// Shapes in file

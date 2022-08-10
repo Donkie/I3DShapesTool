@@ -45,7 +45,7 @@ namespace I3DShapesTool.Lib.Container
         {
             int type = stream.ReadInt32();
             int size = stream.ReadInt32();
-            byte[]? data = stream.ReadBytes(size);
+            byte[] data = stream.ReadBytes(size);
 
             return new Entity(type, size, data);
         }

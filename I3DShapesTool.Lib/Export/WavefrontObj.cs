@@ -17,15 +17,15 @@ namespace I3DShapesTool.Lib.Export
 
         private I3DVector[] Positions { get; set; }
 
-        private I3DVector[]? Normals { get; set; }
+        private I3DVector[] Normals { get; set; }
 
-        private I3DUV[]? UVs { get; set; }
+        private I3DUV[] UVs { get; set; }
 
         public WavefrontObj(I3DShape shape, string name, float scale = 100)
         {
             Scale = scale;
 
-            string? geomname = shape.Name;
+            string geomname = shape.Name;
             if(geomname.EndsWith("Shape"))
                 geomname = geomname[0..^5];
 

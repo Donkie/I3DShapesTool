@@ -6,14 +6,14 @@ namespace I3DShapesTool.Lib.Model.I3D
 {
     public class TransformGroup
     {
-        public string? Name { get; }
+        public string Name { get; }
         public int? Id { get; }
         public Transform RelativeTransform { get; }
         public Transform AbsoluteTransform { get; private set; }
-        public TransformGroup? Parent { get; private set; }
+        public TransformGroup Parent { get; private set; }
         public ISet<TransformGroup> Children { get; } = new HashSet<TransformGroup>();
 
-        public TransformGroup(string? name, int? id, I3DVector translation, I3DVector rotation, I3DVector scale)
+        public TransformGroup(string name, int? id, I3DVector translation, I3DVector rotation, I3DVector scale)
         {
             Name = name;
             Id = id;
@@ -55,10 +55,10 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public void PrintTree(int depth = 0)
         {
-            string? nameStr = Name != null ? $" {Name}" : "";
-            string? spaces = new string('-', depth);
+            string nameStr = Name != null ? $" {Name}" : "";
+            string spaces = new string('-', depth);
             Console.WriteLine($"{spaces}<{GetType().Name}{nameStr}>");
-            foreach(TransformGroup? child in Children)
+            foreach(TransformGroup child in Children)
             {
                 child.PrintTree(depth + 1);
             }

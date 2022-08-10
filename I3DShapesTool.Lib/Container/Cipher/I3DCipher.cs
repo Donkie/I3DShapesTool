@@ -585,7 +585,7 @@ namespace I3DShapesTool.Lib.Container
         /// <param name="blockIndex">Block index to start from</param>
         private void ProcessBlocks(uint[] buf, ulong blockIndex)
         {
-            uint[]? key = GetKeyByIndexBlock(this.key, blockIndex);
+            uint[] key = GetKeyByIndexBlock(this.key, blockIndex);
             ProcessBlocks(buf, key);
         }
 
@@ -618,7 +618,7 @@ namespace I3DShapesTool.Lib.Container
                 throw new Exception("Expecting 16 byte blocks");
             }
 
-            uint[]? tempKey = new uint[key.Length];
+            uint[] tempKey = new uint[key.Length];
             ulong blockCounter = key[8] | ((ulong)key[9] << 32);
             for(int i = 0; i < buf.Length; i += 16)
             {
@@ -653,7 +653,7 @@ namespace I3DShapesTool.Lib.Container
         /// <returns>Indexed key</returns>
         private static uint[] GetKeyByIndexBlock(uint[] key, ulong blockIndex)
         {
-            uint[]? tempKey = new uint[key.Length];
+            uint[] tempKey = new uint[key.Length];
             Array.Copy(key, tempKey, tempKey.Length);
 
             tempKey[8] = (uint)(blockIndex & 0xFFFFFFFF);
@@ -669,10 +669,10 @@ namespace I3DShapesTool.Lib.Container
         /// <returns>Next block index</returns>
         public ulong Process(byte[] buffer, ulong blockIndex)
         {
-            byte[]? copy = new byte[RoundUpTo(buffer.Length, CRYPT_BLOCK_SIZE)];
+            byte[] copy = new byte[RoundUpTo(buffer.Length, CRYPT_BLOCK_SIZE)];
             buffer.CopyTo(copy, 0);
 
-            uint[]? blocks = new uint[copy.Length / 4];
+            uint[] blocks = new uint[copy.Length / 4];
             CopyTo(copy, 0, blocks);
 
             ProcessBlocks(blocks, blockIndex);

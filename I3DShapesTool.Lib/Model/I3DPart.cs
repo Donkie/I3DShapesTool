@@ -22,7 +22,7 @@ namespace I3DShapesTool.Lib.Model
         /// </summary>
         public uint Id { get; private set; } = 0;
 
-        private byte[]? contents;
+        private byte[] contents;
 
         private void ReadHeader(BinaryReader reader)
         {
