@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using I3DShapesTool.Lib.Tools;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.IO;
@@ -8,8 +9,6 @@ namespace I3DShapesTool.Lib.Model.I3D
 {
     public class I3DXMLReader
     {
-        public static ILogger? Logger;
-
         private static readonly XmlReaderSettings xmlSettings = new XmlReaderSettings
         {
             IgnoreWhitespace = true,
@@ -21,7 +20,7 @@ namespace I3DShapesTool.Lib.Model.I3D
             string[]? components = vecStr.Split(' ');
             if(components.Length != 3)
             {
-                Logger?.LogWarning("Encountered invalid vector string when parsing xml: \"{str}\"", vecStr);
+                Logger.Instance.LogWarning("Encountered invalid vector string when parsing xml: \"{str}\"", vecStr);
                 return I3DVector.Zero;
             }
             return new I3DVector(

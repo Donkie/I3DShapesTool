@@ -64,6 +64,8 @@ namespace I3DShapesTool
             config.AddRule(minLevel, LogLevel.Fatal, logconsole);
 
             LogManager.Configuration = config;
+
+            Lib.Tools.Logger.Instance = Logger;
         }
 
         /// <summary>
@@ -81,7 +83,7 @@ namespace I3DShapesTool
         {
             using FileStream fileStream = File.OpenRead(filePath);
 
-            ShapesFile file = new ShapesFile(Logger);
+            ShapesFile file = new ShapesFile();
             bool success = false;
 
             byte seed;
@@ -117,7 +119,7 @@ namespace I3DShapesTool
         {
             using FileStream fileStream = File.OpenRead(filePath);
 
-            ShapesFile file = new ShapesFile(Logger);
+            ShapesFile file = new ShapesFile();
 
             Logger.LogInformation($"Loading file: {Path.GetFileName(filePath)}");
             try

@@ -12,15 +12,15 @@ namespace I3DShapesTool.Lib.Container
         private readonly CipherStream cipherStream;
         private readonly BinaryReader binaryReader;
 
-        public ShapesFileReader(Stream inputStream, ILogger? logger = null, byte? forceSeed = null)
+        public ShapesFileReader(Stream inputStream, byte? forceSeed = null)
         {
             Header = FileHeader.Read(inputStream);
-            logger?.LogDebug("File seed: {fileSeed}", Header.Seed);
-            logger?.LogDebug("File version: {version}", Header.Version);
+            Logger.Instance.LogDebug("File seed: {fileSeed}", Header.Seed);
+            Logger.Instance.LogDebug("File version: {version}", Header.Version);
 
             if(Header.Version < 2 || Header.Version > 7)
             {
-                logger?.LogCritical("Unsupported version: {version}", Header.Version);
+                Logger.Instance.LogCritical("Unsupported version: {version}", Header.Version);
                 throw new NotSupportedException("Unsupported version");
             }
 

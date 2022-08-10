@@ -13,8 +13,6 @@ namespace I3DShapesTool.Lib.Model
     /// </summary>
     public class ShapesFile
     {
-        private readonly ILogger? logger;
-
         /// <summary>
         /// Cipher seed
         /// </summary>
@@ -50,9 +48,8 @@ namespace I3DShapesTool.Lib.Model
         /// </summary>
         public IEnumerable<Spline> Splines => Parts.OfType<Spline>();
 
-        public ShapesFile(ILogger? logger = null)
+        public ShapesFile()
         {
-            this.logger = logger;
         }
 
         /// <summary>
@@ -63,7 +60,7 @@ namespace I3DShapesTool.Lib.Model
         /// <param name="strict">Abort reading and propagate any exceptions that pop up when parsing part data. If false, parts that failed to read will be ignored.</param>
         public void Load(Stream inputStream, byte? forceSeed = null, bool strict = false)
         {
-            using ShapesFileReader reader = new ShapesFileReader(inputStream, logger, forceSeed);
+            using ShapesFileReader reader = new ShapesFileReader(inputStream, forceSeed);
             Seed = reader.Header.Seed;
             Version = reader.Header.Version;
             Endian = reader.Endian;
@@ -78,7 +75,7 @@ namespace I3DShapesTool.Lib.Model
                             I3DPart part = LoadPart(entityRaw, entityRaw.EntityType, reader.Endian, reader.Header.Version);
 
                             if(entityRaw.Type == 0 || entityRaw.Type > (int)EntityType.Last)
-                                logger?.LogInformation("Loaded part {name} with unknown type {type}.", part.Name, entityRaw.Type);
+                                Logger.Instance.LogInformation("Loaded part {name} with unknown type {type}.", part.Name, entityRaw.Type);
 
                             return part;
                         }
@@ -88,7 +85,7 @@ namespace I3DShapesTool.Lib.Model
                                 throw;
 
                             Console.WriteLine(ex);
-                            logger?.LogError("Failed to decode part {index}.", index);
+                            Logger.Instance.LogError("Failed to decode part {index}.", index);
 
                             // Failed to decode as the real part type, load it as a generic I3DPart instead so we at least can get hold of the binary data
                             try
