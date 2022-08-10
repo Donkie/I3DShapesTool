@@ -27,7 +27,7 @@ namespace I3DShapesTool.Lib.Export
 
             string geomname = shape.Name;
             if(geomname.EndsWith("Shape"))
-                geomname = geomname[0..^5];
+                geomname = geomname.Substring(0, geomname.Length - 5);
 
             Name = name;
             GeometryName = geomname;
