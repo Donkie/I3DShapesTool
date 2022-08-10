@@ -152,35 +152,36 @@ namespace I3DShapesTool.Lib.Export
         /// <param name="stream">The stream</param>
         public void Export(Stream stream)
         {
-            using StreamWriter s = new InvariantStreamWriter(stream);
-
-            WriteHeader(s);
-            s.WriteLine();
-            WriteGroup(s, "default");
-            s.WriteLine();
-            foreach(I3DVector t in Positions)
+            using(StreamWriter s = new InvariantStreamWriter(stream))
             {
-                WriteVertex(s, t);
-            }
-            if(UVs != null)
-            {
-                foreach(I3DUV t in UVs)
+                WriteHeader(s);
+                s.WriteLine();
+                WriteGroup(s, "default");
+                s.WriteLine();
+                foreach(I3DVector t in Positions)
                 {
-                    WriteUV(s, t);
+                    WriteVertex(s, t);
                 }
-            }
-            if(Normals != null)
-            {
-                foreach(I3DVector t in Normals)
+                if(UVs != null)
                 {
-                    WriteNormal(s, t);
+                    foreach(I3DUV t in UVs)
+                    {
+                        WriteUV(s, t);
+                    }
                 }
-            }
-            WriteSmoothing(s, false);
-            WriteGroup(s, GeometryName);
-            foreach(I3DTri t in Triangles)
-            {
-                WriteTriangle(s, t);
+                if(Normals != null)
+                {
+                    foreach(I3DVector t in Normals)
+                    {
+                        WriteNormal(s, t);
+                    }
+                }
+                WriteSmoothing(s, false);
+                WriteGroup(s, GeometryName);
+                foreach(I3DTri t in Triangles)
+                {
+                    WriteTriangle(s, t);
+                }
             }
         }
     }

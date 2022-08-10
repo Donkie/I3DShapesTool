@@ -95,53 +95,56 @@ namespace I3DShapesTool.Lib.Model.I3D
 
         public static I3D ParseXML(string filePath)
         {
-            using XmlReader reader = XmlReader.Create(fileStream, xmlSettings);
-
-            I3D result = new I3D();
-
-            while(reader.Read())
-            using StreamReader fileStream = File.OpenText(filePath);
+            using(StreamReader fileStream = File.OpenText(filePath))
             {
-                switch(reader.NodeType)
+                using(XmlReader reader = XmlReader.Create(fileStream, xmlSettings))
                 {
-                    case XmlNodeType.Element:
-                        if(reader.Name == "i3D" && reader.HasAttributes)
-                        {
-                            reader.MoveToFirstAttribute();
-                            do
-                            {
-                                if(reader.Name == "name")
-                                    result.Name = reader.Value;
-                                if(reader.Name == "version")
-                                    result.Version = reader.Value;
-                            }
-                            while(reader.MoveToNextAttribute());
-                            break;
-                        }
-                        if(reader.Name == "Shapes")
-                        {
-                            reader.MoveToFirstAttribute();
-                            do
-                            {
-                                if(reader.Name == "externalShapesFile")
-                                    result.ExternalShapesFile = Path.Combine(Path.GetDirectoryName(filePath), reader.Value);
-                            }
-                            while(reader.MoveToNextAttribute());
-                            break;
-                        }
-                        if(reader.Name == "Scene")
-                        {
-                            reader.Read();
-                            TraverseScene(reader, result.SceneRoot);
-                        }
-                        break;
+                    I3D result = new I3D();
 
+                    while(reader.Read())
+                    {
+                        switch(reader.NodeType)
+                        {
+                            case XmlNodeType.Element:
+                                if(reader.Name == "i3D" && reader.HasAttributes)
+                                {
+                                    reader.MoveToFirstAttribute();
+                                    do
+                                    {
+                                        if(reader.Name == "name")
+                                            result.Name = reader.Value;
+                                        if(reader.Name == "version")
+                                            result.Version = reader.Value;
+                                    }
+                                    while(reader.MoveToNextAttribute());
+                                    break;
+                                }
+                                if(reader.Name == "Shapes")
+                                {
+                                    reader.MoveToFirstAttribute();
+                                    do
+                                    {
+                                        if(reader.Name == "externalShapesFile")
+                                            result.ExternalShapesFile = Path.Combine(Path.GetDirectoryName(filePath), reader.Value);
+                                    }
+                                    while(reader.MoveToNextAttribute());
+                                    break;
+                                }
+                                if(reader.Name == "Scene")
+                                {
+                                    reader.Read();
+                                    TraverseScene(reader, result.SceneRoot);
+                                }
+                                break;
+
+                        }
+                    }
+
+                    result.Setup();
+
+                    return result;
                 }
             }
-
-            result.Setup();
-
-            return result;
         }
     }
 }
