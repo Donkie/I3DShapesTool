@@ -75,13 +75,22 @@ namespace I3DShapesTool.Lib.Model.I3D
                         reader.Read();
                     }
 
-                    TransformGroup child = type switch
+                    TransformGroup child;
+                    switch(type)
                     {
-                        I3DSceneType.Shape => new Shape(name, id, shapeId, pos, rot, scl),
-                        I3DSceneType.Light => new Light(name, id, pos, rot, scl),
-                        I3DSceneType.Camera => new Camera(name, id, pos, rot, scl),
-                        _ => new TransformGroup(name, id, pos, rot, scl),
-                    };
+                        case I3DSceneType.Shape:
+                            child = new Shape(name, id, shapeId, pos, rot, scl);
+                            break;
+                        case I3DSceneType.Light:
+                            child = new Light(name, id, pos, rot, scl);
+                            break;
+                        case I3DSceneType.Camera:
+                            child = new Camera(name, id, pos, rot, scl);
+                            break;
+                        default:
+                            child = new TransformGroup(name, id, pos, rot, scl);
+                            break;
+                    }
                     child.SetParent(parent);
 
                     if(!isEmpty)

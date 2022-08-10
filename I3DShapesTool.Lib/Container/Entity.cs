@@ -17,12 +17,21 @@ namespace I3DShapesTool.Lib.Container
         /// <summary>
         /// Entity type as en enum
         /// </summary>
-        public EntityType EntityType => Type switch
+        public EntityType EntityType
         {
-            1 => EntityType.Shape,
-            2 => EntityType.Spline,
-            _ => EntityType.Unknown,
-        };
+            get
+            {
+                switch(Type)
+                {
+                    case 1:
+                        return EntityType.Shape;
+                    case 2:
+                        return EntityType.Spline;
+                    default:
+                        return EntityType.Unknown;
+                }
+            }
+        }
 
         /// <summary>
         /// Entity byte size

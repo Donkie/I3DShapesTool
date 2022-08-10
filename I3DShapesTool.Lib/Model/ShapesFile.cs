@@ -141,7 +141,22 @@ namespace I3DShapesTool.Lib.Model
 
         private static I3DPart LoadPart(Entity entityRaw, EntityType partType, Endian endian, short version)
         {
-            I3DPart part = partType switch
+            I3DPart part;
+            switch(partType)
+            {
+                case EntityType.Shape:
+                    part = new I3DShape();
+                    break;
+                case EntityType.Spline:
+                    part = new Spline();
+                    break;
+                case EntityType.Unknown:
+                    part = new I3DPart();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
             using(MemoryStream stream = new MemoryStream(entityRaw.Data))
             {
                 using(EndianBinaryReader reader = new EndianBinaryReader(stream, endian))
